@@ -4,6 +4,7 @@ suppressMessages(library(psych))
 
 set.seed(123)
 
+
 data_input_sim <- as_tibble(sim.poly.ideal(nvar = 50, n = 1000, cat = 4,)[["items"]]) %>%
   mutate_all( ~ case_when(.x == 0 ~ "never",
                           .x == 1 ~ "occasionally",
@@ -28,6 +29,21 @@ data_input_bfi <- bfi %>%
   drop_na() %>% 
   sample_n(1000)
 
+# bfi coding
+# gender
+# Males = 1, Females =2
+# 
+# education
+# 1 = HS, 2 = finished HS, 3 = some college, 4 = college graduate 5 = graduate degree
+# 
+# age
+# age in years
+
+
+# bfi item reponse key
+# 1 Very Inaccurate 2 Moderately Inaccurate 3 Slightly Inaccurate 
+# 4 Slightly Accurate 5 Moderately Accurate 6 Very Accurate
+
 # get freqs of vals accross vars
 var_order <- c("age", "gender", "p_educ", "ethnic", "region", "clin_status",
                str_c("i", str_pad(as.character(1:50), 2, side = "left", pad = "0")))
@@ -49,7 +65,7 @@ cat_order <- c(
   "never", "occasionally","frequently", "always"
 )
 
-freq_val <- data_input_sim %>% 
+freq_val_sim <- data_input_sim %>% 
   select(var_order) %>% 
   gather(var, value) %>% 
   group_by(var, value) %>% 
