@@ -4,7 +4,6 @@ suppressMessages(library(psych))
 
 set.seed(123)
 
-
 data_input_sim <-
   as_tibble(sim.poly.ideal(nvar = 50, n = 1000, cat = 4, )[["items"]]) %>%
   mutate_all(
@@ -100,23 +99,23 @@ data_input_bfi <- bfi %>%
     vars(A1:O5),
     ~
       case_when(
-        .x == 1 ~ "very inacurate",
-        .x == 2 ~ "moderately inacurate",
-        .x == 3 ~ "slightly inacurate",
-        .x == 4 ~ "slightly acurate",
-        .x == 5 ~ "moderately acurate",
-        .x == 6 ~ "very acurate",
+        .x == 1 ~ "very_inaccurate",
+        .x == 2 ~ "moderately_inaccurate",
+        .x == 3 ~ "slightly_inaccurate",
+        .x == 4 ~ "slightly_accurate",
+        .x == 5 ~ "moderately_accurate",
+        .x == 6 ~ "very_accurate",
       )
   ) %>% 
   select(ID, age:clin_status, A1:O5)
 
 # get freqs of vals accross vars
-var_order <- c("age", "age_range","gender", "p_educ", "ethnic", "region", "clin_status",
+var_order <- c("age", "age_range", "gender", "educ", "ethnic", "region", "clin_status",
                str_c("i", str_pad(as.character(1:50), 2, side = "left", pad = "0")))
 
 cat_order <- c(
-  # age
-  "5", "6", "7", "8", "9", "10", "11", "12",
+  # # age
+  # "5", "6", "7", "8", "9", "10", "11", "12",
   # age_range
   "5 to 8 yo", "9 to 12 yo", "18 yo or younger", 
   "19 to 24 yo", "25 to 39 yo", "40 yo or older",
@@ -134,13 +133,81 @@ cat_order <- c(
   "never", "occasionally","frequently", "always"
 )
 
-freq_val_sim <- data_input_sim %>% 
-  select(var_order) %>% 
-  gather(var, value) %>% 
-  group_by(var, value) %>% 
-  count(var, value) %>% 
-  ungroup() %>%
-  spread(value, n) %>% 
-  arrange(match(var, var_order)) %>%
-  select(var, cat_order)
-  
+# data_set <- c("sim", "bfi")
+data_set <- c("sim")
+
+# data_set %>% 
+#   map_df(~
+#            eval(as.name(str_c("data_input_", .x))) %>% 
+#            select(str_c("i", str_pad(as.character(1:50), 2, side = "left", pad = "0"))) %>% 
+#            gather(var, value) %>% 
+#            group_by(var, value) %>% 
+#            count(var, value) %>% 
+#            ungroup() %>%
+#            spread(value, n) %>% 
+#            arrange(match(var, var_order)) %>%
+#            select(var, never, occasionally, frequently, always) %>% 
+#            assign(str_c("freq_item_val_", .x), ., envir = .GlobalEnv)
+#   )
+
+sim_var_cats <- c("never", "occasionally","frequently", "always")
+bfi_var_cats <- c("very_inaccurate", "moderately_inaccurate", "slightly_inaccurate",
+                  "slightly_accurate", "moderately_accurate", "very_accurate")
+
+data_set <- c("sim", "bfi")
+# item_cols <- list(str_c("i", str_pad(as.character(1:50), 2, side = "left", pad = "0")), bfi_item_cols)
+# item_cols <- str_c("i", str_pad(as.character(1:50), 2, side = "left", pad = "0"))
+sim_item_cols <- str_c("i", str_pad(as.character(1:50), 2, side = "left", pad = "0"))
+item_cols <- quos(sim_item_cols, bfi_item_cols)
+var_cats <- quos(sim_var_cats, bfi_var_cats)
+
+l <- list(data_set,
+          item_cols,
+          var_cats)
+
+test <- pmap_df(
+  list(data_set,
+  item_cols,
+  var_cats),
+  ~
+    eval(as.name(str_c("data_input_", data_set))) %>%
+    select(!!!item_cols) %>%
+    gather(var, value) %>%
+    group_by(var, value) %>%
+    count(var, value) %>%
+    ungroup() %>%
+    spread(value, n) %>%
+    arrange(match(var, var_order)) %>%
+    # select(var, never, occasionally, frequently, always) %>%
+    # select(var, very_inaccurate, moderately_inaccurate, slightly_inaccurate,
+    #        slightly_accurate, moderately_accurate, very_accurate) %>%
+    select(var, !!!var_cats) %>% 
+    assign(str_c("freq_item_val_", data_set), ., envir = .GlobalEnv)
+)
+
+
+  freq_demos_sim <- eval(as.name(str_c("data_input_", .x))) %>% 
+  select(age_range, gender, educ, ethnic, region, clin_status) %>% 
+  gather(var, cat) %>% 
+  group_by(var, cat) %>% 
+  count(var, cat) %>% 
+  arrange(match(var, var_order), match(cat, cat_order)) %>% 
+  ungroup() %>% 
+  mutate(var = case_when(
+    lag(var) == "age_range" & var == "age_range" ~ "",
+    lag(var) == "gender" & var == "gender" ~ "",
+    lag(var) == "educ" & var == "educ" ~ "",
+    lag(var) == "ethnic" & var == "ethnic" ~ "",
+    lag(var) == "region" & var == "region" ~ "",
+    lag(var) == "clin_status" & var == "clin_status" ~ "",
+    TRUE ~ var
+  ))
+)
+
+bfi_item_prefix <- c("A", "C", "E", "N", "O")
+bfi_item_suffix <- seq(1:5)
+
+bfi_item_cols <- cross(list(bfi_item_prefix, bfi_item_suffix)) %>%
+  map_chr(str_c, collapse = "") %>% 
+  sort()
+
