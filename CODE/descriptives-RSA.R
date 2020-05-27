@@ -1,7 +1,10 @@
 suppressMessages(library(here))
-suppressMessages(library(tidyverse))
+suppressMessages(suppressWarnings(library(tidyverse)))
 suppressMessages(library(psych))
 
+# read data
+data_input_sim <- suppressMessages(read_csv(here("INPUT-FILES/data-input-sim.csv")))
+data_input_bfi <- suppressMessages(read_csv(here("INPUT-FILES/data-input-bfi.csv")))
 
 # extract elements unique to each data set: name suffix, item cols, item cats
 data_name_suffix <- c("sim", "bfi")
@@ -46,12 +49,11 @@ freq_item_val_tables <- list(mget(str_c("data_input_", data_name_suffix)),
          # `..3` refers to `item_cats`, the list containing the char vecs that
          # name the item response categories for each input data set.
          select(var, !! ..3)
-  )
-
-# trying to reduce my use of `assign()` to place data objecds intop the global
-# environment. Let `pmap()` output a list of dfs `freq_item_val_tables`, then
-# use `names()` to give each df the desired name
-names(freq_item_val_tables) <- c("freq_item_val_sim", "freq_item_val_bfi")
+  ) %>% 
+  # trying to reduce my use of `assign()` to place data objecds intop the global
+  # environment. Let `pmap()` output a list of dfs `freq_item_val_tables`, then
+  # use `set_names()` to give each df the desired name
+  set_names(str_c("freq_item_val_", data_name_suffix))
 
 # `list2env()` extracts the data frames from the list into the global environment
 list2env(freq_item_val_tables, envir=.GlobalEnv)
@@ -78,11 +80,10 @@ cat_order <- c(
 )
 
 freq_demos_tables <-
-  list(mget(str_c("data_input_", data_name_suffix)),
-       item_cols,
-       item_cats) %>%
-  pmap( ~ ..1 %>%
-          select(var_order) %>% 
+  mget(str_c("data_input_", data_name_suffix)
+       ) %>%
+  map( ~ .x %>%
+          select(all_of(var_order)) %>% 
   pivot_longer(everything(), names_to = 'var', values_to = 'cat') %>%
   count(var, cat) %>%
   arrange(match(var, var_order), match(cat, cat_order)) %>%
@@ -97,9 +98,8 @@ freq_demos_tables <-
       TRUE ~ var
     )
   )
-)
-
-names(freq_demos_tables) <- c("freq_demos_sim", "freq_demos_bfi")
+) %>% 
+  set_names(str_c("freq_demos_", data_name_suffix))
 
 list2env(freq_demos_tables, envir=.GlobalEnv)
 
