@@ -18,7 +18,7 @@ sim_item_cats <- c("never", "occasionally","frequently", "always")
 bfi_item_cats <- c("very_inaccurate", "moderately_inaccurate", "slightly_inaccurate",
                    "slightly_accurate", "moderately_accurate", "very_accurate")
 
-# make list contining item cols, item cats for each data set
+# make list containing item cols, item cats for each data set
 item_cols <- list(sim_item_cols, bfi_item_cols)
 item_cats <- list(sim_item_cats, bfi_item_cats)
 

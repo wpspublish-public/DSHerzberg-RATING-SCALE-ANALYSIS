@@ -1,3 +1,20 @@
+---
+title: "Create data for rating scale analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Overview
+
+This script uses the `psych` package to generate two 1000-case data sets for  demonstrating the procedures of rating scale analysis. The first, `data_input_sim`, is simulated data consisting of 50 behavior items rated on a `Never-Occasionally-Frequently-Always` scale. These responses are coded `1-2-3-4` and summed to yield five raw scale scores: `S1_raw`, `S2_raw`, `S3_raw`, `S4_raw`, and `S5_raw`. The data set also includes simulated data for age, parental education level, ethnicity, geographic region, and clinical status. 
+
+The second data set, `data_input_bfi`, is real data consisting of 25 self-report items taken from the International Personality Item Pool. These responses are coded `1-2-3-4-5-6` for level of agreement with the personality descriptor. The item codes are summed to yield five raw scale scores: `AGR_raw`, `CON_raw` `EXT_raw`, `NEU_raw`, and `OPE_raw`.  This data set includes actual data for age, gender, and education; and simulated data for ethnicity, region, and clinical status.
+
+#### Executable Code
+```{r create-data-rsa, eval=FALSE}
 suppressMessages(library(here))
 suppressMessages(library(tidyverse))
 suppressMessages(library(psych))
@@ -126,3 +143,9 @@ write_csv(data_input_bfi,
           here("INPUT-FILES/data-input-bfi.csv"),
           na = "")
 
+rm(data_input_bfi)
+```
+
+<br>
+
+#### Commented
