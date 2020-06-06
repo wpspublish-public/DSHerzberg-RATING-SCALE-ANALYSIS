@@ -498,10 +498,45 @@ data_input_bfi &lt;- bfi %&gt;%
 
 write_csv(data_input_bfi,
           here(&quot;INPUT-FILES/data-input-bfi.csv&quot;),
-          na = &quot;&quot;)
-
-rm(data_input_bfi)</code></pre>
+          na = &quot;&quot;)</code></pre>
 <p><br></p>
+</div>
+<div id="commented-snippets" class="section level4">
+<h4>Commented Snippets</h4>
+<p>Load packages for file path specification (<code>here</code>), data wrangling (<code>tidyverse</code>) and pscyhometric data simulation and analysis (<code>psych</code>). <code>base::set.seed()</code> ensures replicable results from sampling and modeling functions that use a random-number generator.</p>
+<pre class="r"><code>suppressMessages(library(here))
+suppressMessages(library(tidyverse))
+suppressMessages(library(psych))
+
+set.seed(123)</code></pre>
+<p><code>sim.poly.ideal()</code> is a function within the <code>psych</code> package for simulating data from polytomous psychometric items. Its arguments specify the number of items <code>nvar</code>, number of cases <code>n</code>, and number of rating scale anchors <code>cat</code>. The output of <code>sim.poly.ideal()</code> is a list, within which the matrix of items and cases can be isolated with <code>[[&quot;items&quot;]]</code> and coerced to a tibble data frame with <code>tibble::as_tibble()</code>.</p>
+<pre class="r"><code>  as_tibble(sim.poly.ideal(nvar = 50, n = 1000, cat = 4,)[[&quot;items&quot;]]) %&gt;%</code></pre>
+<p><code>dplyr::rename_with()</code> renames columns by applying a function (here set off with the formula shortand <code>~</code>). Here we write a function to rename the fifty item-response columns with an <code>i01</code> to <code>i50</code> nomenclature. <code>stringr::str_pad()</code> pads a numerical sequence with zeros to the left of each number. Note the use of <code>base::as_character()</code> to coerce the number sequence <code>1:50</code> to a sequence of strings. This is wrapped in <code>stringr::str_c()</code> which concatenates the prefix <code>i</code> with the padded numbers.</p>
+<pre class="r"><code>  rename_with(~ str_c(&quot;i&quot;, str_pad(
+    as.character(1:50), 2, side = &quot;left&quot;, pad = &quot;0&quot;
+  ))) %&gt;%</code></pre>
+<p>We can create new variables with <code>dplyr::mutate()</code>. Here we use <code>base::rowSums()</code> to sum across a subset of 10 items to compute the raw score <code>S1_raw</code>. We identify the target items by their column names, including only items <code>i01</code>, <code>i06</code>, <code>i11</code>, <code>i16</code>, <code>i21</code>, <code>i26</code>, <code>i31</code>, <code>i36</code>, <code>i41</code>, and <code>i46</code> by calling <code>base::seq(1, 50, by = 5)</code>. This latter function is wrapped in the <code>str_c()</code> function described previously to concatenate the complete column names.</p>
+<pre class="r"><code>  mutate(
+    S1_raw = rowSums(.[str_c(&quot;i&quot;, str_pad(as.character(seq(1, 50, by = 5)), 2, side = &quot;left&quot;, pad = &quot;0&quot;))]),</code></pre>
+<p><code>across()</code> can be used within <code>dplyr</code> verbs to delineate a subset of columns and apply a function to them. The first argument of <code>across()</code> designates the columns, using the <code>tidyselect</code> helper <code>contains(&quot;i&quot;)</code> to select only columns whose names contain <code>i</code>, (i.e., the item columns).</p>
+<p>The second argument of <code>across()</code> is the function (set off by <code>~</code>) to be applied to the selected columns. Here we use <code>dplyr::case_when()</code> to recode the numerical item codes to frequency descriptors. The <code>.x</code> shorthand signifies the input cell value, which is recoded according to the logical conditions passes as arguments to <code>case_when()</code>.</p>
+<p>Note that when across is used in this manner, no new columns are created; rather, existing columns are transformed. Thus, both the columns to be transformed (first argument) and the function (second argument) need to be within the parentheses of <code>across()</code>.</p>
+<pre class="r"><code>    across(
+      contains(&quot;i&quot;),
+      ~ case_when(
+        .x == 0 ~ &quot;never&quot;,
+        .x == 1 ~ &quot;occasionally&quot;,
+        .x == 2 ~ &quot;frequently&quot;,
+        .x == 3 ~ &quot;always&quot;
+      )
+    ),</code></pre>
+<p>The next snippet is an example of creating a column <code>gender</code> and using <code>base::sample()</code> to populate it with proportionally sampled data. The arguments to <code>sample()</code> are as follow: a vector giving cell values from which to sample (<code>c(&quot;female&quot;, &quot;male&quot;)</code>), the number of rows in the current data object (<code>1000</code>), sampling with or without replacement (<code>replace = TRUE</code>), and a vector of probability weights corresponding to each cell value (<code>c(0.53, 0.47)</code>). In this way, we compute a new variable that establishes a distribution of gender values equivalent to the U.S. census proportions for gender.</p>
+<pre class="r"><code>    gender = sample(
+      c(&quot;female&quot;, &quot;male&quot;),
+      1000,
+      replace = TRUE,
+      prob = c(0.53, 0.47)
+    ),</code></pre>
 </div>
 </div>
 

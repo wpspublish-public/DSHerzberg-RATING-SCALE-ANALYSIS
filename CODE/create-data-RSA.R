@@ -125,4 +125,3 @@ data_input_bfi <- bfi %>%
 write_csv(data_input_bfi,
           here("INPUT-FILES/data-input-bfi.csv"),
           na = "")
-

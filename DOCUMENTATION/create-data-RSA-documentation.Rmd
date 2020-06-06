@@ -14,7 +14,7 @@ This script uses the `psych` package to generate two 1000-case data sets for  de
 The second data set, `data_input_bfi`, is real data consisting of 25 self-report items taken from the International Personality Item Pool. These responses are coded `1-2-3-4-5-6` for level of agreement with the personality descriptor. The item codes are summed to yield five raw scale scores: `AGR_raw`, `CON_raw` `EXT_raw`, `NEU_raw`, and `OPE_raw`.  This data set includes actual data for age, gender, and education; and simulated data for ethnicity, region, and clinical status.
 
 #### Executable Code
-```{r create-data-rsa, eval=FALSE}
+```{r create-data-rsa, eval = FALSE}
 suppressMessages(library(here))
 suppressMessages(library(tidyverse))
 suppressMessages(library(psych))
@@ -142,10 +142,30 @@ data_input_bfi <- bfi %>%
 write_csv(data_input_bfi,
           here("INPUT-FILES/data-input-bfi.csv"),
           na = "")
-
-rm(data_input_bfi)
 ```
 
 <br>
 
-#### Commented
+#### Commented Snippets
+Load packages for file path specification (`here`), data wrangling (`tidyverse`) and pscyhometric data simulation and analysis (`psych`). `base::set.seed()` ensures replicable results from sampling and modeling functions that use a random-number generator.
+```{r create-data-rsa, echo = 1:5, eval = F}
+```
+`sim.poly.ideal()` is a function within the `psych` package for simulating data from polytomous psychometric items. Its arguments specify the number of items `nvar`, number of cases `n`, and number of rating scale anchors `cat`. The output of `sim.poly.ideal()` is a list, within which the matrix of items and cases can be isolated with `[["items"]]` and coerced to a tibble data frame with `tibble::as_tibble()`. 
+```{r create-data-rsa, echo = 8, eval = F}
+```
+`dplyr::rename_with()` renames columns by applying a function (here set off with the formula shortand `~`). Here we write a function to rename the fifty item-response columns with an `i01` to `i50` nomenclature. `stringr::str_pad()` pads a numerical sequence with zeros to the left of each number. Note the use of `base::as_character()` to coerce the number sequence `1:50` to a sequence of strings. This is wrapped in `stringr::str_c()` which concatenates the prefix `i` with the padded numbers.
+```{r create-data-rsa, echo = 9:11, eval = F}
+```
+We can create new variables with `dplyr::mutate()`. Here we use `base::rowSums()` to sum across a subset of 10 items to compute the raw score  `S1_raw`. We identify the target items by their column names, including only items `i01`, `i06`, `i11`, `i16`, `i21`, `i26`, `i31`, `i36`, `i41`, and `i46` by calling `base::seq(1, 50, by = 5)`. This latter function is wrapped in the `str_c()` function described previously to concatenate the complete column names.
+```{r create-data-rsa, echo = 12:13, eval = F}
+```
+`across()` can be used within `dplyr` verbs to delineate a subset of columns and apply a function to them. The first argument of `across()` designates the columns, using the `tidyselect` helper `contains("i")` to select only columns whose names contain `i`, (i.e., the item columns).
+
+The second argument of `across()` is the function (set off by `~`) to be applied to the selected columns. Here we use `dplyr::case_when()` to recode the numerical item codes to frequency descriptors. The `.x` shorthand signifies the input cell value, which is recoded according to the logical conditions passes as arguments to `case_when()`.
+
+Note that when across is used in this manner, no new columns are created; rather, existing columns are transformed. Thus, both the columns to be transformed (first argument) and the function (second argument) need to be within the parentheses of `across()`.
+```{r create-data-rsa, echo = 18:26, eval = F}
+```
+The next snippet is an example of creating a column `gender` and using `base::sample()` to populate it with proportionally sampled data. The arguments to `sample()` are as follow: a vector giving cell values from which to sample (`c("female", "male")`), the number of rows in the current data object (`1000`), sampling with or without replacement (`replace = TRUE`), and a vector of probability weights corresponding to each cell value (`c(0.53, 0.47)`). In this way, we compute a new variable that establishes a distribution of gender values equivalent to the U.S. census proportions for gender.
+```{r create-data-rsa, echo = 31:36, eval = F}
+```
