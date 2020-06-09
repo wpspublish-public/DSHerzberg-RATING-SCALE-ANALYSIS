@@ -1,5 +1,5 @@
 ---
-title: "Create data for rating scale analysis"
+title: "Rating Scale Analysis"
 output: html_document
 ---
 
@@ -7,11 +7,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-### Overview
+### 1. Create Data
 
-This script uses the `psych` package to generate two 1000-case data sets for  demonstrating the procedures of rating scale analysis. The first, `data_input_sim`, is simulated data consisting of 50 behavior items rated on a `Never-Occasionally-Frequently-Always` scale. These responses are coded `1-2-3-4` and summed to yield five raw scale scores: `S1_raw`, `S2_raw`, `S3_raw`, `S4_raw`, and `S5_raw`. The data set also includes simulated data for age, parental education level, ethnicity, geographic region, and clinical status. 
+#### Overview
 
-The second data set, `data_input_bfi`, is real data consisting of 25 self-report items taken from the International Personality Item Pool. These responses are coded `1-2-3-4-5-6` for level of agreement with the personality descriptor. The item codes are summed to yield five raw scale scores: `AGR_raw`, `CON_raw` `EXT_raw`, `NEU_raw`, and `OPE_raw`.  This data set includes actual data for age, gender, and education; and simulated data for ethnicity, region, and clinical status.
+We use the `psych` package to generate two 1000-case data sets for  demonstrating the procedures of rating scale analysis. The first, `data_input_sim`, is simulated data consisting of 50 behavior items rated on a four-option `Never-Occasionally-Frequently-Always` scale. These responses are coded `1-2-3-4` and summed to yield five raw scale scores: `S1_raw`, `S2_raw`, `S3_raw`, `S4_raw`, and `S5_raw`. The data set also includes simulated data for age, parental education level, ethnicity, geographic region, and clinical status. 
+
+The second data set, `data_input_bfi`, is real data consisting of 25 self-report items taken from the International Personality Item Pool. These responses are coded `1-2-3-4-5-6` for level of accuracy of the personality descriptor, with higher codes indicating greater accuracy. The item codes are summed to yield five raw scale scores: `AGR_raw`, `CON_raw` `EXT_raw`, `NEU_raw`, and `OPE_raw`.  This data set includes real data for age, gender, and education; and simulated data for ethnicity, region, and clinical status.
 
 #### Executable Code
 ```{r create-data-rsa, eval = FALSE}
@@ -144,10 +146,8 @@ write_csv(data_input_bfi,
           na = "")
 ```
 
-<br>
-
 #### Commented Snippets
-Load packages for file path specification (`here`), data wrangling (`tidyverse`) and pscyhometric data simulation and analysis (`psych`). `base::set.seed()` ensures replicable results from sampling and modeling functions that use a random-number generator.
+Load packages for file path specification (`here`), data wrangling (`tidyverse`) and pscyhometric data simulation and analysis (`psych`). `base::set.seed()` ensures repeatable results from sampling and modeling functions that use a random-number generator.
 ```{r create-data-rsa, echo = 1:5, eval = F}
 ```
 `sim.poly.ideal()` is a function within the `psych` package for simulating data from polytomous psychometric items. Its arguments specify the number of items `nvar`, number of cases `n`, and number of rating scale anchors `cat`. The output of `sim.poly.ideal()` is a list, within which the matrix of items and cases can be isolated with `[["items"]]` and coerced to a tibble data frame with `tibble::as_tibble()`. 
@@ -156,12 +156,12 @@ Load packages for file path specification (`here`), data wrangling (`tidyverse`)
 `dplyr::rename_with()` renames columns by applying a function (here set off with the formula shortand `~`). Here we write a function to rename the fifty item-response columns with an `i01` to `i50` nomenclature. `stringr::str_pad()` pads a numerical sequence with zeros to the left of each number. Note the use of `base::as_character()` to coerce the number sequence `1:50` to a sequence of strings. This is wrapped in `stringr::str_c()` which concatenates the prefix `i` with the padded numbers.
 ```{r create-data-rsa, echo = 9:11, eval = F}
 ```
-We can create new variables with `dplyr::mutate()`. Here we use `base::rowSums()` to sum across a subset of 10 items to compute the raw score  `S1_raw`. We identify the target items by their column names, including only items `i01`, `i06`, `i11`, `i16`, `i21`, `i26`, `i31`, `i36`, `i41`, and `i46` by calling `base::seq(1, 50, by = 5)`. This latter function is wrapped in the `str_c()` function described previously to concatenate the complete column names.
+We use `dplyr::mutate()` to create/compute new variables. Within `mutate()`, we use `base::rowSums()` to sum across a subset of 10 items to compute the raw score  `S1_raw`. We identify the target items by their column names, including only items `i01`, `i06`, `i11`, `i16`, `i21`, `i26`, `i31`, `i36`, `i41`, and `i46` by calling `base::seq(1, 50, by = 5)`. This latter function is wrapped in the `str_c()` function described previously to concatenate the complete column names.
 ```{r create-data-rsa, echo = 12:13, eval = F}
 ```
 `across()` can be used within `dplyr` verbs to delineate a subset of columns and apply a function to them. The first argument of `across()` designates the columns, using the `tidyselect` helper `contains("i")` to select only columns whose names contain `i`, (i.e., the item columns).
 
-The second argument of `across()` is the function (set off by `~`) to be applied to the selected columns. Here we use `dplyr::case_when()` to recode the numerical item codes to frequency descriptors. The `.x` shorthand signifies the input cell value, which is recoded according to the logical conditions passes as arguments to `case_when()`.
+The second argument of `across()` is the function (set off by `~`) to be applied to the selected columns. Here we use `dplyr::case_when()` to recode the numerical item codes to frequency descriptors. The `.x` shorthand signifies the input cell value, which is recoded according to the logical conditions passes as arguments to `case_when()`. As an example, `.x == 0 ~ "never",` indicates that when the input cell value is 0, the value of that cell will be changed to the string "never". The formula shorthand `~` indicates the "if-then" relationship between LHS (logical predicate) and RHS (outcome).
 
 Note that when across is used in this manner, no new columns are created; rather, existing columns are transformed. Thus, both the columns to be transformed (first argument) and the function (second argument) need to be within the parentheses of `across()`.
 ```{r create-data-rsa, echo = 18:26, eval = F}
@@ -169,3 +169,25 @@ Note that when across is used in this manner, no new columns are created; rather
 The next snippet is an example of creating a column `gender` and using `base::sample()` to populate it with proportionally sampled data. The arguments to `sample()` are as follow: a vector giving cell values from which to sample (`c("female", "male")`), the number of rows in the current data object (`1000`), sampling with or without replacement (`replace = TRUE`), and a vector of probability weights corresponding to each cell value (`c(0.53, 0.47)`). In this way, we compute a new variable that establishes a distribution of gender values equivalent to the U.S. census proportions for gender.
 ```{r create-data-rsa, echo = 31:36, eval = F}
 ```
+We use `dplyr::select()` both to keep certain columns for the output and to specify the sequence for those columns.
+```{r create-data-rsa, echo = 62, eval = F}
+```
+We use `readr::write_csv()` to write output to a flat file (.csv). In this instance, the arguments are:
+
+1. `data_input_sim`: data object to be written
+2. `here("INPUT-FILES/data-input-sim.csv")`: file path (specified using `here::here()`, which allows you to write the file path out of the R project folder without a leading `/`)
+3. `na = ""`: values that are `NA` in R will be written to the .csv as empty cells.
+
+```{r create-data-rsa, echo = 64:66, eval = F}
+```
+Here we process the `bfi` data set, which has 2800 cases and is included in the `psych` package. Because we have many more cases than we need, we can clean up the data by simply dropping any row that has `NA`, which we do with `tidyr::drop_na()`. We then pare the data down to a random sample of 1000 rows, using `dplyr::sample_n()`.
+```{r create-data-rsa, echo = 67:70, eval = F}
+```
+
+<br>
+
+### 2. Descriptives
+
+#### Overview
+
+We use the `psych` package to generate two 1000-case data sets for  demonstrating the procedures of rating scale analysis. The first, 
