@@ -1,0 +1,26 @@
+---
+title: "Rating Scale Analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Descriptives
+
+#### Overview
+
+We use the `psych` package to generate two 1000-case data sets for  demonstrating the procedures of rating scale analysis. The first, 
+
+This code can handle a set of input data files consisting of different forms (e.g., `parent`, `teen`) and different age ranges (e.g., `child`, `teen`).
+
+#### Executable Code
+```{r descriptives-rsa, eval = FALSE}
+suppressMessages(library(here))
+suppressMessages(library(tidyverse))
+suppressMessages(library(psych))
+
+set.seed(123)
+
+```

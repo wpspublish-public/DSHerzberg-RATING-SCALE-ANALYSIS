@@ -7,11 +7,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-### 1. Create Data
+### Create Data
 
 #### Overview
 
-We use the `psych` package to generate two 1000-case data sets for  demonstrating the procedures of rating scale analysis. The first, `data_input_sim`, is simulated data consisting of 50 behavior items rated on a four-option `Never-Occasionally-Frequently-Always` scale. These responses are coded `1-2-3-4` and summed to yield five raw scale scores: `S1_raw`, `S2_raw`, `S3_raw`, `S4_raw`, and `S5_raw`. The data set also includes simulated data for age, parental education level, ethnicity, geographic region, and clinical status. 
+We use the `psych` package to generate two 1000-case data sets for  demonstrating the procedures of rating scale analysis. The first, `data_RS_sim_child_parent`, is simulated data consisting of 50 behavior items rated on a four-option `Never-Occasionally-Frequently-Always` scale. The data are parent ratings on children aged 5-12. The item and scale score names have a `cp` (upper or lower case) prefix to indicate `parent` ratings on a `child` form. By varying these prefixes, and changing the definitions of the `age` and `age_range` variables, we can create similar data sets for other forms (e.g., `teacher`) and other age ranges (e.g., `teen`).
+
+The item responses are coded `1-2-3-4` and summed to yield five raw scale scores: `CPS1_raw`, `CPS2_raw`, `CPS3_raw`, `CPS4_raw`, and `CPS5_raw`. The data set also includes simulated data for age, parental education level, ethnicity, geographic region, and clinical status. 
 
 The second data set, `data_input_bfi`, is real data consisting of 25 self-report items taken from the International Personality Item Pool. These responses are coded `1-2-3-4-5-6` for level of accuracy of the personality descriptor, with higher codes indicating greater accuracy. The item codes are summed to yield five raw scale scores: `AGR_raw`, `CON_raw` `EXT_raw`, `NEU_raw`, and `OPE_raw`.  This data set includes real data for age, gender, and education; and simulated data for ethnicity, region, and clinical status.
 
@@ -23,19 +25,19 @@ suppressMessages(library(psych))
 
 set.seed(123)
 
-data_input_sim <-
+data_RS_sim_child_parent <-
   as_tibble(sim.poly.ideal(nvar = 50, n = 1000, cat = 4,)[["items"]]) %>%
-  rename_with(~ str_c("i", str_pad(
+  rename_with(~ str_c("cpi", str_pad(
     as.character(1:50), 2, side = "left", pad = "0"
   ))) %>%
   mutate(
-    S1_raw = rowSums(.[str_c("i", str_pad(as.character(seq(1, 50, by = 5)), 2, side = "left", pad = "0"))]),
-    S2_raw = rowSums(.[str_c("i", str_pad(as.character(seq(2, 50, by = 5)), 2, side = "left", pad = "0"))]),
-    S3_raw = rowSums(.[str_c("i", str_pad(as.character(seq(3, 50, by = 5)), 2, side = "left", pad = "0"))]),
-    S4_raw = rowSums(.[str_c("i", str_pad(as.character(seq(4, 50, by = 5)), 2, side = "left", pad = "0"))]),
-    S5_raw = rowSums(.[str_c("i", str_pad(as.character(seq(5, 50, by = 5)), 2, side = "left", pad = "0"))]),
+    CPS1_raw = rowSums(.[str_c("cpi", str_pad(as.character(seq(1, 50, by = 5)), 2, side = "left", pad = "0"))]),
+    CPS2_raw = rowSums(.[str_c("cpi", str_pad(as.character(seq(2, 50, by = 5)), 2, side = "left", pad = "0"))]),
+    CPS3_raw = rowSums(.[str_c("cpi", str_pad(as.character(seq(3, 50, by = 5)), 2, side = "left", pad = "0"))]),
+    CPS4_raw = rowSums(.[str_c("cpi", str_pad(as.character(seq(4, 50, by = 5)), 2, side = "left", pad = "0"))]),
+    CPS5_raw = rowSums(.[str_c("cpi", str_pad(as.character(seq(5, 50, by = 5)), 2, side = "left", pad = "0"))]),
     across(
-      contains("i"),
+      contains("cpi"),
       ~ case_when(
         .x == 0 ~ "never",
         .x == 1 ~ "occasionally",
@@ -78,10 +80,10 @@ data_input_sim <-
       prob = c(0.8, 0.2)
     )
   ) %>%
-  select(ID:clin_status, S1_raw:S5_raw, i01:i50)
+  select(ID:clin_status, CPS1_raw:CPS5_raw, cpi01:cpi50)
 
-write_csv(data_input_sim,
-          here("INPUT-FILES/data-input-sim.csv"),
+write_csv(data_RS_sim_child_parent,
+          here("INPUT-FILES/data-RS-sim-child-parent.csv"),
           na = "")
 
 data_input_bfi <- bfi %>%
@@ -153,20 +155,20 @@ Load packages for file path specification (`here`), data wrangling (`tidyverse`)
 `sim.poly.ideal()` is a function within the `psych` package for simulating data from polytomous psychometric items. Its arguments specify the number of items `nvar`, number of cases `n`, and number of rating scale anchors `cat`. The output of `sim.poly.ideal()` is a list, within which the matrix of items and cases can be isolated with `[["items"]]` and coerced to a tibble data frame with `tibble::as_tibble()`. 
 ```{r create-data-rsa, echo = 8, eval = F}
 ```
-`dplyr::rename_with()` renames columns by applying a function (here set off with the formula shortand `~`). Here we write a function to rename the fifty item-response columns with an `i01` to `i50` nomenclature. `stringr::str_pad()` pads a numerical sequence with zeros to the left of each number. Note the use of `base::as_character()` to coerce the number sequence `1:50` to a sequence of strings. This is wrapped in `stringr::str_c()` which concatenates the prefix `i` with the padded numbers.
+`dplyr::rename_with()` renames columns by applying a function (here set off with the formula shortand `~`). Here we write a function to rename the fifty item-response columns with an `i01` to `i50` nomenclature. `stringr::str_pad()` pads a numerical sequence with zeros to the left of each number. Note the use of `base::as_character()` to coerce the number sequence `1:50` to a sequence of strings. This is wrapped in `stringr::str_c()` which concatenates the prefix `cpi` with the padded numbers.
 ```{r create-data-rsa, echo = 9:11, eval = F}
 ```
 We use `dplyr::mutate()` to create/compute new variables. Within `mutate()`, we use `base::rowSums()` to sum across a subset of 10 items to compute the raw score  `S1_raw`. We identify the target items by their column names, including only items `i01`, `i06`, `i11`, `i16`, `i21`, `i26`, `i31`, `i36`, `i41`, and `i46` by calling `base::seq(1, 50, by = 5)`. This latter function is wrapped in the `str_c()` function described previously to concatenate the complete column names.
 ```{r create-data-rsa, echo = 12:13, eval = F}
 ```
-`across()` can be used within `dplyr` verbs to delineate a subset of columns and apply a function to them. The first argument of `across()` designates the columns, using the `tidyselect` helper `contains("i")` to select only columns whose names contain `i`, (i.e., the item columns).
+`across()` can be used within `dplyr` verbs to delineate a subset of columns and apply a function to them. The first argument of `across()` designates the columns, using the `tidyselect` helper `contains("i")` to select only columns whose names contain `cpi`, (i.e., the item columns).
 
 The second argument of `across()` is the function (set off by `~`) to be applied to the selected columns. Here we use `dplyr::case_when()` to recode the numerical item codes to frequency descriptors. The `.x` shorthand signifies the input cell value, which is recoded according to the predicate functions passed as arguments to `case_when()`. As an example, `.x == 0 ~ "never",` indicates that when the input cell value is 0, the value of that cell will be changed to the string "never". The formula shorthand `~` indicates the "if-then" relationship between LHS (logical predicate) and RHS (outcome).
 
 Note that when across is used in this manner, no new columns are created; rather, existing columns are transformed. Thus, both the columns to be transformed (first argument) and the function (second argument) need to be within the parentheses of `across()`.
 ```{r create-data-rsa, echo = 18:26, eval = F}
 ```
-The next snippet is an example of creating a column `gender` and using `base::sample()` to populate it with proportionally sampled data. The arguments to `sample()` are as follows: a vector giving cell values from which to sample (`c("female", "male")`), the number of rows in the current data object (`1000`), sampling with or without replacement (`replace = TRUE`), and a vector of probability weights corresponding to each cell value (`c(0.53, 0.47)`). In this way, we compute a new variable that establishes a distribution of gender values equivalent to the U.S. census proportions for gender.
+The next snippet is an example of creating a new column `gender` and using `base::sample()` to populate it with proportionally sampled data. The arguments to `sample()` are as follows: a vector giving cell values from which to sample (`c("female", "male")`), the number of rows in the current data object (`1000`), sampling with or without replacement (`replace = TRUE`), and a vector of probability weights corresponding to each cell value (`c(0.53, 0.47)`). In this way, we compute a new variable that establishes a distribution of gender values equivalent to the U.S. census proportions for gender.
 ```{r create-data-rsa, echo = 31:36, eval = F}
 ```
 We use `dplyr::select()` both to keep certain columns for the output and to specify the sequence for those columns.
@@ -174,8 +176,8 @@ We use `dplyr::select()` both to keep certain columns for the output and to spec
 ```
 We use `readr::write_csv()` to write output to a flat file (.csv). In this instance, the arguments are:
 
-1. `data_input_sim`: data object to be written
-2. `here("INPUT-FILES/data-input-sim.csv")`: file path (specified using `here::here()`, which allows you to write the file path out of the R project folder without a leading `/`)
+1. `data_RS_sim_child_parent`: data object to be written
+2. `here("INPUT-FILES/data-RS-sim-child-parent.csv")`: file path (specified using `here::here()`, which enables writing the file path out of the R project folder without a leading `/`)
 3. `na = ""`: values that are `NA` in R will be written to the .csv as empty cells.
 
 ```{r create-data-rsa, echo = 64:66, eval = F}
@@ -184,10 +186,3 @@ Here we process the `bfi` data set, which has 2800 cases and is included in the 
 ```{r create-data-rsa, echo = 67:70, eval = F}
 ```
 
-<br>
-
-### 2. Descriptives
-
-#### Overview
-
-We use the `psych` package to generate two 1000-case data sets for  demonstrating the procedures of rating scale analysis. The first, 

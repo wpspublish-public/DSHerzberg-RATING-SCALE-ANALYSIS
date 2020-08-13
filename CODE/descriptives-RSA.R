@@ -1,42 +1,51 @@
 suppressMessages(library(here))
 suppressMessages(suppressWarnings(library(tidyverse)))
 suppressMessages(library(psych))
+library(ggrepel)
 
 # read data from remote URL
 urlRemote_path  <- "https://raw.githubusercontent.com/"
 github_path <- "DSHerzberg/RATING-SCALE-ANALYSIS/master/INPUT-FILES/"
 
-data_input_sim <- suppressMessages(read_csv(url(
-  str_c(urlRemote_path, github_path, "data-input-sim.csv")
+data_RS_sim_child_parent <- suppressMessages(read_csv(url(
+  str_c(urlRemote_path, github_path, "data-RS-sim-child-parent.csv")
 )))
-data_input_bfi <- suppressMessages(read_csv(url(
-  str_c(urlRemote_path, github_path, "data-input-bfi.csv")
+data_RS_sim_child_teacher <- suppressMessages(read_csv(url(
+  str_c(urlRemote_path, github_path, "data-RS-sim-child-teacher.csv")
+)))
+data_RS_sim_teen_parent <- suppressMessages(read_csv(url(
+  str_c(urlRemote_path, github_path, "data-RS-sim-teen-parent.csv")
+)))
+data_RS_sim_teen_teacher <- suppressMessages(read_csv(url(
+  str_c(urlRemote_path, github_path, "data-RS-sim-teen-teacher.csv")
 )))
 
 
 # extract elements unique to each data set: name suffix, item cols, item cats
-data_name_suffix <- c("sim", "bfi")
+data_name_suffix <- c("child_parent", "child_teacher", "teen_parent", "teen_teacher")
+item_col_prefix <- c("cp", "ct", "tp", "tt")
+scale_col_prefix <- toupper(item_col_prefix)
 
-sim_item_cols <- str_c("i", str_pad(as.character(1:50), 2, side = "left", pad = "0"))
-bfi_item_cols <- cross(list(c("A", "C", "E", "N", "O"), seq(1:5))) %>%
-  map_chr(str_c, collapse = "") %>% 
-  sort()
+item_cols <- item_col_prefix %>% 
+  map(
+    ~ str_c(.x, "i", str_pad(as.character(1:50), 2, side = "left", pad = "0"))
+  ) %>% 
+  set_names(str_c("item_cols_", data_name_suffix))
+    
+item_cats <- replicate(
+  4, 
+  c("never", "occasionally","frequently", "always"), 
+  simplify =  F
+  )  %>% 
+  set_names(str_c("item_cats_", data_name_suffix))
 
-sim_item_cats <- c("never", "occasionally","frequently", "always")
-bfi_item_cats <- c("very_inaccurate", "moderately_inaccurate", "slightly_inaccurate",
-                   "slightly_accurate", "moderately_accurate", "very_accurate")
-
-# make list containing item cols, item cats for each data set
-item_cols <- list(sim_item_cols, bfi_item_cols)
-item_cats <- list(sim_item_cats, bfi_item_cats)
-
-# item val freq tables
+####### START HERE
 
 # akrun solution mget() returns the two data objects whose string names are
 # contained within str_c(). These objects are put into a list, to be one of the
 # inputs that pmap() iterates over. Now all three inputs to pmap() are lists
 # containing named objects
-list(mget(str_c("data_input_", data_name_suffix)),
+list(mget(str_c("data_RS_sim_", data_name_suffix)),
      item_cols,
      item_cats,
      data_name_suffix) %>%
@@ -75,8 +84,8 @@ var_order <- c("age_range", "gender", "educ", "ethnic", "region", "clin_status")
 
 cat_order <- c(
   # age_range
-  "5 to 8 yo", "9 to 12 yo", "18 yo or younger", 
-  "19 to 24 yo", "25 to 39 yo", "40 yo or older",
+  "5 to 8 yo", "9 to 12 yo", "13 to 15 yo", 
+  "16 to 18 yo",
   # gender
   "male", "female",
   # educ
@@ -91,7 +100,7 @@ cat_order <- c(
   "never", "occasionally","frequently", "always"
 )
 
-list(mget(str_c("data_input_", data_name_suffix)),
+list(mget(str_c("data_RS_sim_", data_name_suffix)),
      data_name_suffix) %>%
   pmap(
     ~ ..1 %>%
@@ -118,7 +127,7 @@ list(mget(str_c("data_input_", data_name_suffix)),
   list2env(envir = .GlobalEnv)
 
 # raw score descriptives tables
-list(mget(str_c("data_input_", data_name_suffix)),
+list(mget(str_c("data_RS_sim_", data_name_suffix)),
      data_name_suffix) %>%
   pmap(
     ~ ..1 %>%
@@ -137,5 +146,24 @@ list(mget(str_c("data_input_", data_name_suffix)),
   set_names(str_c("raw_desc_", data_name_suffix)) %>%
   list2env(envir = .GlobalEnv)
 
+# START HERE: FIX ERROR BAR
 
-rm(list = setdiff(ls(), ls(pattern = "_bfi|_sim")))
+mean_plot <- raw_desc_child_parent %>% 
+  ggplot(aes(scale, mean)) +
+  geom_point(
+    col = "blue",
+    fill = "blue",
+    alpha = .5,
+    size = 3,
+    shape = 23
+  ) +
+  geom_label_repel(aes(label = mean), hjust = .7, vjust = -1, label.padding = unit(0.1, "lines"), size = 4, col = "blue") +
+  scale_y_continuous(breaks = seq(8, 12, by = .25), limits = c(8,12)) +
+  labs(title = "Raw Score Means (with SDs)", x = "Scale", y = "Raw Score Mean") +
+  geom_errorbar(
+    aes(ymin = mean - sd, ymax = mean + sd),
+    col = "red",
+    size = 0.2,
+    width = 0.2
+  ) 
+print(mean_plot)
