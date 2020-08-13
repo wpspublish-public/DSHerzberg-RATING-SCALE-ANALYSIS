@@ -126,6 +126,8 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
   set_names(str_c("freq_demos_", data_name_suffix)) %>%
   list2env(envir = .GlobalEnv)
 
+# START HERE: ADD HISTOGRAMS FOR DEMO TABLES
+
 # raw score descriptives tables
 list(mget(str_c("data_RS_sim_", data_name_suffix)),
      data_name_suffix) %>%
@@ -146,8 +148,6 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
   set_names(str_c("raw_desc_", data_name_suffix)) %>%
   list2env(envir = .GlobalEnv)
 
-# START HERE: FIX ERROR BAR
-
 mean_plot <- raw_desc_child_parent %>% 
   ggplot(aes(scale, mean)) +
   geom_point(
@@ -158,7 +158,7 @@ mean_plot <- raw_desc_child_parent %>%
     shape = 23
   ) +
   geom_label_repel(aes(label = mean), hjust = .7, vjust = -1, label.padding = unit(0.1, "lines"), size = 4, col = "blue") +
-  scale_y_continuous(breaks = seq(8, 12, by = .25), limits = c(8,12)) +
+  scale_y_continuous(breaks = seq(0, 15, by = 1), limits = c(0,15)) +
   labs(title = "Raw Score Means (with SDs)", x = "Scale", y = "Raw Score Mean") +
   geom_errorbar(
     aes(ymin = mean - sd, ymax = mean + sd),
