@@ -138,8 +138,9 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
       rownames_to_column() %>%
       rename(scale = rowname) %>%
       mutate(
-        data = case_when(rownames(.) == "1" ~ ..2,
-                         T ~ NA_character_),
+        # data = case_when(rownames(.) == "1" ~ ..2,
+        #                  T ~ NA_character_),
+        data = ..2,
         across(c(mean, sd),
                ~ round(., 2))
       ) %>%
