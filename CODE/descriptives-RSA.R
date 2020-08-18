@@ -148,7 +148,9 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
   set_names(str_c("raw_desc_", data_name_suffix)) %>%
   list2env(envir = .GlobalEnv)
 
-mean_plot <- raw_desc_child_parent %>% 
+# to get four plots, try stacking the data in long format and using facet_wrap
+
+mean_plot <- raw_desc_child_parent %>%
   ggplot(aes(scale, mean)) +
   geom_point(
     col = "blue",
@@ -165,5 +167,5 @@ mean_plot <- raw_desc_child_parent %>%
     col = "red",
     size = 0.2,
     width = 0.2
-  ) 
+  )
 print(mean_plot)
