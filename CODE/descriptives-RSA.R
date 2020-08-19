@@ -109,15 +109,15 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
       count(var, cat) %>%
       arrange(match(var, var_order), match(cat, cat_order)) %>%
       mutate(
-        var = case_when(
-          lag(var) == "age_range" & var == "age_range" ~ "",
-          lag(var) == "gender" & var == "gender" ~ "",
-          lag(var) == "educ" & var == "educ" ~ "",
-          lag(var) == "ethnic" & var == "ethnic" ~ "",
-          lag(var) == "region" & var == "region" ~ "",
-          lag(var) == "clin_status" & var == "clin_status" ~ "",
-          TRUE ~ var
-        ),
+        # var = case_when(
+        #   lag(var) == "age_range" & var == "age_range" ~ "",
+        #   lag(var) == "gender" & var == "gender" ~ "",
+        #   lag(var) == "educ" & var == "educ" ~ "",
+        #   lag(var) == "ethnic" & var == "ethnic" ~ "",
+        #   lag(var) == "region" & var == "region" ~ "",
+        #   lag(var) == "clin_status" & var == "clin_status" ~ "",
+        #   TRUE ~ var
+        # ),
         data = case_when(rownames(.) == "1" ~ ..2,
                          T ~ NA_character_)
       ) %>%
@@ -126,7 +126,21 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
   set_names(str_c("freq_demos_", data_name_suffix)) %>%
   list2env(envir = .GlobalEnv)
 
-# START HERE: ADD HISTOGRAMS FOR DEMO TABLES
+
+# NEXT: REPLICATE WITHIN imap AS WITH MEANS PLOTS
+# print and save histograms of demo counts
+ggplot(data = freq_demos_child_parent, aes(cat, n)) +
+  geom_histogram(
+    stat = "identity",
+    binwidth = .2,
+    col = "red",
+    fill = "blue",
+    alpha = .2
+  ) +
+  scale_y_continuous(breaks = seq(0, 1000, 50)) +
+  labs(title = "Frequency Distribution") + 
+  theme(panel.grid.minor=element_blank()) +
+  facet_wrap(vars(var))
 
 # raw score descriptives tables
 list(mget(str_c("data_RS_sim_", data_name_suffix)),
@@ -149,24 +163,47 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
   set_names(str_c("raw_desc_", data_name_suffix)) %>%
   list2env(envir = .GlobalEnv)
 
-# to get four plots, try stacking the data in long format and using facet_wrap
-
-mean_plot <- raw_desc_child_parent %>%
-  ggplot(aes(scale, mean)) +
-  geom_point(
-    col = "blue",
-    fill = "blue",
-    alpha = .5,
-    size = 3,
-    shape = 23
-  ) +
-  geom_label_repel(aes(label = mean), hjust = .7, vjust = -1, label.padding = unit(0.1, "lines"), size = 4, col = "blue") +
-  scale_y_continuous(breaks = seq(0, 15, by = 1), limits = c(0,15)) +
-  labs(title = "Raw Score Means (with SDs)", x = "Scale", y = "Raw Score Mean") +
-  geom_errorbar(
-    aes(ymin = mean - sd, ymax = mean + sd),
-    col = "red",
-    size = 0.2,
-    width = 0.2
+# print and save plots of raw score means, SDs by scale
+imap(
+  .x = lst(
+    raw_desc_child_parent,
+    raw_desc_child_teacher,
+    raw_desc_teen_parent,
+    raw_desc_teen_teacher
+  ),
+  ~ print(
+    ggplot(.x, aes(scale, mean)) +
+      geom_point(
+        col = "blue",
+        fill = "blue",
+        alpha = .5,
+        size = 3,
+        shape = 23
+      ) +
+      geom_label_repel(
+        aes(label = mean),
+        hjust = .7,
+        vjust = -1,
+        label.padding = unit(0.1, "lines"),
+        size = 4,
+        col = "blue"
+      ) +
+      scale_y_continuous(breaks = seq(0, 15, by = 1), limits = c(0, 15)) +
+      labs(
+        title = str_c(
+          "Raw Score Means (with SDs) - ",
+          str_replace(str_sub(.y, 10), "_", " form, "),
+          " report"
+        ),
+        x = "Scale",
+        y = "Raw Score Mean"
+      ) +
+      geom_errorbar(
+        aes(ymin = mean - sd, ymax = mean + sd),
+        col = "red",
+        size = 0.2,
+        width = 0.2
+      )
   )
-print(mean_plot)
+) %>%
+  imap( ~ ggsave(plot = .x, file = here(str_c("PLOTS/", .y, ".pdf"))))
