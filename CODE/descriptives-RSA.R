@@ -119,7 +119,9 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
         #   TRUE ~ var
         # ),
         data = case_when(rownames(.) == "1" ~ ..2,
-                         T ~ NA_character_)
+                         T ~ NA_character_),
+        # across(c(var, cat),
+        #        ~ as.factor(.))
       ) %>%
       select(data, var, cat, n)
   ) %>%
