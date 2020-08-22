@@ -2,13 +2,56 @@ suppressMessages(library(here))
 suppressMessages(library(tidyverse))
 suppressMessages(library(psych))
 
-input <- list(df1 = mtcars, df2 = iris)
-
-map(input, ~ deparse(substitute(.x)))
-
-
 demo_table_input <- lst(freq_demos_child_parent, freq_demos_child_teacher)
 
+# next code block implements list-column workflow to get desired histograms for
+# single freq_demos table, next challenge is to interate this over list of
+# freq_demo tables
+temp3 <-
+  tibble(file = deparse(substitute(freq_demos_child_parent)),
+         var = map(var_order, ~ freq_demos_child_parent %>% filter(var == .x))) %>%
+  mutate(plots = map(
+    var,
+    ~ ggplot(data = .x, aes(cat, n)) +
+      geom_col(col = "red",
+               fill = "blue",
+               alpha = .2) +
+      scale_y_continuous(breaks = seq(0, 1000, 50)) +
+      labs(title = str_c(
+        "Demo Counts - ",
+        str_replace(str_sub(
+          file
+          , 12), "_", " form, "),
+        " report"
+      )) +
+      scale_x_discrete(limits = .x %>% pull(cat)) +
+      theme(panel.grid.minor = element_blank(),
+            axis.title.x = element_blank()) +
+      facet_wrap(vars(var))
+  ))
+
+
+temp1 <- tibble(file = names(demo_table_input), data1 = demo_table_input) %>% 
+  mutate(plots = map(data1, 
+          ~ ggplot(data = .x, aes(cat, n)) +
+            geom_col(col = "red",
+                     fill = "blue",
+                     alpha = .2) +
+            scale_y_continuous(breaks = seq(0, 1000, 50)) +
+            # labs(title = str_c(
+            #   "Demo Counts - ",
+            #   str_replace(str_sub(
+            #     names(.x)
+            #     , 12), "_", " form, "),
+            #   " report"
+            # )) +
+            # scale_x_discrete(limits = .x %>% pull(cat))) +
+            theme(panel.grid.minor = element_blank(),
+                  axis.title.x = element_blank()) +
+            facet_wrap(vars(var))#,
+          # .y = .x
+      )
+)
 
 demo_hist <- map(
   demo_table_input,
@@ -22,9 +65,9 @@ demo_hist <- map(
         scale_y_continuous(breaks = seq(0, 1000, 50)) +
         labs(title = str_c(
           "Demo Counts - ",
-          str_replace(str_sub(deparse(quote(
-            .y
-          )), 12), "_", " form, "),
+          str_replace(str_sub(
+            names(.y)
+          , 12), "_", " form, "),
           " report"
         )) +
         scale_x_discrete(limits = (.y %>% filter(var == .x) %>% pull(cat))) +
