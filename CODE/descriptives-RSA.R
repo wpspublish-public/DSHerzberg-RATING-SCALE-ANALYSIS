@@ -129,20 +129,40 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
   list2env(envir = .GlobalEnv)
 
 
-# NEXT: REPLICATE WITHIN imap AS WITH MEANS PLOTS
-# print and save histograms of demo counts
-ggplot(data = freq_demos_child_parent, aes(cat, n)) +
-  geom_histogram(
-    stat = "identity",
-    binwidth = .2,
-    col = "red",
-    fill = "blue",
-    alpha = .2
-  ) +
-  scale_y_continuous(breaks = seq(0, 1000, 50)) +
-  labs(title = "Frequency Distribution") + 
-  theme(panel.grid.minor=element_blank()) +
-  facet_wrap(vars(var))
+# NEXT: save 24 histograms with distinct filenames
+# print histograms of demo counts
+lst(
+  freq_demos_child_parent,
+  freq_demos_child_teacher,
+  freq_demos_teen_parent,
+  freq_demos_teen_teacher
+) %>% 
+  map(~
+        tibble(
+          var = map(var_order, ~ .y %>% filter(var == .x), .y = .x))
+  ) %>% 
+  tibble(file = names(.), data1 = .) %>% 
+  unnest(cols = c(data1)) %>%
+  mutate(plots = map2(
+    var, file,
+    ~ print(
+      ggplot(data = .x, aes(cat, n)) +
+        geom_col(col = "red",
+                 fill = "blue",
+                 alpha = .2) +
+        scale_y_continuous(breaks = seq(0, 1000, 50)) +
+        labs(title = str_c(
+          "Demo Counts - ",
+          str_replace(str_sub(
+            .y
+            , 12), "_", " form, "),
+          " report"
+        )) +
+        scale_x_discrete(limits = .x %>% pull(cat)) +
+        theme(panel.grid.minor = element_blank(),
+              axis.title.x = element_blank()) +
+        facet_wrap(vars(var))
+    )))
 
 # raw score descriptives tables
 list(mget(str_c("data_RS_sim_", data_name_suffix)),

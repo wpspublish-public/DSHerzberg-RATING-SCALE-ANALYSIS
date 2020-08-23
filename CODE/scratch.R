@@ -4,6 +4,39 @@ suppressMessages(library(psych))
 
 demo_table_input <- lst(freq_demos_child_parent, freq_demos_child_teacher)
 
+lst(
+    freq_demos_child_parent,
+    freq_demos_child_teacher,
+    freq_demos_teen_parent,
+    freq_demos_teen_teacher
+  ) %>% 
+  map(~
+        tibble(
+          var = map(var_order, ~ .y %>% filter(var == .x), .y = .x))
+  ) %>% 
+  tibble(file = names(.), data1 = .) %>% 
+  unnest(cols = c(data1)) %>%
+  mutate(plots = map2(
+    var, file,
+    ~ print(
+      ggplot(data = .x, aes(cat, n)) +
+      geom_col(col = "red",
+               fill = "blue",
+               alpha = .2) +
+      scale_y_continuous(breaks = seq(0, 1000, 50)) +
+      labs(title = str_c(
+        "Demo Counts - ",
+        str_replace(str_sub(
+          .y
+          , 12), "_", " form, "),
+        " report"
+      )) +
+      scale_x_discrete(limits = .x %>% pull(cat)) +
+      theme(panel.grid.minor = element_blank(),
+            axis.title.x = element_blank()) +
+      facet_wrap(vars(var))
+  )))
+
 # next code block implements list-column workflow to get desired histograms for
 # single freq_demos table, next challenge is to interate this over list of
 # freq_demo tables
