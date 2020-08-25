@@ -22,7 +22,7 @@ temp1 <- lst(
                    fill = "blue",
                    alpha = .2,
                    width = .3) +
-          scale_y_continuous(breaks = seq(0, 1000, 50)) +
+          scale_y_continuous(breaks = seq(0, max(.x$n), 50)) +
           labs(subtitle = str_c(
             "Demo Counts - ",
             str_replace(str_sub(.y
@@ -36,19 +36,15 @@ temp1 <- lst(
       # )
   ))
 
-plots <- temp1$plots
-
-temp2 <- ggpubr::ggarrange(plotlist = plots, ncol = 2, nrow = 2)
-
-ggpubr::ggexport(temp2, filename = here("PLOTS/temp2.pdf"))
-
-vec <- unique(temp1$file)
-
+# NOTE: temp3 and temp4 can be combined into a single function, they'll fail the
+# identical test because ggplot generate different environments, but plot output
+# is identical (test for this)
 temp3 <- map(unique(temp1$file), ~ temp1 %>% filter(file == .x))
+temp4 <- map(temp3, ~ ggpubr::ggarrange(plotlist = .x$plots, ncol = 2, nrow = 2))
 
-temp4 <- map(temp3, ~ ggpubr::ggarrange(plotlist = plots, ncol = 2, nrow = 2))
+temp5 <- map(
+  temp3, 
+  ~ ggpubr::ggarrange(plotlist = .x$plots, ncol = 2, nrow = 2))
 
-# NEXT: figure out why next line is yielding four separate pdfs, each containing
-# all the graphs, instead of only the 6 that should go in that pdf
 
-map2(temp4, vec, ~ ggpubr::ggexport(.x, filename = here(str_c("PLOTS/", .y, ".pdf"))))
+map2(temp5, unique(temp1$file), ~ ggpubr::ggexport(.x, filename = here(str_c("PLOTS/", .y, ".pdf"))))
