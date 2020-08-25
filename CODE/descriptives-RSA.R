@@ -2,6 +2,7 @@ suppressMessages(library(here))
 suppressMessages(suppressWarnings(library(tidyverse)))
 suppressMessages(library(psych))
 library(ggrepel)
+library(ggpubr)
 
 # read data from remote URL
 urlRemote_path  <- "https://raw.githubusercontent.com/"

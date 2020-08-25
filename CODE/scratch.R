@@ -2,164 +2,53 @@ suppressMessages(library(here))
 suppressMessages(library(tidyverse))
 suppressMessages(library(psych))
 
-demo_table_input <- lst(freq_demos_child_parent, freq_demos_child_teacher)
-
-lst(
-    freq_demos_child_parent,
-    freq_demos_child_teacher,
-    freq_demos_teen_parent,
-    freq_demos_teen_teacher
-  ) %>% 
-  map(~
-        tibble(
-          var = map(var_order, ~ .y %>% filter(var == .x), .y = .x))
-  ) %>% 
-  tibble(file = names(.), data1 = .) %>% 
+temp1 <- lst(
+  freq_demos_child_parent,
+  freq_demos_child_teacher,
+  freq_demos_teen_parent,
+  freq_demos_teen_teacher
+) %>%
+  map( ~
+         tibble(var = map(var_order, ~ .y %>% filter(var == .x), .y = .x))) %>%
+  tibble(file = names(.), data1 = .) %>%
   unnest(cols = c(data1)) %>%
   mutate(plots = map2(
-    var, file,
-    ~ print(
-      ggplot(data = .x, aes(cat, n)) +
-      geom_col(col = "red",
-               fill = "blue",
-               alpha = .2) +
-      scale_y_continuous(breaks = seq(0, 1000, 50)) +
-      labs(title = str_c(
-        "Demo Counts - ",
-        str_replace(str_sub(
-          .y
-          , 12), "_", " form, "),
-        " report"
-      )) +
-      scale_x_discrete(limits = .x %>% pull(cat)) +
-      theme(panel.grid.minor = element_blank(),
-            axis.title.x = element_blank()) +
-      facet_wrap(vars(var))
-  )))
-
-# next code block implements list-column workflow to get desired histograms for
-# single freq_demos table, next challenge is to interate this over list of
-# freq_demo tables
-temp3 <-
-  tibble(file = deparse(substitute(freq_demos_child_parent)),
-         var = map(var_order, ~ freq_demos_child_parent %>% filter(var == .x))) %>%
-  mutate(plots = map(
     var,
-    ~ ggplot(data = .x, aes(cat, n)) +
-      geom_col(col = "red",
-               fill = "blue",
-               alpha = .2) +
-      scale_y_continuous(breaks = seq(0, 1000, 50)) +
-      labs(title = str_c(
-        "Demo Counts - ",
-        str_replace(str_sub(
-          file
-          , 12), "_", " form, "),
-        " report"
-      )) +
-      scale_x_discrete(limits = .x %>% pull(cat)) +
-      theme(panel.grid.minor = element_blank(),
-            axis.title.x = element_blank()) +
-      facet_wrap(vars(var))
+    file,
+    ~
+      # print(
+        ggplot(data = .x, aes(cat, n)) +
+          geom_col(col = "red",
+                   fill = "blue",
+                   alpha = .2,
+                   width = .3) +
+          scale_y_continuous(breaks = seq(0, 1000, 50)) +
+          labs(subtitle = str_c(
+            "Demo Counts - ",
+            str_replace(str_sub(.y
+                                , 12), "_", " form, "),
+            " report"
+          )) +
+          scale_x_discrete(limits = .x %>% pull(cat)) +
+          theme(panel.grid.minor = element_blank(),
+                axis.title.x = element_blank()) +
+          facet_wrap(vars(var))
+      # )
   ))
 
+plots <- temp1$plots
 
-temp1 <- tibble(file = names(demo_table_input), data1 = demo_table_input) %>% 
-  mutate(plots = map(data1, 
-          ~ ggplot(data = .x, aes(cat, n)) +
-            geom_col(col = "red",
-                     fill = "blue",
-                     alpha = .2) +
-            scale_y_continuous(breaks = seq(0, 1000, 50)) +
-            # labs(title = str_c(
-            #   "Demo Counts - ",
-            #   str_replace(str_sub(
-            #     names(.x)
-            #     , 12), "_", " form, "),
-            #   " report"
-            # )) +
-            # scale_x_discrete(limits = .x %>% pull(cat))) +
-            theme(panel.grid.minor = element_blank(),
-                  axis.title.x = element_blank()) +
-            facet_wrap(vars(var))#,
-          # .y = .x
-      )
-)
+temp2 <- ggpubr::ggarrange(plotlist = plots, ncol = 2, nrow = 2)
 
-demo_hist <- map(
-  demo_table_input,
-  ~
-    var_order %>%
-    map(
-      ~ ggplot(data = (.y %>% filter(var == .x)), aes(cat, n)) +
-        geom_col(col = "red",
-                 fill = "blue",
-                 alpha = .2) +
-        scale_y_continuous(breaks = seq(0, 1000, 50)) +
-        labs(title = str_c(
-          "Demo Counts - ",
-          str_replace(str_sub(
-            names(.y)
-          , 12), "_", " form, "),
-          " report"
-        )) +
-        scale_x_discrete(limits = (.y %>% filter(var == .x) %>% pull(cat))) +
-        theme(panel.grid.minor = element_blank(),
-              axis.title.x = element_blank()) +
-        facet_wrap(vars(var)),
-      .y = .x
-    )
-)
-demo_hist
+ggpubr::ggexport(temp2, filename = here("PLOTS/temp2.pdf"))
 
-# demo_hist <- var_order %>%
-#   map(
-#     ~ ggplot(data = (
-#       freq_demos_child_parent %>% filter(var == .x)
-#     ), aes(cat, n)) +
-#       geom_col(col = "red",
-#                fill = "blue",
-#                alpha = .2) +
-#       scale_y_continuous(breaks = seq(0, 1000, 50)) +
-#       labs(
-#         title = str_c(
-#           "Demo Counts - ",
-#           str_replace(str_sub(deparse(quote(freq_demos_child_parent)), 12), "_", " form, "),
-#           " report"
-#         )) +
-#       scale_x_discrete(limits = (
-#         freq_demos_child_parent %>% filter(var == .x) %>% pull(cat)
-#       )) +
-#       theme(panel.grid.minor = element_blank(),
-#             axis.title.x = element_blank()) +
-#       facet_wrap(vars(var))
-#   )
-# demo_hist
+vec <- unique(temp1$file)
 
-imap(
-  .x = lst(
-    freq_demos_child_parent,
-    freq_demos_child_teacher,
-    freq_demos_teen_parent,
-    freq_demos_teen_teacher
-  ),
-  ~ print(
-    ggplot(.x, aes(cat, n)) +
-      geom_col(
-        col = "red",
-        fill = "blue",
-        alpha = .2
-      ) +
-      scale_y_continuous(breaks = seq(0, 1000, 50)) +
-      labs(title = "Frequency Distribution") + 
-      theme(panel.grid.minor=element_blank(),
-            axis.title.x=element_blank()) +
-      facet_wrap(vars(var))
-  )
-) %>%
-  imap( ~ ggsave(plot = .x, file = here(str_c("PLOTS/", .y, ".pdf"))))
+temp3 <- map(unique(temp1$file), ~ temp1 %>% filter(file == .x))
 
+temp4 <- map(temp3, ~ ggpubr::ggarrange(plotlist = plots, ncol = 2, nrow = 2))
 
+# NEXT: figure out why next line is yielding four separate pdfs, each containing
+# all the graphs, instead of only the 6 that should go in that pdf
 
-
-
+map2(temp4, vec, ~ ggpubr::ggexport(.x, filename = here(str_c("PLOTS/", .y, ".pdf"))))
