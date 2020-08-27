@@ -21,7 +21,6 @@ data_RS_sim_teen_teacher <- suppressMessages(read_csv(url(
   str_c(urlRemote_path, github_path, "data-RS-sim-teen-teacher.csv")
 )))
 
-
 # extract elements unique to each data set: name suffix, item cols, item cats
 data_name_suffix <- c("child_parent", "child_teacher", "teen_parent", "teen_teacher")
 item_col_prefix <- c("cp", "ct", "tp", "tt")
@@ -42,7 +41,7 @@ item_cats <- replicate(
 
 ####### START HERE
 
-# akrun solution mget() returns the two data objects whose string names are
+# akrun solution mget() returns the data objects whose string names are
 # contained within str_c(). These objects are put into a list, to be one of the
 # inputs that pmap() iterates over. Now all three inputs to pmap() are lists
 # containing named objects
@@ -61,16 +60,16 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
       # unquoted with `!!`
       select(!!..2) %>%
       # `pivot_longer` is an updated version of `gather`
-      pivot_longer(everything(), names_to = 'var', values_to = 'value') %>%
-      count(var, value) %>%
+      pivot_longer(everything(), names_to = 'item', values_to = 'value') %>%
+      count(item, value) %>%
       # `pivot_wider` is an updated version of `spread`
       pivot_wider(names_from = value, values_from = n) %>%
-      arrange(match(var,!!..2)) %>%
+      arrange(match(item,!!..2)) %>%
       # `..3` refers to `item_cats`, the list containing the char vecs that
       # name the item response categories for each input data set.
       mutate(data = case_when(rownames(.) == "1" ~ ..4,
                               T ~ NA_character_)) %>%
-      select(data, var,!!..3)
+      select(data, item,!!..3)
   ) %>%
   # trying to reduce my use of `assign()` to place data objecds intop the global
   # environment. Let `pmap()` output a list of dfs `freq_item_val_tables`, then
@@ -79,6 +78,20 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
   
   # `list2env()` extracts the data frames from the list into the global environment
   list2env(envir = .GlobalEnv)
+
+# use iwalk() to iterate over a list of four data frames and save them to csv.
+# "i" so we can map a function to both the data frames (.x) and their names(.y).
+# "walk" because we don't need the mapping operation to print the data frames to
+# the console. What we care about is the "side effect" of the data frames being
+# saved as .csv.
+iwalk(mget(str_c("freq_item_val_", data_name_suffix)),
+      ~ write_csv(.x, here(
+        str_c("OUTPUT-FILES/TABLES/",
+              str_replace_all(.y, "_", "-"),
+              ".csv")
+      ),
+      na = ""))
+
 
 # demo tables
 var_order <- c("age_range", "gender", "educ", "ethnic", "region", "clin_status")
@@ -110,60 +123,89 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
       count(var, cat) %>%
       arrange(match(var, var_order), match(cat, cat_order)) %>%
       mutate(
-        # var = case_when(
-        #   lag(var) == "age_range" & var == "age_range" ~ "",
-        #   lag(var) == "gender" & var == "gender" ~ "",
-        #   lag(var) == "educ" & var == "educ" ~ "",
-        #   lag(var) == "ethnic" & var == "ethnic" ~ "",
-        #   lag(var) == "region" & var == "region" ~ "",
-        #   lag(var) == "clin_status" & var == "clin_status" ~ "",
-        #   TRUE ~ var
-        # ),
+        var = case_when(
+          lag(var) == "age_range" & var == "age_range" ~ NA_character_,
+          lag(var) == "gender" & var == "gender" ~ NA_character_,
+          lag(var) == "educ" & var == "educ" ~ NA_character_,
+          lag(var) == "ethnic" & var == "ethnic" ~ NA_character_,
+          lag(var) == "region" & var == "region" ~ NA_character_,
+          lag(var) == "clin_status" & var == "clin_status" ~ NA_character_,
+          TRUE ~ var
+        ),
         data = case_when(rownames(.) == "1" ~ ..2,
-                         T ~ NA_character_),
-        # across(c(var, cat),
-        #        ~ as.factor(.))
+                         T ~ NA_character_)
+        # data = ..2
       ) %>%
       select(data, var, cat, n)
   ) %>%
   set_names(str_c("freq_demos_", data_name_suffix)) %>%
   list2env(envir = .GlobalEnv)
 
+iwalk(mget(str_c("freq_demos_", data_name_suffix)),
+      ~ write_csv(.x, here(
+        str_c("OUTPUT-FILES/TABLES/",
+              str_replace_all(.y, "_", "-"),
+              ".csv")
+      ),
+      na = ""))
 
-# NEXT: save 24 histograms with distinct filenames
-# print histograms of demo counts
-lst(
+# fill NA values of $data with file name, for creation of histograms in next snippet
+map(mget(str_c("freq_demos_", data_name_suffix)), ~ .x %>% 
+   fill(c(data, var))) %>%
+    list2env(envir = .GlobalEnv)
+
+
+# This snippet creates a data frame with three columns: file: name of the input
+# demographic table, by form and reporter var: list-column containing 24 demo
+# tables by var x cat plots: list-column containing 24 ggplots (histograms), one
+# for each demo table. It prints these 24 histograms to the RStudio plots pane.
+hist_list <- lst(
   freq_demos_child_parent,
   freq_demos_child_teacher,
   freq_demos_teen_parent,
   freq_demos_teen_teacher
-) %>% 
-  map(~
-        tibble(
-          var = map(var_order, ~ .y %>% filter(var == .x), .y = .x))
-  ) %>% 
-  tibble(file = names(.), data1 = .) %>% 
+) %>%
+  map( ~
+         tibble(var = map(var_order, ~ .y %>% filter(var == .x), .y = .x))) %>%
+  tibble(file = names(.), data1 = .) %>%
   unnest(cols = c(data1)) %>%
   mutate(plots = map2(
-    var, file,
-    ~ print(
-      ggplot(data = .x, aes(cat, n)) +
-        geom_col(col = "red",
-                 fill = "blue",
-                 alpha = .2) +
-        scale_y_continuous(breaks = seq(0, 1000, 50)) +
-        labs(title = str_c(
-          "Demo Counts - ",
-          str_replace(str_sub(
-            .y
-            , 12), "_", " form, "),
-          " report"
-        )) +
-        scale_x_discrete(limits = .x %>% pull(cat)) +
-        theme(panel.grid.minor = element_blank(),
-              axis.title.x = element_blank()) +
-        facet_wrap(vars(var))
-    )))
+    var,
+    file,
+    ~
+      print(
+        ggplot(data = .x, aes(cat, n)) +
+          geom_col(col = "red",
+                   fill = "blue",
+                   alpha = .2,
+                   width = .3) +
+          scale_y_continuous(breaks = seq(0, max(.x$n), 50)) +
+          labs(subtitle = str_c(
+            "Demo Counts - ",
+            str_replace(str_sub(.y
+                                , 12), "_", " form, "),
+            " report"
+          )) +
+          scale_x_discrete(limits = .x %>% pull(cat)) +
+          theme(panel.grid.minor = element_blank(),
+                axis.title.x = element_blank()) +
+          facet_wrap(vars(var))
+      )
+  ))
+
+# hist_plot_prep is a list, in which .x argument to the outer map() call is a list
+# containing four data frames, hist_list divided into separate dfs for the four
+# age_range x rater combos. This list is supplied as the .x argument to the
+# inner map() call, which applies ggarrange() to put the plots of plots of the
+# .x list into muliple plot per page format suitable for saving as .pdf
+hist_plot_prep <- map(
+  map(unique(hist_list$file), ~ hist_list %>% filter(file == .x)), 
+  ~ ggpubr::ggarrange(plotlist = .x$plots, ncol = 2, nrow = 2))
+
+# this snippet exports and saves the .pdfs.
+walk2(hist_plot_prep,
+     unique(hist_list$file),
+     ~ ggpubr::ggexport(.x, filename = here(str_c("OUTPUT-FILES/PLOTS/", .y, ".pdf"))))
 
 # raw score descriptives tables
 list(mget(str_c("data_RS_sim_", data_name_suffix)),
@@ -229,4 +271,4 @@ imap(
       )
   )
 ) %>%
-  imap( ~ ggsave(plot = .x, file = here(str_c("PLOTS/", .y, ".pdf"))))
+  imap( ~ ggsave(plot = .x, file = here(str_c("OUTPUT-FILES/PLOTS/", .y, ".pdf"))))

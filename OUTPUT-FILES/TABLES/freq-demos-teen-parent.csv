@@ -1,0 +1,20 @@
+data,var,cat,n
+teen_parent,age_range,13 to 15 yo,497
+,,16 to 18 yo,503
+,gender,male,483
+,,female,517
+,educ,no_HS,127
+,,HS_grad,284
+,,some_college,285
+,,BA_plus,304
+,ethnic,hispanic,218
+,,asian,40
+,,black,127
+,,white,558
+,,other,57
+,region,northeast,173
+,,south,367
+,,midwest,223
+,,west,237
+,clin_status,typ,802
+,,clin,198

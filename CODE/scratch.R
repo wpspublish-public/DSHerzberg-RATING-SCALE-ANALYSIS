@@ -2,7 +2,11 @@ suppressMessages(library(here))
 suppressMessages(library(tidyverse))
 suppressMessages(library(psych))
 
-temp1 <- lst(
+# This code creates a data frame with three columns:
+# file: name of the input demographic table, by form and reporter
+# var: list-column containing 24 demo tables by var x cat
+# plots: list-column containing 24 ggplots (histograms), one for each demo table
+hist_list <- lst(
   freq_demos_child_parent,
   freq_demos_child_teacher,
   freq_demos_teen_parent,
@@ -16,7 +20,7 @@ temp1 <- lst(
     var,
     file,
     ~
-      # print(
+      print(
         ggplot(data = .x, aes(cat, n)) +
           geom_col(col = "red",
                    fill = "blue",
@@ -33,18 +37,19 @@ temp1 <- lst(
           theme(panel.grid.minor = element_blank(),
                 axis.title.x = element_blank()) +
           facet_wrap(vars(var))
-      # )
+      )
   ))
 
-# NOTE: temp3 and temp4 can be combined into a single function, they'll fail the
-# identical test because ggplot generate different environments, but plot output
-# is identical (test for this)
-temp3 <- map(unique(temp1$file), ~ temp1 %>% filter(file == .x))
-temp4 <- map(temp3, ~ ggpubr::ggarrange(plotlist = .x$plots, ncol = 2, nrow = 2))
-
-temp5 <- map(
-  temp3, 
+# hist_plot_prep is a list, in which .x argument to the outer map() call is a list
+# containing four data frames, hist_list divided into separate dfs for the four
+# age_range x rater combos. This list is supplied as the .x argument to the
+# inner map() call, which applies ggarrange() to put the plots of plots of the
+# .x list into muliple plot per page format suitable for saving as .pdf
+hist_plot_prep <- map(
+  map(unique(hist_list$file), ~ hist_list %>% filter(file == .x)), 
   ~ ggpubr::ggarrange(plotlist = .x$plots, ncol = 2, nrow = 2))
 
-
-map2(temp5, unique(temp1$file), ~ ggpubr::ggexport(.x, filename = here(str_c("PLOTS/", .y, ".pdf"))))
+# this snippet exports and saves the .pdfs.
+map2(hist_plot_prep,
+     unique(hist_list$file),
+     ~ ggpubr::ggexport(.x, filename = here(str_c("PLOTS/", .y, ".pdf"))))

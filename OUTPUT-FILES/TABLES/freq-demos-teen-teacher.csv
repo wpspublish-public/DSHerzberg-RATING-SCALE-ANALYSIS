@@ -1,0 +1,20 @@
+data,var,cat,n
+teen_teacher,age_range,13 to 15 yo,509
+,,16 to 18 yo,491
+,gender,male,478
+,,female,522
+,educ,no_HS,133
+,,HS_grad,292
+,,some_college,285
+,,BA_plus,290
+,ethnic,hispanic,238
+,,asian,41
+,,black,137
+,,white,521
+,,other,63
+,region,northeast,149
+,,south,403
+,,midwest,222
+,,west,226
+,clin_status,typ,785
+,,clin,215

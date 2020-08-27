@@ -1,0 +1,20 @@
+data,var,cat,n
+child_teacher,age_range,5 to 8 yo,503
+,,9 to 12 yo,497
+,gender,male,451
+,,female,549
+,educ,no_HS,144
+,,HS_grad,249
+,,some_college,297
+,,BA_plus,310
+,ethnic,hispanic,231
+,,asian,54
+,,black,141
+,,white,516
+,,other,58
+,region,northeast,163
+,,south,358
+,,midwest,242
+,,west,237
+,clin_status,typ,820
+,,clin,180

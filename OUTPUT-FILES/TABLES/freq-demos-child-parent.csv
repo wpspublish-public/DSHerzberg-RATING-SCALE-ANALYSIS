@@ -1,0 +1,20 @@
+data,var,cat,n
+child_parent,age_range,5 to 8 yo,492
+,,9 to 12 yo,508
+,gender,male,476
+,,female,524
+,educ,no_HS,133
+,,HS_grad,247
+,,some_college,309
+,,BA_plus,311
+,ethnic,hispanic,252
+,,asian,48
+,,black,146
+,,white,490
+,,other,64
+,region,northeast,173
+,,south,367
+,,midwest,218
+,,west,242
+,clin_status,typ,802
+,,clin,198
