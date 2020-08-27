@@ -26,6 +26,28 @@ data_name_suffix <- c("child_parent", "child_teacher", "teen_parent", "teen_teac
 item_col_prefix <- c("cp", "ct", "tp", "tt")
 scale_col_prefix <- toupper(item_col_prefix)
 
+# demo tables
+var_order <- c("age_range", "gender", "educ", "ethnic", "region", "clin_status")
+
+cat_order <- c(
+  # age_range
+  "5 to 8 yo", "9 to 12 yo", "13 to 15 yo", 
+  "16 to 18 yo",
+  # gender
+  "male", "female",
+  # educ
+  "no_HS","HS_grad", "some_college", "BA_plus", 
+  # ethnic
+  "hispanic","asian", "black", "white", "other", 
+  # region
+  "northeast","south", "midwest", "west",
+  # clin_status
+  "typ", "clin", 
+  # items
+  "never", "occasionally","frequently", "always"
+)
+
+
 item_cols <- item_col_prefix %>% 
   map(
     ~ str_c(.x, "i", str_pad(as.character(1:50), 2, side = "left", pad = "0"))
@@ -92,27 +114,6 @@ iwalk(mget(str_c("freq_item_val_", data_name_suffix)),
       ),
       na = ""))
 
-
-# demo tables
-var_order <- c("age_range", "gender", "educ", "ethnic", "region", "clin_status")
-
-cat_order <- c(
-  # age_range
-  "5 to 8 yo", "9 to 12 yo", "13 to 15 yo", 
-  "16 to 18 yo",
-  # gender
-  "male", "female",
-  # educ
-  "no_HS","HS_grad", "some_college", "BA_plus", 
-  # ethnic
-  "hispanic","asian", "black", "white", "other", 
-  # region
-  "northeast","south", "midwest", "west",
-  # clin_status
-  "typ", "clin", 
-  # items
-  "never", "occasionally","frequently", "always"
-)
 
 list(mget(str_c("data_RS_sim_", data_name_suffix)),
      data_name_suffix) %>%
@@ -204,8 +205,11 @@ hist_plot_prep <- map(
 
 # this snippet exports and saves the .pdfs.
 walk2(hist_plot_prep,
-     unique(hist_list$file),
-     ~ ggpubr::ggexport(.x, filename = here(str_c("OUTPUT-FILES/PLOTS/", .y, ".pdf"))))
+      unique(hist_list$file),
+      ~ ggpubr::ggexport(.x, filename = here(
+        str_c("OUTPUT-FILES/PLOTS/", str_replace_all(.y, "_", "-"),
+              ".pdf")
+      )))
 
 # raw score descriptives tables
 list(mget(str_c("data_RS_sim_", data_name_suffix)),
@@ -217,15 +221,27 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
       rownames_to_column() %>%
       rename(scale = rowname) %>%
       mutate(
-        # data = case_when(rownames(.) == "1" ~ ..2,
-        #                  T ~ NA_character_),
-        data = ..2,
+        data = case_when(rownames(.) == "1" ~ ..2,
+                         T ~ NA_character_),
+        # data = ..2,
         across(c(mean, sd),
                ~ round(., 2))
       ) %>%
       select(data, scale, n, mean, sd)
   ) %>%
   set_names(str_c("raw_desc_", data_name_suffix)) %>%
+  list2env(envir = .GlobalEnv)
+
+iwalk(mget(str_c("raw_desc_", data_name_suffix)),
+      ~ write_csv(.x, here(
+        str_c("OUTPUT-FILES/TABLES/",
+              str_replace_all(.y, "_", "-"),
+              ".csv")
+      ),
+      na = ""))
+
+map(mget(str_c("raw_desc_", data_name_suffix)), ~ .x %>% 
+      fill(data)) %>%
   list2env(envir = .GlobalEnv)
 
 # print and save plots of raw score means, SDs by scale
@@ -271,4 +287,7 @@ imap(
       )
   )
 ) %>%
-  imap( ~ ggsave(plot = .x, file = here(str_c("OUTPUT-FILES/PLOTS/", .y, ".pdf"))))
+  iwalk(~ ggsave(plot = .x, file = here(
+    str_c("OUTPUT-FILES/PLOTS/",
+          str_replace_all(.y, "_", "-"), ".pdf")
+  )))
