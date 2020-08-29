@@ -437,9 +437,69 @@ item_cats &lt;- replicate(
   )  %&gt;% 
   set_names(str_c(&quot;item_cats_&quot;, data_name_suffix))</code></pre>
 </div>
+<div id="commented-snippets" class="section level6">
+<h6>COMMENTED SNIPPETS</h6>
+<p>Load packages for file path specification (<code>here</code>), data wrangling (<code>tidyverse</code>) psychometric data simulation and analysis (<code>psych</code>), plot labeling (<code>ggrepel</code>), and formatting plots for export as .pdf (<code>ggpubr</code>).</p>
+<pre class="r"><code>suppressMessages(library(here))
+suppressMessages(suppressWarnings(library(tidyverse)))
+suppressMessages(library(psych))
+library(ggrepel)
+library(ggpubr)</code></pre>
+<p>Specify file paths and retrieve data from a remote host. The script reads in four input files consisting of simulated rating-scale (<code>RS</code>) data:</p>
+<ul>
+<li><code>data-RS-sim-child-parent.csv</code>: <code>child</code> age range (5-12 yo), <code>parent</code> report</li>
+<li><code>data-RS-sim-child-teacher</code>: <code>child</code> age range (5-12 yo), <code>teacher</code> report</li>
+<li><code>data-RS-sim-teen-parent.csv</code>: <code>teen</code> age range (13-18 yo), <code>parent</code> report</li>
+<li><code>data-RS-sim-teen-teacher.csv</code>: <code>teen</code> age range (13-18 yo), <code>teacher</code> report</li>
+</ul>
+<pre class="r"><code>urlRemote_path  &lt;- &quot;https://raw.githubusercontent.com/&quot;
+github_path &lt;- &quot;DSHerzberg/RATING-SCALE-ANALYSIS/master/INPUT-FILES/&quot;
+
+data_RS_sim_child_parent &lt;- suppressMessages(read_csv(url(
+  str_c(urlRemote_path, github_path, &quot;data-RS-sim-child-parent.csv&quot;)
+)))
+data_RS_sim_child_teacher &lt;- suppressMessages(read_csv(url(
+  str_c(urlRemote_path, github_path, &quot;data-RS-sim-child-teacher.csv&quot;)
+)))
+data_RS_sim_teen_parent &lt;- suppressMessages(read_csv(url(
+  str_c(urlRemote_path, github_path, &quot;data-RS-sim-teen-parent.csv&quot;)
+)))
+data_RS_sim_teen_teacher &lt;- suppressMessages(read_csv(url(
+  str_c(urlRemote_path, github_path, &quot;data-RS-sim-teen-teacher.csv&quot;)
+)))</code></pre>
+<p>Initialize vectors containing file, variable, and category names, abbrievations, and pre/suffixes.</p>
+<pre class="r"><code>data_name_suffix &lt;- c(&quot;child_parent&quot;, &quot;child_teacher&quot;, &quot;teen_parent&quot;, &quot;teen_teacher&quot;)
+item_col_prefix &lt;- c(&quot;cp&quot;, &quot;ct&quot;, &quot;tp&quot;, &quot;tt&quot;)
+scale_col_prefix &lt;- toupper(item_col_prefix)
+var_order &lt;- c(&quot;age_range&quot;, &quot;gender&quot;, &quot;educ&quot;, &quot;ethnic&quot;, &quot;region&quot;, &quot;clin_status&quot;)
+cat_order &lt;- c(
+  &quot;5 to 8 yo&quot;, &quot;9 to 12 yo&quot;, &quot;13 to 15 yo&quot;, 
+  &quot;16 to 18 yo&quot;,
+  &quot;male&quot;, &quot;female&quot;,
+  &quot;no_HS&quot;,&quot;HS_grad&quot;, &quot;some_college&quot;, &quot;BA_plus&quot;, 
+  &quot;hispanic&quot;,&quot;asian&quot;, &quot;black&quot;, &quot;white&quot;, &quot;other&quot;, 
+  &quot;northeast&quot;,&quot;south&quot;, &quot;midwest&quot;, &quot;west&quot;,
+  &quot;typ&quot;, &quot;clin&quot;, 
+  &quot;never&quot;, &quot;occasionally&quot;,&quot;frequently&quot;, &quot;always&quot;
+)</code></pre>
+<p>Initialize a list containing four character vectors whose elements are the item column names for the four input data files. We use <code>purrr::map()</code> to iterate over the vector containing the item column prefixes (<code>item_col_prefix</code>). We apply a lambda (anonymous) function with <code>~</code> to create item column names with an <code>i01</code> to <code>i50</code> nomenclature. <code>stringr::str_pad()</code> pads a numerical sequence with zeros to the left of each number. Note the use of <code>base::as_character()</code> to coerce the number sequence <code>1:50</code> to a sequence of strings. This is wrapped in <code>stringr::str_c()</code> which concatenates the prefixes in <code>item_col_prefix</code> with the zero-padded numbers. We then use <code>purrr::set_names()</code> to name the vectors within the list, again employing <code>str_c()</code> to iteratively concatenate a prefix <code>&quot;item_cols_&quot;</code> with a vector of suffixes <code>data_name_suffix</code>.</p>
+<pre class="r"><code>item_cols &lt;- item_col_prefix %&gt;% 
+  map(
+    ~ str_c(.x, &quot;i&quot;, str_pad(as.character(1:50), 2, side = &quot;left&quot;, pad = &quot;0&quot;))
+  ) %&gt;% 
+  set_names(str_c(&quot;item_cols_&quot;, data_name_suffix))</code></pre>
+<p>We use <code>base::replicate()</code> to return a list (<code>item_cats</code>) containing four identical vectors whose elements are the item rating categories <code>c(&quot;never&quot;, &quot;occasionally&quot;,&quot;frequently&quot;, &quot;always&quot;)</code>. We use <code>set_names()</code> to name the vectors correspondingly to the input data files.</p>
+<pre class="r"><code>item_cats &lt;- replicate(
+  4, 
+  c(&quot;never&quot;, &quot;occasionally&quot;,&quot;frequently&quot;, &quot;always&quot;), 
+  simplify =  F
+  )  %&gt;% 
+  set_names(str_c(&quot;item_cats_&quot;, data_name_suffix))</code></pre>
+</div>
 </div>
 <div id="item-response-frequencies" class="section level4">
 <h4>2. Item Response Frequencies</h4>
+<p>The item response frequency tables provide counts of responses across the four categories for each item. The script generates a separate table for each input data file. These frequency tables are named with the prefix <code>freq_item_val</code> and saved to <code>.csv</code> in the <code>OUTPUT-FILES/TABLES</code> folder.</p>
 <div id="executable-code-1" class="section level6">
 <h6>EXECUTABLE CODE</h6>
 <pre class="r"><code>list(mget(str_c(&quot;data_RS_sim_&quot;, data_name_suffix)),
@@ -467,6 +527,14 @@ iwalk(mget(str_c(&quot;freq_item_val_&quot;, data_name_suffix)),
               &quot;.csv&quot;)
       ),
       na = &quot;&quot;))</code></pre>
+</div>
+<div id="commented-snippets-1" class="section level6">
+<h6>COMMENTED SNIPPETS</h6>
+<p>We first initialize a <code>list</code> containing the objects required to assemble the tables. We use <code>base::mget()</code> to bring the four input data files into the list. Here <code>mget()</code> returns the objects named by the character vector <code>str_c(&quot;data_RS_sim_&quot;, data_name_suffix)</code>, whose elements are the names of the four input files. Also included in this list are the <code>item_cols</code>, <code>item_cats</code>, and <code>data_name_suffix</code> vectors.</p>
+<pre class="r"><code>list(mget(str_c(&quot;data_RS_sim_&quot;, data_name_suffix)),
+     item_cols,
+     item_cats,
+     data_name_suffix) %&gt;%</code></pre>
 </div>
 </div>
 <div id="demographic-frequency-counts" class="section level4">

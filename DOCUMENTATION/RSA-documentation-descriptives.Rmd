@@ -77,10 +77,35 @@ item_cats <- replicate(
   set_names(str_c("item_cats_", data_name_suffix))
 ```
 
+###### COMMENTED SNIPPETS
+Load packages for file path specification (`here`), data wrangling (`tidyverse`) psychometric data simulation and analysis (`psych`), plot labeling (`ggrepel`), and formatting plots for export as .pdf (`ggpubr`).
+```{r descriptives-load, echo = 1:5, eval = F}
+```
+Specify file paths and retrieve data from a remote host. The script reads in four input files consisting of simulated rating-scale (`RS`) data:
+
+* `data-RS-sim-child-parent.csv`: `child` age range (5-12 yo), `parent` report
+* `data-RS-sim-child-teacher`: `child` age range (5-12 yo), `teacher` report
+* `data-RS-sim-teen-parent.csv`: `teen` age range (13-18 yo), `parent` report
+* `data-RS-sim-teen-teacher.csv`: `teen` age range (13-18 yo), `teacher` report
+
+```{r descriptives-load, echo = 7:21, eval = F}
+```
+Initialize vectors containing file, variable, and category names, abbrievations, and pre/suffixes.
+```{r descriptives-load, echo = 23:36, eval = F}
+```
+Initialize a list containing four character vectors whose elements are the item column names for the four input data files. We use `purrr::map()` to iterate over the vector containing the item column prefixes (`item_col_prefix`). We apply a lambda (anonymous) function with `~` to create item column names with an `i01` to `i50` nomenclature. `stringr::str_pad()` pads a numerical sequence with zeros to the left of each number. Note the use of `base::as_character()` to coerce the number sequence `1:50` to a sequence of strings. This is wrapped in `stringr::str_c()` which concatenates the prefixes in `item_col_prefix` with the zero-padded numbers. We then use `purrr::set_names()` to name the vectors within the list, again employing `str_c()` to iteratively concatenate a prefix `"item_cols_"` with a vector of suffixes `data_name_suffix`.
+```{r descriptives-load, echo = 38:42, eval = F}
+```
+We use `base::replicate()` to return a list (`item_cats`) containing four identical vectors whose elements are the item rating categories `c("never", "occasionally","frequently", "always")`. We use `set_names()` to name the vectors correspondingly to the input data files.
+```{r descriptives-load, echo = 44:49, eval = F}
+```
+
 #### 2. Item Response Frequencies
 
+The item response frequency tables provide counts of responses across the four categories for each item. The script generates a separate table for each input data file. These frequency tables are named with the prefix `freq_item_val` and saved to `.csv` in the `OUTPUT-FILES/TABLES` folder.
+
 ###### EXECUTABLE CODE
-```{r descriptives-item-val-freq, eval = FALSE}
+```{r descriptives-freq-item-val, eval = FALSE}
 list(mget(str_c("data_RS_sim_", data_name_suffix)),
      item_cols,
      item_cats,
@@ -106,6 +131,11 @@ iwalk(mget(str_c("freq_item_val_", data_name_suffix)),
               ".csv")
       ),
       na = ""))
+```
+
+###### COMMENTED SNIPPETS
+We first initialize a `list` containing the objects required to assemble the tables. We use `base::mget()` to bring the four input data files into the list. Here `mget()` returns the objects named by the character vector `str_c("data_RS_sim_", data_name_suffix)`, whose elements are the names of the four input files. Also included in this list are the `item_cols`, `item_cats`, and `data_name_suffix` vectors.
+```{r descriptives-freq-item-val, echo = 1:4, eval = F}
 ```
 
 #### 3. Demographic Frequency Counts

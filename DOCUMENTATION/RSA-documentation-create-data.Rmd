@@ -149,7 +149,7 @@ write_csv(data_input_bfi,
 ```
 
 #### Commented Snippets
-Load packages for file path specification (`here`), data wrangling (`tidyverse`) and pscyhometric data simulation and analysis (`psych`). `base::set.seed()` ensures repeatable results from sampling and modeling functions that use a random-number generator.
+Load packages for file path specification (`here`), data wrangling (`tidyverse`) and psychometric data simulation and analysis (`psych`). `base::set.seed()` ensures repeatable results from sampling and modeling functions that use a random-number generator.
 ```{r create-data-rsa, echo = 1:5, eval = F}
 ```
 `sim.poly.ideal()` is a function within the `psych` package for simulating data from polytomous psychometric items. Its arguments specify the number of items `nvar`, number of cases `n`, and number of rating scale anchors `cat`. The output of `sim.poly.ideal()` is a list, within which the matrix of items and cases can be isolated with `[["items"]]` and coerced to a tibble data frame with `tibble::as_tibble()`. 
