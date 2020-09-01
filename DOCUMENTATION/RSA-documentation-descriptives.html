@@ -467,7 +467,7 @@ data_RS_sim_teen_parent &lt;- suppressMessages(read_csv(url(
 data_RS_sim_teen_teacher &lt;- suppressMessages(read_csv(url(
   str_c(urlRemote_path, github_path, &quot;data-RS-sim-teen-teacher.csv&quot;)
 )))</code></pre>
-<p>Initialize vectors containing file, variable, and category names, abbrievations, and pre/suffixes.</p>
+<p>Initialize vectors containing file, variable, and category names, abbrievations, and pre/suffixes. These vectors will be used throughout the script.</p>
 <pre class="r"><code>data_name_suffix &lt;- c(&quot;child_parent&quot;, &quot;child_teacher&quot;, &quot;teen_parent&quot;, &quot;teen_teacher&quot;)
 item_col_prefix &lt;- c(&quot;cp&quot;, &quot;ct&quot;, &quot;tp&quot;, &quot;tt&quot;)
 scale_col_prefix &lt;- toupper(item_col_prefix)
@@ -535,7 +535,18 @@ iwalk(mget(str_c(&quot;freq_item_val_&quot;, data_name_suffix)),
      item_cols,
      item_cats,
      data_name_suffix) %&gt;%</code></pre>
+<p>We use <code>purrr::pmap()</code> to iterate simultaneously over several inputs of equal length (here all inputs have length of four). We apply a function, designated by <code>~</code>, to these inputs in parallel. Within the body of the funtion, we refer to the inputs using a numerical shorthand. Here, <code>..1</code> refers to the first input object, the list containing the four input data files. <code>..2</code> refers to the second input object (<code>item_cols</code>), a list containing vectors of item column names for each of the four input data files. Because these names are strings, we need to unquote them, using the <code>!!</code> operator, in order to pass them to <code>select()</code>. The data object at this point is a list, with each element a data fram containing only the item columns from the input data files.</p>
+<pre class="r"><code>  pmap(
+    ~ ..1 %&gt;%
+      select(!!..2) %&gt;%</code></pre>
+<p>We use <code>tidyr::pivot_longer()</code> to transform the data object from wide to long (nested) format. The arguments to <code>pivot_longer()</code> include the <code>tidyselect</code> helper <code>everything()</code>, which indicates that all columns will be included in the transformation, and the names of the new destination columns for the input column name (<code>names_to</code>) and the input cell values (<code>values_to</code>). <code>pivot_longer</code> returns a nested data frame with two columns, <code>item</code> and <code>value</code>. In this long object, the items and their respective response values are nested within each case of the input, running down the rows for the case and then repeating the same items for the next case, and so on.</p>
+<p>We then use <code>dplyr::count()</code> to summarize this object. Passing <code>item</code> and <code>value</code> as arguments groups the summary object by these two variables, such that a new column <code>n</code> provides the case count for each pairing of item and response value (i.e., the first row is the number of cases that responded <code>always</code> to item <code>cpi01</code>, the second row is the number of cases that responded <code>frequently</code> to item <code>cpi01</code>, and so on). Because the input data file has 50 items, each with four possible response options, the summary object has 200 rows.</p>
+<pre class="r"><code>      pivot_longer(everything(), names_to = &#39;item&#39;, values_to = &#39;value&#39;) %&gt;%
+      count(item, value) %&gt;%</code></pre>
 </div>
+</div>
+<div id="start-here-continue-using-scratch-code-to-unpack-piped-object-out-of-pmap" class="section level4">
+<h4>START HERE: CONTINUE USING SCRATCH CODE TO UNPACK PIPED OBJECT OUT OF pmap()</h4>
 </div>
 <div id="demographic-frequency-counts" class="section level4">
 <h4>3. Demographic Frequency Counts</h4>

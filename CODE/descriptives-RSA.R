@@ -4,7 +4,6 @@ suppressMessages(library(psych))
 library(ggrepel)
 library(ggpubr)
 
-# read data from remote URL
 urlRemote_path  <- "https://raw.githubusercontent.com/"
 github_path <- "DSHerzberg/RATING-SCALE-ANALYSIS/master/INPUT-FILES/"
 
@@ -21,32 +20,20 @@ data_RS_sim_teen_teacher <- suppressMessages(read_csv(url(
   str_c(urlRemote_path, github_path, "data-RS-sim-teen-teacher.csv")
 )))
 
-# extract elements unique to each data set: name suffix, item cols, item cats
 data_name_suffix <- c("child_parent", "child_teacher", "teen_parent", "teen_teacher")
 item_col_prefix <- c("cp", "ct", "tp", "tt")
 scale_col_prefix <- toupper(item_col_prefix)
-
-# demo tables
 var_order <- c("age_range", "gender", "educ", "ethnic", "region", "clin_status")
-
 cat_order <- c(
-  # age_range
   "5 to 8 yo", "9 to 12 yo", "13 to 15 yo", 
   "16 to 18 yo",
-  # gender
   "male", "female",
-  # educ
   "no_HS","HS_grad", "some_college", "BA_plus", 
-  # ethnic
   "hispanic","asian", "black", "white", "other", 
-  # region
   "northeast","south", "midwest", "west",
-  # clin_status
   "typ", "clin", 
-  # items
   "never", "occasionally","frequently", "always"
 )
-
 
 item_cols <- item_col_prefix %>% 
   map(
@@ -61,12 +48,6 @@ item_cats <- replicate(
   )  %>% 
   set_names(str_c("item_cats_", data_name_suffix))
 
-####### START HERE
-
-# akrun solution mget() returns the data objects whose string names are
-# contained within str_c(). These objects are put into a list, to be one of the
-# inputs that pmap() iterates over. Now all three inputs to pmap() are lists
-# containing named objects
 list(mget(str_c("data_RS_sim_", data_name_suffix)),
      item_cols,
      item_cats,

@@ -90,7 +90,7 @@ Specify file paths and retrieve data from a remote host. The script reads in fou
 
 ```{r descriptives-load, echo = 7:21, eval = F}
 ```
-Initialize vectors containing file, variable, and category names, abbrievations, and pre/suffixes.
+Initialize vectors containing file, variable, and category names, abbrievations, and pre/suffixes. These vectors will be used throughout the script.
 ```{r descriptives-load, echo = 23:36, eval = F}
 ```
 Initialize a list containing four character vectors whose elements are the item column names for the four input data files. We use `purrr::map()` to iterate over the vector containing the item column prefixes (`item_col_prefix`). We apply a lambda (anonymous) function with `~` to create item column names with an `i01` to `i50` nomenclature. `stringr::str_pad()` pads a numerical sequence with zeros to the left of each number. Note the use of `base::as_character()` to coerce the number sequence `1:50` to a sequence of strings. This is wrapped in `stringr::str_c()` which concatenates the prefixes in `item_col_prefix` with the zero-padded numbers. We then use `purrr::set_names()` to name the vectors within the list, again employing `str_c()` to iteratively concatenate a prefix `"item_cols_"` with a vector of suffixes `data_name_suffix`.
@@ -137,6 +137,18 @@ iwalk(mget(str_c("freq_item_val_", data_name_suffix)),
 We first initialize a `list` containing the objects required to assemble the tables. We use `base::mget()` to bring the four input data files into the list. Here `mget()` returns the objects named by the character vector `str_c("data_RS_sim_", data_name_suffix)`, whose elements are the names of the four input files. Also included in this list are the `item_cols`, `item_cats`, and `data_name_suffix` vectors.
 ```{r descriptives-freq-item-val, echo = 1:4, eval = F}
 ```
+We use `purrr::pmap()` to iterate simultaneously over several inputs of equal length (here all inputs have length of four). We apply a function, designated by `~`, to these inputs in parallel. Within the body of the funtion, we refer to the inputs using a numerical shorthand. Here, `..1` refers to the first input object, the list containing the four input data files. `..2` refers to the second input object (`item_cols`), a list containing vectors of item column names for each of the four input data files. Because these names are strings, we need to unquote them, using the `!!` operator, in order to pass them to `select()`. The data object at this point is a list, with each element a data fram containing only the item columns from the input data files.
+```{r descriptives-freq-item-val, echo = 5:7, eval = F}
+```
+We use `tidyr::pivot_longer()` to transform the data object from wide to long (nested) format. The arguments to `pivot_longer()` include the `tidyselect` helper `everything()`, which indicates that all columns will be included in the transformation, and the names of the new destination columns for the input column name (`names_to`) and the input cell values (`values_to`). `pivot_longer` returns a nested data frame with two columns, `item` and `value`. In this long object, the items and their respective response values are nested within each case of the input, running down the rows for the case and then repeating the same items for the next case, and so on.
+
+We then use `dplyr::count()` to summarize this object. Passing `item` and `value` as arguments groups the summary object by these two variables, such that a new column `n` provides the case count for each pairing of item and response value (i.e., the first row is the number of cases that responded `always` to item `cpi01`, the second row is the number of cases that responded `frequently` to item `cpi01`, and so on). Because the input data file has 50 items, each with four possible response options, the summary object has 200 rows.
+```{r descriptives-freq-item-val, echo = 8:9, eval = F}
+```
+
+
+####    START HERE: CONTINUE USING SCRATCH CODE TO UNPACK PIPED OBJECT OUT OF pmap()
+
 
 #### 3. Demographic Frequency Counts
 
