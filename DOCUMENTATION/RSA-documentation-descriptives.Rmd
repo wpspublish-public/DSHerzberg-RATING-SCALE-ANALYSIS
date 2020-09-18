@@ -20,7 +20,7 @@ This script generates these output files:
   * `freq-demos`(histogram)
   * `raw-desc` (scatterplot)
 
-The code can handle a set of input files that represent different forms (e.g., different combination of age-range and rater). The output files are labeled analogously with `[age-range]-[rater]` nomenclature (e.g., `child-parent`, `teen-teacher`, etc.)
+The code can handle a set of input files that represent different forms (e.g., different combinations of age-range and rater). The output files are labeled analogously with `[age-range]-[rater]` nomenclature (e.g., `child-parent`, `teen-teacher`, etc.)
 
 #### 1. Load packages, read data, specify input parameters
 
@@ -137,15 +137,33 @@ iwalk(mget(str_c("freq_item_val_", data_name_suffix)),
 We first initialize a `list` containing the objects required to assemble the tables. We use `base::mget()` to bring the four input data files into the list. Here `mget()` returns the objects named by the character vector `str_c("data_RS_sim_", data_name_suffix)`, whose elements are the names of the four input files. Also included in this list are the `item_cols`, `item_cats`, and `data_name_suffix` vectors.
 ```{r descriptives-freq-item-val, echo = 1:4, eval = F}
 ```
-We use `purrr::pmap()` to iterate simultaneously over several inputs of equal length (here all inputs have length of four). We apply a function, designated by `~`, to these inputs in parallel. Within the body of the funtion, we refer to the inputs using a numerical shorthand. Here, `..1` refers to the first input object, the list containing the four input data files. `..2` refers to the second input object (`item_cols`), a list containing vectors of item column names for each of the four input data files. Because these names are strings, we need to unquote them, using the `!!` operator, in order to pass them to `select()`. The data object at this point is a list, with each element a data fram containing only the item columns from the input data files.
+We use `purrr::pmap()` to iterate simultaneously over several inputs of equal length (here all inputs have length of four). We apply a function, designated by `~`, to these inputs in parallel. Within the body of the funtion, we refer to the inputs using a numerical shorthand. Here, `..1` refers to the first input object, the list containing the four input data files. `..2` refers to the second input object (`item_cols`), a list containing vectors of item column names for each of the four input data files. Because these names are strings, we need to unquote them, using the `!!` operator, in order to pass them to `select()`. The data object at this point is a list, with each element a data frame containing only the item columns from the input data files.
 ```{r descriptives-freq-item-val, echo = 5:7, eval = F}
 ```
-We use `tidyr::pivot_longer()` to transform the data object from wide to long (nested) format. The arguments to `pivot_longer()` include the `tidyselect` helper `everything()`, which indicates that all columns will be included in the transformation, and the names of the new destination columns for the input column name (`names_to`) and the input cell values (`values_to`). `pivot_longer` returns a nested data frame with two columns, `item` and `value`. In this long object, the items and their respective response values are nested within each case of the input, running down the rows for the case and then repeating the same items for the next case, and so on.
+
+```{r eval = F}
+The data object is a list whose elements are data frames (shown here is the upper left corner of one).
+
+  cpi01  cpi02  cpi03 cpi04 cpi05 cpi06 cpi07 cpi08 cpi09 cpi10 cpi11 cpi12 cpi13 cpi14 cpi15 cpi16 cpi17
+
+1 never  never  occa… never occa… freq… occa… freq… occa… never occa… freq… never freq… freq… freq… alwa…
+2 never  frequ… freq… alwa… occa… occa… occa… freq… occa… occa… occa… never never never occa… never occa…
+3 never  never  never never never never never never occa… never occa… never never occa… freq… never never
+4 occas… occas… occa… occa… occa… freq… never occa… occa… freq… alwa… occa… occa… alwa… occa… freq… never
+5 never  never  never never never never occa… freq… never never never alwa… alwa… occa… never occa… occa…
+6 never  never  never never never occa… occa… never never never never never occa… never occa… occa… never
+```
+
+
+
+We use `tidyr::pivot_longer()` to transform the data object from wide to long (nested) format. The arguments to `pivot_longer()` include the `tidyselect` helper `everything()`, which indicates that all columns will be included in the transformation, and the names of the new destination columns for the input column names (`names_to`) and the input cell values (`values_to`). `pivot_longer` returns a nested data frame with two columns, `item` and `value`. In this long object, the items and their respective response values are nested within each case of the input, running down the rows for the case and then repeating the same items for the next case, and so on.
 
 We then use `dplyr::count()` to summarize this object. Passing `item` and `value` as arguments groups the summary object by these two variables, such that a new column `n` provides the case count for each pairing of item and response value (i.e., the first row is the number of cases that responded `always` to item `cpi01`, the second row is the number of cases that responded `frequently` to item `cpi01`, and so on). Because the input data file has 50 items, each with four possible response options, the summary object has 200 rows.
 ```{r descriptives-freq-item-val, echo = 8:9, eval = F}
 ```
-
+We now transform the summary object back to wide format using `tidyr::pivot_wider()`, the mirror-image function of `pivot_longer()`. The `names_from` and `values_from` arguments indicate that the transformed object will draw its column names from the `value` column and its cell values from the `n` column, respectively, of the input object.
+```{r descriptives-freq-item-val, echo = 10, eval = F}
+```
 
 ####    START HERE: CONTINUE USING SCRATCH CODE TO UNPACK PIPED OBJECT OUT OF pmap()
 

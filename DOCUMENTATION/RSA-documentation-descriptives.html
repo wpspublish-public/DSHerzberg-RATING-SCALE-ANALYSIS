@@ -382,7 +382,7 @@ summary {
 <li><code>raw-desc</code> (scatterplot)</li>
 </ul></li>
 </ul>
-<p>The code can handle a set of input files that represent different forms (e.g., different combination of age-range and rater). The output files are labeled analogously with <code>[age-range]-[rater]</code> nomenclature (e.g., <code>child-parent</code>, <code>teen-teacher</code>, etc.)</p>
+<p>The code can handle a set of input files that represent different forms (e.g., different combinations of age-range and rater). The output files are labeled analogously with <code>[age-range]-[rater]</code> nomenclature (e.g., <code>child-parent</code>, <code>teen-teacher</code>, etc.)</p>
 <div id="load-packages-read-data-specify-input-parameters" class="section level4">
 <h4>1. Load packages, read data, specify input parameters</h4>
 <div id="executable-code" class="section level6">
@@ -535,14 +535,26 @@ iwalk(mget(str_c(&quot;freq_item_val_&quot;, data_name_suffix)),
      item_cols,
      item_cats,
      data_name_suffix) %&gt;%</code></pre>
-<p>We use <code>purrr::pmap()</code> to iterate simultaneously over several inputs of equal length (here all inputs have length of four). We apply a function, designated by <code>~</code>, to these inputs in parallel. Within the body of the funtion, we refer to the inputs using a numerical shorthand. Here, <code>..1</code> refers to the first input object, the list containing the four input data files. <code>..2</code> refers to the second input object (<code>item_cols</code>), a list containing vectors of item column names for each of the four input data files. Because these names are strings, we need to unquote them, using the <code>!!</code> operator, in order to pass them to <code>select()</code>. The data object at this point is a list, with each element a data fram containing only the item columns from the input data files.</p>
+<p>We use <code>purrr::pmap()</code> to iterate simultaneously over several inputs of equal length (here all inputs have length of four). We apply a function, designated by <code>~</code>, to these inputs in parallel. Within the body of the funtion, we refer to the inputs using a numerical shorthand. Here, <code>..1</code> refers to the first input object, the list containing the four input data files. <code>..2</code> refers to the second input object (<code>item_cols</code>), a list containing vectors of item column names for each of the four input data files. Because these names are strings, we need to unquote them, using the <code>!!</code> operator, in order to pass them to <code>select()</code>. The data object at this point is a list, with each element a data frame containing only the item columns from the input data files.</p>
 <pre class="r"><code>  pmap(
     ~ ..1 %&gt;%
       select(!!..2) %&gt;%</code></pre>
-<p>We use <code>tidyr::pivot_longer()</code> to transform the data object from wide to long (nested) format. The arguments to <code>pivot_longer()</code> include the <code>tidyselect</code> helper <code>everything()</code>, which indicates that all columns will be included in the transformation, and the names of the new destination columns for the input column name (<code>names_to</code>) and the input cell values (<code>values_to</code>). <code>pivot_longer</code> returns a nested data frame with two columns, <code>item</code> and <code>value</code>. In this long object, the items and their respective response values are nested within each case of the input, running down the rows for the case and then repeating the same items for the next case, and so on.</p>
+<pre class="r"><code>The data object is a list whose elements are data frames (shown here is the upper left corner of one).
+
+  cpi01  cpi02  cpi03 cpi04 cpi05 cpi06 cpi07 cpi08 cpi09 cpi10 cpi11 cpi12 cpi13 cpi14 cpi15 cpi16 cpi17
+
+1 never  never  occa… never occa… freq… occa… freq… occa… never occa… freq… never freq… freq… freq… alwa…
+2 never  frequ… freq… alwa… occa… occa… occa… freq… occa… occa… occa… never never never occa… never occa…
+3 never  never  never never never never never never occa… never occa… never never occa… freq… never never
+4 occas… occas… occa… occa… occa… freq… never occa… occa… freq… alwa… occa… occa… alwa… occa… freq… never
+5 never  never  never never never never occa… freq… never never never alwa… alwa… occa… never occa… occa…
+6 never  never  never never never occa… occa… never never never never never occa… never occa… occa… never</code></pre>
+<p>We use <code>tidyr::pivot_longer()</code> to transform the data object from wide to long (nested) format. The arguments to <code>pivot_longer()</code> include the <code>tidyselect</code> helper <code>everything()</code>, which indicates that all columns will be included in the transformation, and the names of the new destination columns for the input column names (<code>names_to</code>) and the input cell values (<code>values_to</code>). <code>pivot_longer</code> returns a nested data frame with two columns, <code>item</code> and <code>value</code>. In this long object, the items and their respective response values are nested within each case of the input, running down the rows for the case and then repeating the same items for the next case, and so on.</p>
 <p>We then use <code>dplyr::count()</code> to summarize this object. Passing <code>item</code> and <code>value</code> as arguments groups the summary object by these two variables, such that a new column <code>n</code> provides the case count for each pairing of item and response value (i.e., the first row is the number of cases that responded <code>always</code> to item <code>cpi01</code>, the second row is the number of cases that responded <code>frequently</code> to item <code>cpi01</code>, and so on). Because the input data file has 50 items, each with four possible response options, the summary object has 200 rows.</p>
 <pre class="r"><code>      pivot_longer(everything(), names_to = &#39;item&#39;, values_to = &#39;value&#39;) %&gt;%
       count(item, value) %&gt;%</code></pre>
+<p>We now transform the summary object back to wide format using <code>tidyr::pivot_wider()</code>, the mirror-image function of <code>pivot_longer()</code>. The <code>names_from</code> and <code>values_from</code> arguments indicate that the transformed object will draw its column names from the <code>value</code> column and its cell values from the <code>n</code> column, respectively, of the input object.</p>
+<pre class="r"><code>      pivot_wider(names_from = value, values_from = n) %&gt;%</code></pre>
 </div>
 </div>
 <div id="start-here-continue-using-scratch-code-to-unpack-piped-object-out-of-pmap" class="section level4">
