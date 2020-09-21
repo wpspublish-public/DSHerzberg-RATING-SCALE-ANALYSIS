@@ -19,7 +19,10 @@ temp1 <- data_RS_sim_child_parent %>%
   pivot_longer(everything(), names_to = 'item', values_to = 'value') %>%
   count(item, value) %>%
   pivot_wider(names_from = value, values_from = n) %>%
-  arrange(match(item, !!..2)) %>%
-  mutate(data = case_when(rownames(.) == "1" ~ ..4,
+  arrange(match(item, !!item_cols[[1]])) %>%
+  mutate(data = case_when(rownames(.) == "1" ~ data_name_suffix[[1]],
                           T ~ NA_character_)) %>%
-  select(data, item, !!..3)
+  select(data, item, !!item_cats[[1]])
+
+
+

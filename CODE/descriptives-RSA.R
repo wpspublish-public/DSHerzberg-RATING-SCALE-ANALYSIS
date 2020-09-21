@@ -52,24 +52,13 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
      item_cols,
      item_cats,
      data_name_suffix) %>%
-  # ..1 etc is how to refer to multiple inputs in pmap(), Here `..1` refers to
-  # the list containing the input data frames for which we are getting freq
-  # counts.
   pmap(
     ~ ..1 %>%
-      # `..2` refers to `item_cols`, the list containing the char vecs that
-      # name the item columns in each input data set. Because these names are
-      # coming into a dplyr function as quoted names, they need to be
-      # unquoted with `!!`
       select(!!..2) %>%
-      # `pivot_longer` is an updated version of `gather`
       pivot_longer(everything(), names_to = 'item', values_to = 'value') %>%
       count(item, value) %>%
-      # `pivot_wider` is an updated version of `spread`
       pivot_wider(names_from = value, values_from = n) %>%
       arrange(match(item,!!..2)) %>%
-      # `..3` refers to `item_cats`, the list containing the char vecs that
-      # name the item response categories for each input data set.
       mutate(data = case_when(rownames(.) == "1" ~ ..4,
                               T ~ NA_character_)) %>%
       select(data, item,!!..3)

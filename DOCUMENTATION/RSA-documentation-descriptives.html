@@ -535,13 +535,12 @@ iwalk(mget(str_c(&quot;freq_item_val_&quot;, data_name_suffix)),
      item_cols,
      item_cats,
      data_name_suffix) %&gt;%</code></pre>
-<p>We use <code>purrr::pmap()</code> to iterate simultaneously over several inputs of equal length (here all inputs have length of four). We apply a function, designated by <code>~</code>, to these inputs in parallel. Within the body of the funtion, we refer to the inputs using a numerical shorthand. Here, <code>..1</code> refers to the first input object, the list containing the four input data files. <code>..2</code> refers to the second input object (<code>item_cols</code>), a list containing vectors of item column names for each of the four input data files. Because these names are strings, we need to unquote them, using the <code>!!</code> operator, in order to pass them to <code>select()</code>. The data object at this point is a list, with each element a data frame containing only the item columns from the input data files.</p>
+<p>We use <code>purrr::pmap()</code> to iterate simultaneously over several inputs of equal length (here all inputs have length of four). We apply a function, designated by <code>~</code>, to these inputs in parallel. Within the body of the funtion, we refer to the inputs using a numerical shorthand. Here, <code>..1</code> refers to the first input object, the list containing the four input data files. <code>..2</code> refers to the second input object (<code>item_cols</code>), a list containing vectors of item column names for each of the four input data files. Because these names are strings, we need to unquote them, using the <code>!!</code> operator, in order to pass them to <code>dplyr::select()</code>. The data object at this point is a list, with each element a data frame containing only the item columns from the input data files.</p>
 <pre class="r"><code>  pmap(
     ~ ..1 %&gt;%
       select(!!..2) %&gt;%</code></pre>
-<pre class="r"><code>The data object is a list whose elements are data frames (shown here is the upper left corner of one).
-
-  cpi01  cpi02  cpi03 cpi04 cpi05 cpi06 cpi07 cpi08 cpi09 cpi10 cpi11 cpi12 cpi13 cpi14 cpi15 cpi16 cpi17
+<p>Here is the upper left corner of the <code>child-parent</code> input table, one of the four contained in the current data object.</p>
+<pre class="r"><code>  cpi01  cpi02  cpi03 cpi04 cpi05 cpi06 cpi07 cpi08 cpi09 cpi10 cpi11 cpi12 cpi13 cpi14 cpi15 cpi16 cpi17
 
 1 never  never  occa… never occa… freq… occa… freq… occa… never occa… freq… never freq… freq… freq… alwa…
 2 never  frequ… freq… alwa… occa… occa… occa… freq… occa… occa… occa… never never never occa… never occa…
@@ -553,12 +552,61 @@ iwalk(mget(str_c(&quot;freq_item_val_&quot;, data_name_suffix)),
 <p>We then use <code>dplyr::count()</code> to summarize this object. Passing <code>item</code> and <code>value</code> as arguments groups the summary object by these two variables, such that a new column <code>n</code> provides the case count for each pairing of item and response value (i.e., the first row is the number of cases that responded <code>always</code> to item <code>cpi01</code>, the second row is the number of cases that responded <code>frequently</code> to item <code>cpi01</code>, and so on). Because the input data file has 50 items, each with four possible response options, the summary object has 200 rows.</p>
 <pre class="r"><code>      pivot_longer(everything(), names_to = &#39;item&#39;, values_to = &#39;value&#39;) %&gt;%
       count(item, value) %&gt;%</code></pre>
+<p>Here are the first 10 rows of the <code>child-parent</code> summary table.</p>
+<pre class="r"><code>   item  value            n
+
+ 1 cpi01 always          29
+ 2 cpi01 frequently     116
+ 3 cpi01 never          498
+ 4 cpi01 occasionally   357
+ 5 cpi02 always          17
+ 6 cpi02 frequently     163
+ 7 cpi02 never          453
+ 8 cpi02 occasionally   367
+ 9 cpi03 always          24
+10 cpi03 frequently     138</code></pre>
 <p>We now transform the summary object back to wide format using <code>tidyr::pivot_wider()</code>, the mirror-image function of <code>pivot_longer()</code>. The <code>names_from</code> and <code>values_from</code> arguments indicate that the transformed object will draw its column names from the <code>value</code> column and its cell values from the <code>n</code> column, respectively, of the input object.</p>
 <pre class="r"><code>      pivot_wider(names_from = value, values_from = n) %&gt;%</code></pre>
+<p>After pivoting back to wide format, the <code>child-parent</code> summary table has 50 rows (one for each item; only the first 10 are shown). The colums to the left of <code>item</code> provide the counts for each of the four response categories, for each item.</p>
+<pre class="r"><code>   item  always frequently never occasionally
+
+ 1 cpi01     29        116   498          357
+ 2 cpi02     17        163   453          367
+ 3 cpi03     24        138   474          364
+ 4 cpi04     29        163   442          366
+ 5 cpi05     35        174   426          365
+ 6 cpi06     34        177   410          379
+ 7 cpi07     41        166   401          392
+ 8 cpi08     35        208   366          391
+ 9 cpi09     46        213   352          389
+10 cpi10     59        218   336          387</code></pre>
+<p>The next snippet formats and adds an additional column to the output tables. Recall that the piped data object is a list containing four summary tables. We use <code>dplyr::arrange()</code> and <code>base::match()</code> to sort each table by <code>item</code>, to a prespecified order. Within <code>match()</code>, we pass the <code>item</code> column and the match order provided by <code>!!..2</code>, which as noted previously, refers to a list containing four vectors of ordered item column names, one corresponding to each of the four summary tables in the pipeline. Wrapping <code>match()</code> in <code>arrange()</code> accomplishes the ordered sort.</p>
+<p>We then use <code>dplyr::mutate()</code> to create the <code>data</code> column, which identifies the data source (form name), for each of the four summary tables. With <code>dplyr::case_when()</code>, we can fill the cells of the <code>data</code> column conditionally. We want the first row of <code>data</code> to contain the form name, leaving the remaining rows <code>NA</code>. As the first argument to <code>case_when()</code>, we pass the predicate <code>rownames(.) == &quot;1&quot;</code>, which returns <code>TRUE</code> only for the first row of the data object, and thus isolates that row to receive a value in the <code>data</code> column. Using <code>~ ..4</code>, we supply that value from the list of form names that is the referent of <code>..4</code>, and which is iterating in parallel to the list containing the four summary tables. The second argument of <code>case_when()</code>, <code>T ~ NA_character_</code>, expresses the logical “else” condition, specifying that the value of <code>data</code> is <code>NA</code> whenever the predicate <code>rownames(.) == &quot;1&quot;</code> returns <code>FALSE</code>. Note the use of <code>NA_character_</code>, which is required because the <code>data</code> column is a character vector.</p>
+<p>We then use <code>select</code> to specify a final sequence of columns, with <code>!!..3</code> referring to the unquoted response category labels contined in the character vector <code>item_cats</code>.</p>
+<pre class="r"><code>      arrange(match(item, !!..2)) %&gt;%
+      mutate(data = case_when(rownames(.) == &quot;1&quot; ~ ..4,
+                              T ~ NA_character_)) %&gt;%
+      select(data, item, !!..3)</code></pre>
+<p>Here is a glimpse of the <code>child-parent</code> summary table, formatted for final output.</p>
+<pre class="r"><code>   data         item  never occasionally frequently always
+
+ 1 child_parent cpi01   498          357        116     29
+ 2 NA           cpi02   453          367        163     17
+ 3 NA           cpi03   474          364        138     24
+ 4 NA           cpi04   442          366        163     29
+ 5 NA           cpi05   426          365        174     35
+ 6 NA           cpi06   410          379        177     34
+ 7 NA           cpi07   401          392        166     41
+ 8 NA           cpi08   366          391        208     35
+ 9 NA           cpi09   352          389        213     46
+10 NA           cpi10   336          387        218     59</code></pre>
+<p>To recall, the data object at this point is a list of four tables summarizing the item response frequency counts for the four input files. We use <code>set_names()</code> to name the tables, employing <code>str_c()</code> to iteratively concatenate a prefix <code>&quot;freq_item_val_&quot;</code> with a vector of suffixes <code>data_name_suffix</code>. We then use <code>base::list2env()</code> to assign the four tables to the global environment <code>.GlobalEnv</code>, as separate data frames.</p>
+<pre class="r"><code>  set_names(str_c(&quot;freq_item_val_&quot;, data_name_suffix)) %&gt;%
+  list2env(envir = .GlobalEnv)</code></pre>
 </div>
 </div>
-<div id="start-here-continue-using-scratch-code-to-unpack-piped-object-out-of-pmap" class="section level4">
-<h4>START HERE: CONTINUE USING SCRATCH CODE TO UNPACK PIPED OBJECT OUT OF pmap()</h4>
+<div id="start-here-document-use-of-iwalk-to-save-multiple-.csvs" class="section level4">
+<h4>START HERE: DOCUMENT USE OF iwalk() TO SAVE MULTIPLE .csvs</h4>
 </div>
 <div id="demographic-frequency-counts" class="section level4">
 <h4>3. Demographic Frequency Counts</h4>
