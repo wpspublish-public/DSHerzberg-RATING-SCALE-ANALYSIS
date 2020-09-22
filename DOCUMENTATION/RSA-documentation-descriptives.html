@@ -518,15 +518,13 @@ cat_order &lt;- c(
       select(data, item, !!..3)
   ) %&gt;%
   set_names(str_c(&quot;freq_item_val_&quot;, data_name_suffix)) %&gt;%
-  list2env(envir = .GlobalEnv)
-
-iwalk(mget(str_c(&quot;freq_item_val_&quot;, data_name_suffix)),
-      ~ write_csv(.x, here(
-        str_c(&quot;OUTPUT-FILES/TABLES/&quot;,
-              str_replace_all(.y, &quot;_&quot;, &quot;-&quot;),
-              &quot;.csv&quot;)
-      ),
-      na = &quot;&quot;))</code></pre>
+  iwalk(~ write_csv(.x, here(
+    str_c(&quot;OUTPUT-FILES/TABLES/&quot;,
+          str_replace_all(.y, &quot;_&quot;, &quot;-&quot;),
+          &quot;.csv&quot;)
+  ),
+  na = &quot;&quot;)) %&gt;%
+  list2env(envir = .GlobalEnv)</code></pre>
 </div>
 <div id="commented-snippets-1" class="section level6">
 <h6>COMMENTED SNIPPETS</h6>
@@ -600,13 +598,19 @@ iwalk(mget(str_c(&quot;freq_item_val_&quot;, data_name_suffix)),
  8 NA           cpi08   366          391        208     35
  9 NA           cpi09   352          389        213     46
 10 NA           cpi10   336          387        218     59</code></pre>
-<p>To recall, the data object at this point is a list of four tables summarizing the item response frequency counts for the four input files. We use <code>set_names()</code> to name the tables, employing <code>str_c()</code> to iteratively concatenate a prefix <code>&quot;freq_item_val_&quot;</code> with a vector of suffixes <code>data_name_suffix</code>. We then use <code>base::list2env()</code> to assign the four tables to the global environment <code>.GlobalEnv</code>, as separate data frames.</p>
+<p>To recall, the data object at this point is a list of four tables summarizing the item response frequency counts for the four input files. We use <code>set_names()</code> to name the tables, employing <code>str_c()</code> to iteratively concatenate a prefix <code>&quot;freq_item_val_&quot;</code> with a vector of suffixes <code>data_name_suffix</code>.</p>
+<p>To save the four summary tables as .csv files for external use, we employ <code>purrr::iwalk()</code>, a variant of <code>map()</code>. Rather than returning a new list, <code>iwalk()</code> returns its input (the current data object) invisibly, passing it to the next function in the pipeline. It is thus ideal when we want to map a function that produces a “side effect” (e.g., saving external files, printing a plot, etc.).</p>
+<p>Using <code>iwalk()</code> (as opposed to <code>walk()</code>) allows us to map over both the data frames in the input list (the <code>.x</code> referent), and the <em>index</em> of that list (i.e., the names of the data frames, the <code>.y</code> referent). To save external files, we map <code>readr::write_csv()</code> over the four data frames in the input list. We designate file paths and names for those .csv files using the <code>stringr</code> functions <code>str_c()</code> and <code>str_replace_all()</code>. The latter creates the file name suffix, replacing the <code>&quot;_&quot;</code> character in the index elements (<code>.y</code>) with the <code>&quot;-&quot;</code> character. The <code>na = &quot;&quot;</code> argument, passed to <code>write_csv()</code>, indicates that that <code>NA</code> cells will be recoded to empty cells in the external files.</p>
+<p>Finally, we use <code>base::list2env()</code> to assign the four summary tables to the global environment <code>.GlobalEnv</code>, as separate data frames. The item response frequency tables are now available within the R programming environment, as well as externally as .csv files.</p>
 <pre class="r"><code>  set_names(str_c(&quot;freq_item_val_&quot;, data_name_suffix)) %&gt;%
+  iwalk(~ write_csv(.x, here(
+    str_c(&quot;OUTPUT-FILES/TABLES/&quot;,
+          str_replace_all(.y, &quot;_&quot;, &quot;-&quot;),
+          &quot;.csv&quot;)
+  ),
+  na = &quot;&quot;)) %&gt;%
   list2env(envir = .GlobalEnv)</code></pre>
 </div>
-</div>
-<div id="start-here-document-use-of-iwalk-to-save-multiple-.csvs" class="section level4">
-<h4>START HERE: DOCUMENT USE OF iwalk() TO SAVE MULTIPLE .csvs</h4>
 </div>
 <div id="demographic-frequency-counts" class="section level4">
 <h4>3. Demographic Frequency Counts</h4>

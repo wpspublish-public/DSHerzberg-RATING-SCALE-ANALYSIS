@@ -58,31 +58,19 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
       pivot_longer(everything(), names_to = 'item', values_to = 'value') %>%
       count(item, value) %>%
       pivot_wider(names_from = value, values_from = n) %>%
-      arrange(match(item,!!..2)) %>%
+      arrange(match(item, !!..2)) %>%
       mutate(data = case_when(rownames(.) == "1" ~ ..4,
                               T ~ NA_character_)) %>%
-      select(data, item,!!..3)
+      select(data, item, !!..3)
   ) %>%
-  # trying to reduce my use of `assign()` to place data objecds intop the global
-  # environment. Let `pmap()` output a list of dfs `freq_item_val_tables`, then
-  # use `set_names()` to give each df the desired name
   set_names(str_c("freq_item_val_", data_name_suffix)) %>%
-  
-  # `list2env()` extracts the data frames from the list into the global environment
+  iwalk(~ write_csv(.x, here(
+    str_c("OUTPUT-FILES/TABLES/",
+          str_replace_all(.y, "_", "-"),
+          ".csv")
+  ),
+  na = "")) %>%
   list2env(envir = .GlobalEnv)
-
-# use iwalk() to iterate over a list of four data frames and save them to csv.
-# "i" so we can map a function to both the data frames (.x) and their names(.y).
-# "walk" because we don't need the mapping operation to print the data frames to
-# the console. What we care about is the "side effect" of the data frames being
-# saved as .csv.
-iwalk(mget(str_c("freq_item_val_", data_name_suffix)),
-      ~ write_csv(.x, here(
-        str_c("OUTPUT-FILES/TABLES/",
-              str_replace_all(.y, "_", "-"),
-              ".csv")
-      ),
-      na = ""))
 
 
 list(mget(str_c("data_RS_sim_", data_name_suffix)),
@@ -100,25 +88,24 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
           lag(var) == "educ" & var == "educ" ~ NA_character_,
           lag(var) == "ethnic" & var == "ethnic" ~ NA_character_,
           lag(var) == "region" & var == "region" ~ NA_character_,
-          lag(var) == "clin_status" & var == "clin_status" ~ NA_character_,
+          lag(var) == "clin_status" &
+            var == "clin_status" ~ NA_character_,
           TRUE ~ var
         ),
         data = case_when(rownames(.) == "1" ~ ..2,
                          T ~ NA_character_)
-        # data = ..2
       ) %>%
       select(data, var, cat, n)
   ) %>%
   set_names(str_c("freq_demos_", data_name_suffix)) %>%
+  iwalk(~ write_csv(.x, here(
+    str_c("OUTPUT-FILES/TABLES/",
+          str_replace_all(.y, "_", "-"),
+          ".csv")
+  ),
+  na = "")) %>%
   list2env(envir = .GlobalEnv)
 
-iwalk(mget(str_c("freq_demos_", data_name_suffix)),
-      ~ write_csv(.x, here(
-        str_c("OUTPUT-FILES/TABLES/",
-              str_replace_all(.y, "_", "-"),
-              ".csv")
-      ),
-      na = ""))
 
 # fill NA values of $data with file name, for creation of histograms in next snippet
 map(mget(str_c("freq_demos_", data_name_suffix)), ~ .x %>% 

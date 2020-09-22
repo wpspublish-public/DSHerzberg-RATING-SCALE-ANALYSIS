@@ -122,15 +122,13 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
       select(data, item, !!..3)
   ) %>%
   set_names(str_c("freq_item_val_", data_name_suffix)) %>%
+  iwalk(~ write_csv(.x, here(
+    str_c("OUTPUT-FILES/TABLES/",
+          str_replace_all(.y, "_", "-"),
+          ".csv")
+  ),
+  na = "")) %>%
   list2env(envir = .GlobalEnv)
-
-iwalk(mget(str_c("freq_item_val_", data_name_suffix)),
-      ~ write_csv(.x, here(
-        str_c("OUTPUT-FILES/TABLES/",
-              str_replace_all(.y, "_", "-"),
-              ".csv")
-      ),
-      na = ""))
 ```
 
 ###### COMMENTED SNIPPETS
@@ -212,12 +210,17 @@ Here is a glimpse of the `child-parent` summary table, formatted for final outpu
  9 NA           cpi09   352          389        213     46
 10 NA           cpi10   336          387        218     59
 ```
-To recall, the data object at this point is a list of four tables summarizing the item response frequency counts for the four input files. We use `set_names()` to name the tables, employing `str_c()` to iteratively concatenate a prefix `"freq_item_val_"` with a vector of suffixes `data_name_suffix`. We then use `base::list2env()` to assign the four tables to the global environment `.GlobalEnv`, as separate data frames.
-```{r descriptives-freq-item-val, echo = 16:17, eval = F}
+To recall, the data object at this point is a list of four tables summarizing the item response frequency counts for the four input files. We use `set_names()` to name the tables, employing `str_c()` to iteratively concatenate a prefix `"freq_item_val_"` with a vector of suffixes `data_name_suffix`. 
+
+To save the four summary tables as .csv files for external use, we employ `purrr::iwalk()`, a variant of `map()`. Rather than returning a new list, `iwalk()` returns its input (the current data object) invisibly, passing it to the next function in the pipeline. It is thus ideal when we want to map a function that produces a "side effect" (e.g., saving external files, printing a plot, etc.).
+
+Using `iwalk()` (as opposed to `walk()`) allows us to map over both the data frames in the input list (the `.x` referent), and the _index_ of that list (i.e., the names of the data frames, the `.y` referent). To save external files, we map `readr::write_csv()` over the four data frames in the input list. We designate file paths and names for those .csv files using the `stringr` functions `str_c()` and `str_replace_all()`. The latter creates the file name suffix, replacing the `"_"` character in the index elements (`.y`) with the `"-"` character. The `na = ""` argument, passed to `write_csv()`, indicates that that `NA` cells will be recoded to empty cells in the external files.
+
+Finally, we use `base::list2env()` to assign the four summary tables to the global environment `.GlobalEnv`, as separate data frames. The item response frequency tables are now available within the R programming environment, as well as externally as .csv files.
+```{r descriptives-freq-item-val, echo = 16:23, eval = F}
 ```
 
 
-####    START HERE: DOCUMENT USE OF iwalk() TO SAVE MULTIPLE .csvs
 
 
 #### 3. Demographic Frequency Counts
@@ -249,15 +252,13 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
       select(data, var, cat, n)
   ) %>%
   set_names(str_c("freq_demos_", data_name_suffix)) %>%
+  iwalk(~ write_csv(.x, here(
+    str_c("OUTPUT-FILES/TABLES/",
+          str_replace_all(.y, "_", "-"),
+          ".csv")
+  ),
+  na = "")) %>%
   list2env(envir = .GlobalEnv)
-
-iwalk(mget(str_c("freq_demos_", data_name_suffix)),
-      ~ write_csv(.x, here(
-        str_c("OUTPUT-FILES/TABLES/",
-              str_replace_all(.y, "_", "-"),
-              ".csv")
-      ),
-      na = ""))
 
 map(mget(str_c("freq_demos_", data_name_suffix)), ~ .x %>% 
    fill(c(data, var))) %>%
