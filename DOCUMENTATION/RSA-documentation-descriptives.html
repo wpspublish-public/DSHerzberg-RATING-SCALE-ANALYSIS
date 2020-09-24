@@ -614,6 +614,9 @@ cat_order &lt;- c(
 </div>
 <div id="demographic-frequency-counts" class="section level4">
 <h4>3. Demographic Frequency Counts</h4>
+<p>The demographic frequency tables provide case counts for the variables of age, gender, (parental) education level, race/ethnicity, U.S. geographical region, and clinical status. The script generates a separate table for each input data file. These frequency tables are named with the prefix <code>freq_demos</code> and saved to <code>.csv</code> in the <code>OUTPUT-FILES/TABLES</code> folder.</p>
+<p>The script also produces histograms for each variable, and combines them into a single .pdf output file. These plots are named with the prefix <code>freq_demos</code> and saved in the <code>OUTPUT-FILES/PLOTS</code> folder.</p>
+<p>The first section of this code is similar to the script for the item response frequency tables, so only the differing elements will receive commentary below.</p>
 <div id="executable-code-2" class="section level6">
 <h6>EXECUTABLE CODE</h6>
 <pre class="r"><code>list(mget(str_c(&quot;data_RS_sim_&quot;, data_name_suffix)),
@@ -636,20 +639,17 @@ cat_order &lt;- c(
         ),
         data = case_when(rownames(.) == &quot;1&quot; ~ ..2,
                          T ~ NA_character_)
-        # data = ..2
       ) %&gt;%
       select(data, var, cat, n)
   ) %&gt;%
   set_names(str_c(&quot;freq_demos_&quot;, data_name_suffix)) %&gt;%
+  iwalk(~ write_csv(.x, here(
+    str_c(&quot;OUTPUT-FILES/TABLES/&quot;,
+          str_replace_all(.y, &quot;_&quot;, &quot;-&quot;),
+          &quot;.csv&quot;)
+  ),
+  na = &quot;&quot;)) %&gt;%
   list2env(envir = .GlobalEnv)
-
-iwalk(mget(str_c(&quot;freq_demos_&quot;, data_name_suffix)),
-      ~ write_csv(.x, here(
-        str_c(&quot;OUTPUT-FILES/TABLES/&quot;,
-              str_replace_all(.y, &quot;_&quot;, &quot;-&quot;),
-              &quot;.csv&quot;)
-      ),
-      na = &quot;&quot;))
 
 map(mget(str_c(&quot;freq_demos_&quot;, data_name_suffix)), ~ .x %&gt;% 
    fill(c(data, var))) %&gt;%
@@ -700,6 +700,30 @@ walk2(hist_plot_prep,
               &quot;.pdf&quot;)
       )))</code></pre>
 </div>
+<div id="commented-snippets-2" class="section level6">
+<h6>COMMENTED SNIPPETS</h6>
+<p>We use <code>pmap()</code> to iterate simultaneously over two inputs of equal length. Input <code>..1</code> is a list (assembled by <code>mget()</code>) containing the four input data files. Input <code>..2</code> is the <code>data_name_suffix</code> vector.</p>
+<p>We use <code>select()</code> to subset columns from each input file for further processing. These columns are named by the previously defined vector <code>var_order</code>. A <code>tidyselect</code> helper (in this case <code>all_of()</code>) is required when passing a character vector to <code>select()</code>.</p>
+<pre class="r"><code>list(mget(str_c(&quot;data_RS_sim_&quot;, data_name_suffix)),
+     data_name_suffix) %&gt;%
+  pmap(
+    ~ ..1 %&gt;%
+      select(all_of(var_order)) %&gt;%</code></pre>
+<p>With <code>mutate()</code> and <code>case_when()</code>, we can recode specific cells of an existing column to produce a more readable output table. In the current data object, the <code>var</code> column names a demographic variable, whose categories are contained in the <code>cat</code> column.</p>
+</div>
+</div>
+<div id="start-here-give-example-of-var-cat-nesting" class="section level4">
+<h4>START HERE GIVE EXAMPLE OF VAR-CAT NESTING</h4>
+<pre class="r"><code>      mutate(
+        var = case_when(
+          lag(var) == &quot;age_range&quot; &amp; var == &quot;age_range&quot; ~ NA_character_,
+          lag(var) == &quot;gender&quot; &amp; var == &quot;gender&quot; ~ NA_character_,
+          lag(var) == &quot;educ&quot; &amp; var == &quot;educ&quot; ~ NA_character_,
+          lag(var) == &quot;ethnic&quot; &amp; var == &quot;ethnic&quot; ~ NA_character_,
+          lag(var) == &quot;region&quot; &amp; var == &quot;region&quot; ~ NA_character_,
+          lag(var) == &quot;clin_status&quot; &amp; var == &quot;clin_status&quot; ~ NA_character_,
+          TRUE ~ var
+        ),</code></pre>
 </div>
 <div id="raw-score-descriptive-statistics" class="section level4">
 <h4>4. Raw Score Descriptive Statistics</h4>
