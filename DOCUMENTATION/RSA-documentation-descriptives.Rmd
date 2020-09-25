@@ -78,10 +78,10 @@ item_cats <- replicate(
 ```
 
 ###### COMMENTED SNIPPETS
-Load packages for file path specification (`here`), data wrangling (`tidyverse`) psychometric data simulation and analysis (`psych`), plot labeling (`ggrepel`), and formatting plots for export as .pdf (`ggpubr`).
+We load packages for file path specification (`here`), data wrangling (`tidyverse`) psychometric data simulation and analysis (`psych`), plot labeling (`ggrepel`), and formatting plots for export as .pdf (`ggpubr`).
 ```{r descriptives-load, echo = 1:5, eval = F}
 ```
-Specify file paths and retrieve data from a remote host. The script reads in four input files consisting of simulated rating-scale (`RS`) data:
+We specify file paths and retrieve data from a remote host. The script reads in four input files consisting of simulated rating-scale (`RS`) data:
 
 * `data-RS-sim-child-parent.csv`: `child` age range (5-12 yo), `parent` report
 * `data-RS-sim-child-teacher`: `child` age range (5-12 yo), `teacher` report
@@ -90,10 +90,10 @@ Specify file paths and retrieve data from a remote host. The script reads in fou
 
 ```{r descriptives-load, echo = 7:21, eval = F}
 ```
-Initialize vectors containing file, variable, and category names, abbrievations, and pre/suffixes. These vectors will be used throughout the script.
+We initialize vectors containing file, variable, and category names, abbrievations, and pre/suffixes. These vectors will be used throughout the script.
 ```{r descriptives-load, echo = 23:36, eval = F}
 ```
-Initialize a list containing four character vectors whose elements are the item column names for the four input data files. We use `purrr::map()` to iterate over the vector containing the item column prefixes (`item_col_prefix`). We apply a lambda (anonymous) function with `~` to create item column names with an `i01` to `i50` nomenclature. `stringr::str_pad()` pads a numerical sequence with zeros to the left of each number. Note the use of `base::as_character()` to coerce the number sequence `1:50` to a sequence of strings. This is wrapped in `stringr::str_c()` which concatenates the prefixes in `item_col_prefix` with the zero-padded numbers. We then use `purrr::set_names()` to name the vectors within the list, again employing `str_c()` to iteratively concatenate a prefix `"item_cols_"` with a vector of suffixes `data_name_suffix`.
+We initialize a list containing four character vectors whose elements are the item column names for the four input data files. We use `purrr::map()` to iterate over the vector containing the item column prefixes (`item_col_prefix`). We apply a lambda (anonymous) function with `~` to create item column names with an `i01` to `i50` nomenclature. `stringr::str_pad()` pads a numerical sequence with zeros to the left of each number. Note the use of `base::as_character()` to coerce the number sequence `1:50` to a sequence of strings. This is wrapped in `stringr::str_c()` which concatenates the prefixes in `item_col_prefix` with the zero-padded numbers. We then use `purrr::set_names()` to name the vectors within the list, again employing `str_c()` to iteratively concatenate a prefix `"item_cols_"` with a vector of suffixes `data_name_suffix`.
 ```{r descriptives-load, echo = 38:42, eval = F}
 ```
 We use `base::replicate()` to return a list (`item_cats`) containing four identical vectors whose elements are the item rating categories `c("never", "occasionally","frequently", "always")`. We use `set_names()` to name the vectors correspondingly to the input data files.
@@ -222,14 +222,14 @@ Finally, we use `base::list2env()` to assign the four summary tables to the glob
 
 #### 3. Demographic Frequency Counts
 
-The demographic frequency tables provide case counts for the variables of age, gender, (parental) education level, race/ethnicity, U.S. geographical region, and clinical status. The script generates a separate table for each input data file. These frequency tables are named with the prefix `freq_demos` and saved to `.csv` in the `OUTPUT-FILES/TABLES` folder.
+##### Tables
 
-The script also produces histograms for each variable, and combines them into a single .pdf output file. These plots are named with the prefix `freq_demos` and saved in the `OUTPUT-FILES/PLOTS` folder.
+The demographic frequency tables provide case counts for the variables of age, gender, (parental) education level, race/ethnicity, U.S. geographical region, and clinical status. The script generates a separate table for each input data file. These frequency tables are named with the prefix `freq_demos` and saved to `.csv` in the `OUTPUT-FILES/TABLES` folder.
 
 The first section of this code is similar to the script for the item response frequency tables, so only the differing elements will receive commentary below.
 
 ###### EXECUTABLE CODE
-```{r descriptives-freq-demos, eval = FALSE}
+```{r descriptives-freq-demos-table, eval = FALSE}
 list(mget(str_c("data_RS_sim_", data_name_suffix)),
      data_name_suffix) %>%
   pmap(
@@ -261,7 +261,41 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
   ),
   na = "")) %>%
   list2env(envir = .GlobalEnv)
+```
+###### COMMENTED SNIPPETS
+We use `pmap()` to iterate simultaneously over two inputs of equal length. Input `..1` is a list (assembled by `mget()`) containing the four input data files. Input `..2` is the `data_name_suffix` vector.
 
+We use `select()` to subset columns from each input file for further processing. These columns are named by the previously defined vector `var_order`. A `tidyselect` helper (in this case `all_of()`) is required when passing a character vector to `select()`.
+```{r descriptives-freq-demos-table, echo = 1:5, eval = F}
+```
+With `mutate()` and `case_when()`, we can recode specific cells of an existing column to produce a more readable output table. In the current data object, the `var` column names a demographic variable, whose categories are contained in the `cat` column. For example, one value of `var` is `region`. In the current data, object, four rows of the `var` column are coded with `region`. In the `cat` column, those four rows are coded with the categories of `region`: `northeast`,`south`, `midwest`, and `west`.
+```{r eval = F}
+  var    cat      
+
+1 region northeast
+2 region south    
+3 region midwest  
+4 region west     
+```
+To make the output more readable, we can recode all but the first `region` row to `NA` (which then can be recoded to blank on the final table). Within `case_when`, we specify the predicate `lag(var) == "region" & var == "region"`, which returns `TRUE` for all rows where the value of `var` is `region`, and where the value of `var` in the _preceding_ row is `region`. This captures all `region` rows except the first, where value of `var` in the preceding row is `ethnic`. The captured rows are then recoded with `~ NA_character_` to yield the transformed table:
+```{r eval = F}
+  var    cat      
+
+1 region northeast
+2 NA     south    
+3 NA     midwest  
+4 NA     west     
+```
+
+```{r descriptives-freq-demos-table, echo = 9:18, eval = F}
+```
+
+##### Histograms
+
+Using `ggplot2` functions, this section produces histograms for each demographic variable, and combines them into a single .pdf output file. These plots are named with the prefix `freq_demos` and saved in the `OUTPUT-FILES/PLOTS` folder.
+
+###### EXECUTABLE CODE
+```{r descriptives-freq-demos-hist, eval = FALSE}
 map(mget(str_c("freq_demos_", data_name_suffix)), ~ .x %>% 
    fill(c(data, var))) %>%
     list2env(envir = .GlobalEnv)
@@ -312,18 +346,21 @@ walk2(hist_plot_prep,
       )))
 ```
 ###### COMMENTED SNIPPETS
-We use `pmap()` to iterate simultaneously over two inputs of equal length. Input `..1` is a list (assembled by `mget()`) containing the four input data files. Input `..2` is the `data_name_suffix` vector.
+The inputs to `ggplot()` are the four demographic frequency table creatd by the previous code. To prepare these tables for plot generation, we use `tidyr::fill()` to recode the `NA` values in the `data` and `var` columns back to their original values, as in this example:
+```{r eval = F}
+  data         var    cat      
 
-We use `select()` to subset columns from each input file for further processing. These columns are named by the previously defined vector `var_order`. A `tidyselect` helper (in this case `all_of()`) is required when passing a character vector to `select()`.
-```{r descriptives-freq-demos, echo = 1:5, eval = F}
+1 child_parent region northeast
+2 child_parent region south    
+3 child_parent region midwest  
+4 child_parent region west     
 ```
-With `mutate()` and `case_when()`, we can recode specific cells of an existing column to produce a more readable output table. In the current data object, the `var` column names a demographic variable, whose categories are contained in the `cat` column.
 
-#### START HERE GIVE EXAMPLE OF VAR-CAT NESTING
-```{r descriptives-freq-demos, echo = 9:18, eval = F}
+```{r descriptives-freq-demos-hist, echo = 1:3, eval = F}
 ```
-
-
+The next section illustrates the list-column workflow, a facility provided by `purrr` that enables nested iteration. A list-column is a column within a tibble that can contain data frames, vectors, functions, or any other R object that can be held in a list. To begin, we load the four input demographic frequency tables into a list, using `tibble::lst()` to name the resulting list elements with the input object names.
+```{r descriptives-freq-demos-hist, echo = 5:10, eval = F}
+```
 
 #### 4. Raw Score Descriptive Statistics
 
