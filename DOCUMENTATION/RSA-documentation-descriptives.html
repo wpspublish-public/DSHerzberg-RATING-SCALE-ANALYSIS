@@ -760,6 +760,58 @@ walk2(hist_plot_prep,
   freq_demos_teen_parent,
   freq_demos_teen_teacher
 ) %&gt;%</code></pre>
+<p>This list of data frames is piped into a nested function in which <code>map()</code> is called twice. Nesting <code>map()</code> calls in this way allows the nested function to process inputs of different lengths to each <code>map()</code> call, as opposed to <code>pmap()</code>, which handles multiple inputs but requires that they be of equal lengths.</p>
+<p>This nested function returns a list of four data frames, one corresponding to each data frame in the input list, but the output data frames have been transformed. Each new data frame consists of a single list-column, <code>var</code>, with six rows, one corresponding to each demographic variable in the input <code>freq_demos</code> tables (i.e., <code>age_range</code>, <code>gender</code>, <code>educ</code>, <code>ethnic</code>, <code>region</code>, <code>clin_status</code>). In each cell of the <code>var</code> column is a slice of the input data frame that contains only the rows of the <code>freq_demos</code> table corresponding to a single demographic variable (e.g., the <code>age_range</code> rows of <code>freq_demos</code> are in the first row of <code>var</code>, the <code>gender</code> rows of <code>freq_demos</code> are in the second row, and so on).</p>
+<p>To illustrate this transformation, the input is a data frame containing all rows for all six demographic variables, here shown partially in the top five rows of <code>freq_demos_child_parent</code>:</p>
+<pre class="r"><code>   data         var         cat              n
+
+ 1 child_parent age_range   5 to 8 yo      492
+ 2 child_parent age_range   9 to 12 yo     508
+ 3 child_parent gender      male           476
+ 4 child_parent gender      female         524
+ 5 child_parent educ        no_HS          133
+ ...</code></pre>
+<p>The output is a data frame with a single list column, in which the input data frame has been split on on the values of <code>var</code> into six separate tibbles, one for each demographic variable.</p>
+<pre class="r"><code>  var             
+  &lt;list&gt;          
+1 &lt;tibble [2 × 4]&gt;
+2 &lt;tibble [2 × 4]&gt;
+3 &lt;tibble [4 × 4]&gt;
+4 &lt;tibble [5 × 4]&gt;
+5 &lt;tibble [4 × 4]&gt;
+6 &lt;tibble [2 × 4]&gt;</code></pre>
+<p>Thus, we now have data frames nested within the rows of a “container” data frame, which is the list-column structure that facilitates nested iteration.</p>
+<p>Returning to the nested mapping function that accomplishes this transformation, recall that what is being piped into the outer call of <code>map()</code> is the list containing the four <code>freq_demos</code> tables. The outer <code>map()</code> call thus applies the function beginning with <code>~ tibble</code> iteratively to each of the four input tables.</p>
+<p>Examining the transformation of a single input table, the call of <code>tibble(var = ...)</code> returns a tibble with the single column <code>var</code>. That column’s row values are defined by the inner call of <code>map()</code>. Once this second <code>map()</code> call is invoked, the function wrapped within is dealing with two inputs: the data frame fed to the outer <code>map()</code> call (the <code>.y</code> referent), and the character vector <code>var_order</code> (the <code>.x</code> referent). In the expression <code>~ .y %&gt;%  filter(var == .x)</code>, therefore, the input data frame (<code>.y</code>) is filtered down to only the rows where <code>var</code> is equal to the current iteration of <code>var_order</code> (<code>.x</code>). These rows are initialized as a separate data frame by <code>tibble()</code>. The <code>.y = .x</code> argument to the inner <code>map()</code> call is required to process the inputs in the correct sequence; that is, the input data frame is processed within the iterative structure that applies the elements of <code>var_order</code>, not the other way around.</p>
+<p>It bears repeating that the output, at this stage, is a list of four named data frames, but those data frames now consist of a single list-column containing slices of the corresponding input data frames. Essentially, the input table has been carved up into segments, with each segment now residing in a row of the new list-column.</p>
+<pre class="r"><code>  map( ~
+         tibble(var = map(var_order, ~ .y %&gt;% filter(var == .x), .y = .x))) %&gt;%</code></pre>
+<p>We now use <code>tibble()</code> to reduce the list of four data frames into a single data frame with two columns and four rows.</p>
+<pre class="r"><code>  tibble(file = names(.), data1 = .) %&gt;%</code></pre>
+<p>The first column <code>file</code> contains the names of the four input data frames, which are extracted from the input list with <code>base::names(.)</code>, where <code>.</code> refers to the input list. The second column <code>data1</code> is a list-column that holds the four input data frames. Here is the structure:</p>
+<pre class="r"><code>  file                     data1           
+  &lt;chr&gt;                    &lt;named list&gt;    
+1 freq_demos_child_parent  &lt;tibble [6 × 1]&gt;
+2 freq_demos_child_teacher &lt;tibble [6 × 1]&gt;
+3 freq_demos_teen_parent   &lt;tibble [6 × 1]&gt;
+4 freq_demos_teen_teacher  &lt;tibble [6 × 1]&gt;</code></pre>
+<p>Note that each tibble in the <code>data1</code> column has six rows; that is, one row for each of the six demographic variables. If we drill down into the top cell of <code>data1</code>, we see:</p>
+<pre class="r"><code>  var             
+  &lt;list&gt;          
+1 &lt;tibble [2 × 4]&gt;
+2 &lt;tibble [2 × 4]&gt;
+3 &lt;tibble [4 × 4]&gt;
+4 &lt;tibble [5 × 4]&gt;
+5 &lt;tibble [4 × 4]&gt;
+6 &lt;tibble [2 × 4]&gt;</code></pre>
+<p>This is the list column of tibbles containing the six slices of <code>freq_demos_child_parent</code>, corresponding to the six demographic variables. Drilling down into the top cell of the <code>var</code> column, we find:</p>
+<pre class="r"><code>  data         var       cat            n
+
+1 child_parent age_range 5 to 8 yo    492
+2 child_parent age_range 9 to 12 yo   508</code></pre>
+<p>This slice, which shows the <code>age_range</code> counts for the <code>child_parent</code> data set, represents the granular data elements from which we will construct the output histograms. Essentially, we now have a single list-column that represents a nested structure (six demographic variables nested within four data sets) that resolves to the 24 granular data elements from which we will plot the 24 histograms that consitute the final output of our <code>ggplot()</code> call.</p>
+<p>To generate the histograms, we need each granular data element to reside in its own row. In the current data object, <code>data1</code> is a nested list-column, in which the 24 granular data elements are collapsed into four rows. We use <code>tidyr::unnest(cols = c(data1))</code> to remove one level of nesting in <code>data1</code>, transforming a four-row list-column into the required 24-row list-column. Conveniently, this operation simultaneously expands the <code>file</code> column, such that each granular data element is paired with the name of its original input file (e.g., <code>freq_demos_child_parent</code>).</p>
+<pre class="r"><code>  unnest(cols = c(data1)) %&gt;%</code></pre>
 </div>
 </div>
 </div>

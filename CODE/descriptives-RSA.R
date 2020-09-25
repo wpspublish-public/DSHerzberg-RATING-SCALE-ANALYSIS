@@ -106,8 +106,6 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
   na = "")) %>%
   list2env(envir = .GlobalEnv)
 
-
-# fill NA values of $data with file name, for creation of histograms in next snippet
 map(mget(str_c("freq_demos_", data_name_suffix)), ~ .x %>% 
    fill(c(data, var))) %>%
     list2env(envir = .GlobalEnv)
