@@ -110,11 +110,6 @@ map(mget(str_c("freq_demos_", data_name_suffix)), ~ .x %>%
    fill(c(data, var))) %>%
     list2env(envir = .GlobalEnv)
 
-
-# This snippet creates a data frame with three columns: file: name of the input
-# demographic table, by form and reporter var: list-column containing 24 demo
-# tables by var x cat plots: list-column containing 24 ggplots (histograms), one
-# for each demo table. It prints these 24 histograms to the RStudio plots pane.
 hist_list <- lst(
   freq_demos_child_parent,
   freq_demos_child_teacher,
@@ -142,10 +137,9 @@ hist_list <- lst(
                                 , 12), "_", " form, "),
             " report"
           )) +
-          scale_x_discrete(limits = .x %>% pull(cat)) +
+          scale_x_discrete(limits = .x$cat) +
           theme(panel.grid.minor = element_blank(),
-                axis.title.x = element_blank()) +
-          facet_wrap(vars(var))
+                axis.title.x = element_blank())
       )
   ))
 
@@ -153,7 +147,7 @@ hist_list <- lst(
 # containing four data frames, hist_list divided into separate dfs for the four
 # age_range x rater combos. This list is supplied as the .x argument to the
 # inner map() call, which applies ggarrange() to put the plots of plots of the
-# .x list into muliple plot per page format suitable for saving as .pdf
+# .x list into multiple plot per page format suitable for saving as .pdf
 hist_plot_prep <- map(
   map(unique(hist_list$file), ~ hist_list %>% filter(file == .x)), 
   ~ ggpubr::ggarrange(plotlist = .x$plots, ncol = 2, nrow = 2))
