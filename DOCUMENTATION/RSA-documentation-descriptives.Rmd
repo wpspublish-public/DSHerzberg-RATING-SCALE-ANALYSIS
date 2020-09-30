@@ -226,7 +226,7 @@ Finally, we use `base::list2env()` to assign the four summary tables to the glob
 
 The demographic frequency tables provide case counts for the variables of age, gender, (parental) education level, race/ethnicity, U.S. geographical region, and clinical status. The script generates a separate table for each input data file. These frequency tables are named with the prefix `freq_demos` and saved to `.csv` in the `OUTPUT-FILES/TABLES` folder.
 
-The first section of this code is similar to the script for the item response frequency tables, so only the differing elements will receive commentary below.
+This code is similar to the script for the item response frequency tables, so only the differing elements will receive commentary below.
 
 ###### EXECUTABLE CODE
 ```{r descriptives-freq-demos-table, eval = FALSE}
@@ -292,7 +292,7 @@ To make the output more readable, we can recode all but the first `region` row t
 
 ##### Histograms
 
-Using `ggplot2` functions, this section produces a .pdf output file for each for the four age-range/rater data sets. Each of these .pdfs includes six histograms, one for each of the six demographic variables. The .pdfs are named with the prefix `freq_demos` and saved in the `OUTPUT-FILES/PLOTS` folder. The 24 individual histograms are also viewable in the RStudio Plots pane.
+Using `ggplot2` functions, this section produces a .pdf output file for each of the four age-range/rater data sets. Each .pdf includes six histograms, one for each of the six demographic variables. The .pdfs are named with the prefix `freq_demos` and saved in the `OUTPUT-FILES/PLOTS` folder. The 24 individual histograms are also viewable in the RStudio Plots pane.
 
 ###### EXECUTABLE CODE
 ```{r descriptives-freq-demos-hist, eval = FALSE}
@@ -469,10 +469,19 @@ We initialize a list `hist_plot_prep` to hold the four objects that will be save
 This list in turn constitutes the `.x` argument for the outer `map()` call. In the outer call, we apply to this list the function `ggpubr::ggarrange()`, which arranges multiple plots on a single page. Here we pass several arguments, including `plotlist`, which extracts the plots to be displayed from the `plots` list-column of the current iteration of the `.x` data frame, and `ncol` and `nrow`, which lay out the dimensions of the resulting plot grid.
 ```{r descriptives-freq-demos-hist, echo = 38:40, eval = F}
 ```
+Now we are ready to export the four .pdfs. We can use `walk2()` to iterate, because we need only the side-effect of saving an external file. To `walk2()` we pass the list of four plot grids to export `hist_plot_prep` as the `.x` argument, and a vector of names for these grids as the `.y` argument (as before, these names are extracted by `unique(hist_list$file)`). We use `ggpubr::ggexport()` to save out the pdfs., passing the names in `.y` to the argument `filename` to create file paths for the output.
+```{r descriptives-freq-demos-hist, echo = 42:47, eval = F}
+```
 #### 4. Raw Score Descriptive Statistics
 
+##### Tables
+
+The descriptive statistics tables provide sample sizes, means, and SDs for the raw scores from five subscales. These frequency tables are named with the prefix `raw_desc` and saved to `.csv` in the `OUTPUT-FILES/TABLES` folder.
+
+As before, only elements that differ from previously documented code will receive commentary below.
+
 ###### EXECUTABLE CODE
-```{r descriptives-raw-desc, eval = FALSE}
+```{r descriptives-raw-desc-tables, eval = FALSE}
 list(mget(str_c("data_RS_sim_", data_name_suffix)),
      data_name_suffix) %>%
   pmap(
@@ -500,7 +509,17 @@ iwalk(mget(str_c("raw_desc_", data_name_suffix)),
               ".csv")
       ),
       na = ""))
+```
 
+
+##### Plots
+
+Using `ggplot2` functions, this section produces a .pdf output file for each of the four age-range/rater data sets. Each .pdf contains a plot of the means and SDs for the five subscale raw scores. The .pdfs are named with the prefix `raw_desc` and saved in the `OUTPUT-FILES/PLOTS` folder. The four plots are also viewable in the RStudio Plots pane.
+
+As before, only elements that differ from previously documented code will receive commentary below.
+
+###### EXECUTABLE CODE
+```{r descriptives-raw-desc-plots, eval = FALSE}
 map(mget(str_c("raw_desc_", data_name_suffix)), ~ .x %>% 
       fill(data)) %>%
   list2env(envir = .GlobalEnv)

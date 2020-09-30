@@ -1,3 +1,5 @@
+# Load packages, read data, specify input parameters
+
 suppressMessages(library(here))
 suppressMessages(suppressWarnings(library(tidyverse)))
 suppressMessages(library(psych))
@@ -48,6 +50,8 @@ item_cats <- replicate(
   )  %>% 
   set_names(str_c("item_cats_", data_name_suffix))
 
+# Item response frequencies: Tables
+
 list(mget(str_c("data_RS_sim_", data_name_suffix)),
      item_cols,
      item_cats,
@@ -72,6 +76,7 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
   na = "")) %>%
   list2env(envir = .GlobalEnv)
 
+# Demographic Frequency Counts: Tables
 
 list(mget(str_c("data_RS_sim_", data_name_suffix)),
      data_name_suffix) %>%
@@ -105,6 +110,8 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
   ),
   na = "")) %>%
   list2env(envir = .GlobalEnv)
+
+# Demographic Frequency Counts: Histograms
 
 map(mget(str_c("freq_demos_", data_name_suffix)), ~ .x %>% 
    fill(c(data, var))) %>%
@@ -143,16 +150,10 @@ hist_list <- lst(
       )
   ))
 
-# hist_plot_prep is a list, in which .x argument to the outer map() call is a list
-# containing four data frames, hist_list divided into separate dfs for the four
-# age_range x rater combos. This list is supplied as the .x argument to the
-# inner map() call, which applies ggarrange() to put the plots of plots of the
-# .x list into multiple plot per page format suitable for saving as .pdf
 hist_plot_prep <- map(
   map(unique(hist_list$file), ~ hist_list %>% filter(file == .x)), 
   ~ ggpubr::ggarrange(plotlist = .x$plots, ncol = 2, nrow = 2))
 
-# this snippet exports and saves the .pdfs.
 walk2(hist_plot_prep,
       unique(hist_list$file),
       ~ ggpubr::ggexport(.x, filename = here(
@@ -160,7 +161,8 @@ walk2(hist_plot_prep,
               ".pdf")
       )))
 
-# raw score descriptives tables
+# raw score descriptives: tables
+
 list(mget(str_c("data_RS_sim_", data_name_suffix)),
      data_name_suffix) %>%
   pmap(
@@ -193,7 +195,8 @@ map(mget(str_c("raw_desc_", data_name_suffix)), ~ .x %>%
       fill(data)) %>%
   list2env(envir = .GlobalEnv)
 
-# print and save plots of raw score means, SDs by scale
+# raw score descriptives: plots
+
 imap(
   .x = lst(
     raw_desc_child_parent,

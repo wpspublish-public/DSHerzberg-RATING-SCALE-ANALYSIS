@@ -617,7 +617,7 @@ cat_order &lt;- c(
 <div id="tables" class="section level5">
 <h5>Tables</h5>
 <p>The demographic frequency tables provide case counts for the variables of age, gender, (parental) education level, race/ethnicity, U.S. geographical region, and clinical status. The script generates a separate table for each input data file. These frequency tables are named with the prefix <code>freq_demos</code> and saved to <code>.csv</code> in the <code>OUTPUT-FILES/TABLES</code> folder.</p>
-<p>The first section of this code is similar to the script for the item response frequency tables, so only the differing elements will receive commentary below.</p>
+<p>This code is similar to the script for the item response frequency tables, so only the differing elements will receive commentary below.</p>
 <div id="executable-code-2" class="section level6">
 <h6>EXECUTABLE CODE</h6>
 <pre class="r"><code>list(mget(str_c(&quot;data_RS_sim_&quot;, data_name_suffix)),
@@ -689,7 +689,7 @@ cat_order &lt;- c(
 </div>
 <div id="histograms" class="section level5">
 <h5>Histograms</h5>
-<p>Using <code>ggplot2</code> functions, this section produces a .pdf output file for each for the four age-range/rater data sets. Each of these .pdfs includes six histograms, one for each of the six demographic variables. The .pdfs are named with the prefix <code>freq_demos</code> and saved in the <code>OUTPUT-FILES/PLOTS</code> folder. The 24 individual histograms are also viewable in the RStudio Plots pane.</p>
+<p>Using <code>ggplot2</code> functions, this section produces a .pdf output file for each of the four age-range/rater data sets. Each .pdf includes six histograms, one for each of the six demographic variables. The .pdfs are named with the prefix <code>freq_demos</code> and saved in the <code>OUTPUT-FILES/PLOTS</code> folder. The 24 individual histograms are also viewable in the RStudio Plots pane.</p>
 <div id="executable-code-3" class="section level6">
 <h6>EXECUTABLE CODE</h6>
 <pre class="r"><code>map(mget(str_c(&quot;freq_demos_&quot;, data_name_suffix)), ~ .x %&gt;% 
@@ -851,11 +851,22 @@ walk2(hist_plot_prep,
 <pre class="r"><code>hist_plot_prep &lt;- map(
   map(unique(hist_list$file), ~ hist_list %&gt;% filter(file == .x)), 
   ~ ggpubr::ggarrange(plotlist = .x$plots, ncol = 2, nrow = 2))</code></pre>
+<p>Now we are ready to export the four .pdfs. We can use <code>walk2()</code> to iterate, because we need only the side-effect of saving an external file. To <code>walk2()</code> we pass the list of four plot grids to export <code>hist_plot_prep</code> as the <code>.x</code> argument, and a vector of names for these grids as the <code>.y</code> argument (as before, these names are extracted by <code>unique(hist_list$file)</code>). We use <code>ggpubr::ggexport()</code> to save out the pdfs., passing the names in <code>.y</code> to the argument <code>filename</code> to create file paths for the output.</p>
+<pre class="r"><code>walk2(hist_plot_prep,
+      unique(hist_list$file),
+      ~ ggpubr::ggexport(.x, filename = here(
+        str_c(&quot;OUTPUT-FILES/PLOTS/&quot;, str_replace_all(.y, &quot;_&quot;, &quot;-&quot;),
+              &quot;.pdf&quot;)
+      )))</code></pre>
 </div>
 </div>
 </div>
 <div id="raw-score-descriptive-statistics" class="section level4">
 <h4>4. Raw Score Descriptive Statistics</h4>
+<div id="tables-1" class="section level5">
+<h5>Tables</h5>
+<p>The descriptive statistics tables provide sample sizes, means, and SDs for the raw scores from five subscales. These frequency tables are named with the prefix <code>raw_desc</code> and saved to <code>.csv</code> in the <code>OUTPUT-FILES/TABLES</code> folder.</p>
+<p>As before, only elements that differ from previously documented code will receive commentary below.</p>
 <div id="executable-code-4" class="section level6">
 <h6>EXECUTABLE CODE</h6>
 <pre class="r"><code>list(mget(str_c(&quot;data_RS_sim_&quot;, data_name_suffix)),
@@ -884,9 +895,16 @@ iwalk(mget(str_c(&quot;raw_desc_&quot;, data_name_suffix)),
               str_replace_all(.y, &quot;_&quot;, &quot;-&quot;),
               &quot;.csv&quot;)
       ),
-      na = &quot;&quot;))
-
-map(mget(str_c(&quot;raw_desc_&quot;, data_name_suffix)), ~ .x %&gt;% 
+      na = &quot;&quot;))</code></pre>
+</div>
+</div>
+<div id="plots" class="section level5">
+<h5>Plots</h5>
+<p>Using <code>ggplot2</code> functions, this section produces a .pdf output file for each of the four age-range/rater data sets. Each .pdf contains a plot of the means and SDs for the five subscale raw scores. The .pdfs are named with the prefix <code>raw_desc</code> and saved in the <code>OUTPUT-FILES/PLOTS</code> folder. The four plots are also viewable in the RStudio Plots pane.</p>
+<p>As before, only elements that differ from previously documented code will receive commentary below.</p>
+<div id="executable-code-5" class="section level6">
+<h6>EXECUTABLE CODE</h6>
+<pre class="r"><code>map(mget(str_c(&quot;raw_desc_&quot;, data_name_suffix)), ~ .x %&gt;% 
       fill(data)) %&gt;%
   list2env(envir = .GlobalEnv)
 
@@ -936,6 +954,7 @@ imap(
     str_c(&quot;OUTPUT-FILES/PLOTS/&quot;,
           str_replace_all(.y, &quot;_&quot;, &quot;-&quot;), &quot;.pdf&quot;)
   )))</code></pre>
+</div>
 </div>
 </div>
 </div>
