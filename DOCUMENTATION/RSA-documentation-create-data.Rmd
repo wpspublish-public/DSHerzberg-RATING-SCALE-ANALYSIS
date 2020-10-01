@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 We use the `psych` package to generate two 1000-case data sets for  demonstrating the procedures of rating scale analysis. The first, `data_RS_sim_child_parent`, is simulated data consisting of 50 behavior items rated on a four-option `Never-Occasionally-Frequently-Always` scale. The data are parent ratings on children aged 5-12. The item and scale score names have a `cp` (upper or lower case) prefix to indicate `parent` ratings on a `child` form. By varying these prefixes, and changing the definitions of the `age` and `age_range` variables, we can create similar data sets for other forms (e.g., `teacher`) and other age ranges (e.g., `teen`).
 
-The item responses are coded `1-2-3-4` and summed to yield five raw scale scores: `CPS1_raw`, `CPS2_raw`, `CPS3_raw`, `CPS4_raw`, and `CPS5_raw`. The data set also includes simulated data for age, parental education level, ethnicity, geographic region, and clinical status. 
+The item responses are coded `1-2-3-4` and summed to yield a raw total score `CPTOT_raw`, and five raw subscale scores: `CPS1_raw`, `CPS2_raw`, `CPS3_raw`, `CPS4_raw`, and `CPS5_raw`. The data set also includes simulated data for age, parental education level, ethnicity, geographic region, and clinical status. 
 
 The second data set, `data_input_bfi`, is real data consisting of 25 self-report items taken from the International Personality Item Pool. These responses are coded `1-2-3-4-5-6` for level of accuracy of the personality descriptor, with higher codes indicating greater accuracy. The item codes are summed to yield five raw scale scores: `AGR_raw`, `CON_raw` `EXT_raw`, `NEU_raw`, and `OPE_raw`.  This data set includes real data for age, gender, and education; and simulated data for ethnicity, region, and clinical status.
 
@@ -36,6 +36,7 @@ data_RS_sim_child_parent <-
     CPS3_raw = rowSums(.[str_c("cpi", str_pad(as.character(seq(3, 50, by = 5)), 2, side = "left", pad = "0"))]),
     CPS4_raw = rowSums(.[str_c("cpi", str_pad(as.character(seq(4, 50, by = 5)), 2, side = "left", pad = "0"))]),
     CPS5_raw = rowSums(.[str_c("cpi", str_pad(as.character(seq(5, 50, by = 5)), 2, side = "left", pad = "0"))]),
+    CPTOT_raw = rowSums(.[str_c("cpi", str_pad(as.character(1:50), 2, side = "left", pad = "0"))]),
     across(
       contains("cpi"),
       ~ case_when(
@@ -80,7 +81,7 @@ data_RS_sim_child_parent <-
       prob = c(0.8, 0.2)
     )
   ) %>%
-  select(ID:clin_status, CPS1_raw:CPS5_raw, cpi01:cpi50)
+  select(ID:clin_status, CPS1_raw:CPTOT_raw, cpi01:cpi50)
 
 write_csv(data_RS_sim_child_parent,
           here("INPUT-FILES/data-RS-sim-child-parent.csv"),
@@ -166,13 +167,13 @@ We use `dplyr::mutate()` to create/compute new variables. Within `mutate()`, we 
 The second argument of `across()` is the function (set off by `~`) to be applied to the selected columns. Here we use `dplyr::case_when()` to recode the numerical item codes to frequency descriptors. The `.x` shorthand signifies the input cell value, which is recoded according to the predicate functions passed as arguments to `case_when()`. As an example, `.x == 0 ~ "never",` indicates that when the input cell value is 0, the value of that cell will be changed to the string "never". The formula shorthand `~` indicates the "if-then" relationship between LHS (logical predicate) and RHS (outcome).
 
 Note that when across is used in this manner, no new columns are created; rather, existing columns are transformed. Thus, both the columns to be transformed (first argument) and the function (second argument) need to be within the parentheses of `across()`.
-```{r create-data-rsa, echo = 18:26, eval = F}
+```{r create-data-rsa, echo = 19:27, eval = F}
 ```
 The next snippet is an example of creating a new column `gender` and using `base::sample()` to populate it with proportionally sampled data. The arguments to `sample()` are as follows: a vector giving cell values from which to sample (`c("female", "male")`), the number of rows in the current data object (`1000`), sampling with or without replacement (`replace = TRUE`), and a vector of probability weights corresponding to each cell value (`c(0.53, 0.47)`). In this way, we compute a new variable that establishes a distribution of gender values equivalent to the U.S. census proportions for gender.
-```{r create-data-rsa, echo = 31:36, eval = F}
+```{r create-data-rsa, echo = 32:37, eval = F}
 ```
 We use `dplyr::select()` both to keep certain columns for the output and to specify the sequence for those columns.
-```{r create-data-rsa, echo = 62, eval = F}
+```{r create-data-rsa, echo = 63, eval = F}
 ```
 We use `readr::write_csv()` to write output to a flat file (.csv). In this instance, the arguments are:
 
@@ -180,9 +181,9 @@ We use `readr::write_csv()` to write output to a flat file (.csv). In this insta
 2. `here("INPUT-FILES/data-RS-sim-child-parent.csv")`: file path (specified using `here::here()`, which enables writing the file path out of the R project folder without a leading `/`)
 3. `na = ""`: values that are `NA` in R will be written to the .csv as empty cells.
 
-```{r create-data-rsa, echo = 64:66, eval = F}
+```{r create-data-rsa, echo = 65:67, eval = F}
 ```
 Here we process the `bfi` data set, which has 2800 cases and is included in the `psych` package. Because we have many more cases than we need, we can clean up the data by simply dropping any row that has `NA`, which we do with `tidyr::drop_na()`. We then pare the data down to a random sample of 1000 rows, using `dplyr::sample_n()`.
-```{r create-data-rsa, echo = 67:70, eval = F}
+```{r create-data-rsa, echo = 68:71, eval = F}
 ```
 

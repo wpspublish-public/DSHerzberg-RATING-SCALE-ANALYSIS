@@ -371,7 +371,7 @@ summary {
 <div id="overview" class="section level4">
 <h4>Overview</h4>
 <p>We use the <code>psych</code> package to generate two 1000-case data sets for demonstrating the procedures of rating scale analysis. The first, <code>data_RS_sim_child_parent</code>, is simulated data consisting of 50 behavior items rated on a four-option <code>Never-Occasionally-Frequently-Always</code> scale. The data are parent ratings on children aged 5-12. The item and scale score names have a <code>cp</code> (upper or lower case) prefix to indicate <code>parent</code> ratings on a <code>child</code> form. By varying these prefixes, and changing the definitions of the <code>age</code> and <code>age_range</code> variables, we can create similar data sets for other forms (e.g., <code>teacher</code>) and other age ranges (e.g., <code>teen</code>).</p>
-<p>The item responses are coded <code>1-2-3-4</code> and summed to yield five raw scale scores: <code>CPS1_raw</code>, <code>CPS2_raw</code>, <code>CPS3_raw</code>, <code>CPS4_raw</code>, and <code>CPS5_raw</code>. The data set also includes simulated data for age, parental education level, ethnicity, geographic region, and clinical status.</p>
+<p>The item responses are coded <code>1-2-3-4</code> and summed to yield a raw total score <code>CPTOT_raw</code>, and five raw subscale scores: <code>CPS1_raw</code>, <code>CPS2_raw</code>, <code>CPS3_raw</code>, <code>CPS4_raw</code>, and <code>CPS5_raw</code>. The data set also includes simulated data for age, parental education level, ethnicity, geographic region, and clinical status.</p>
 <p>The second data set, <code>data_input_bfi</code>, is real data consisting of 25 self-report items taken from the International Personality Item Pool. These responses are coded <code>1-2-3-4-5-6</code> for level of accuracy of the personality descriptor, with higher codes indicating greater accuracy. The item codes are summed to yield five raw scale scores: <code>AGR_raw</code>, <code>CON_raw</code> <code>EXT_raw</code>, <code>NEU_raw</code>, and <code>OPE_raw</code>. This data set includes real data for age, gender, and education; and simulated data for ethnicity, region, and clinical status.</p>
 </div>
 <div id="executable-code" class="section level4">
@@ -393,6 +393,7 @@ data_RS_sim_child_parent &lt;-
     CPS3_raw = rowSums(.[str_c(&quot;cpi&quot;, str_pad(as.character(seq(3, 50, by = 5)), 2, side = &quot;left&quot;, pad = &quot;0&quot;))]),
     CPS4_raw = rowSums(.[str_c(&quot;cpi&quot;, str_pad(as.character(seq(4, 50, by = 5)), 2, side = &quot;left&quot;, pad = &quot;0&quot;))]),
     CPS5_raw = rowSums(.[str_c(&quot;cpi&quot;, str_pad(as.character(seq(5, 50, by = 5)), 2, side = &quot;left&quot;, pad = &quot;0&quot;))]),
+    CPTOT_raw = rowSums(.[str_c(&quot;cpi&quot;, str_pad(as.character(1:50), 2, side = &quot;left&quot;, pad = &quot;0&quot;))]),
     across(
       contains(&quot;cpi&quot;),
       ~ case_when(
@@ -437,7 +438,7 @@ data_RS_sim_child_parent &lt;-
       prob = c(0.8, 0.2)
     )
   ) %&gt;%
-  select(ID:clin_status, CPS1_raw:CPS5_raw, cpi01:cpi50)
+  select(ID:clin_status, CPS1_raw:CPTOT_raw, cpi01:cpi50)
 
 write_csv(data_RS_sim_child_parent,
           here(&quot;INPUT-FILES/data-RS-sim-child-parent.csv&quot;),
@@ -506,7 +507,7 @@ write_csv(data_input_bfi,
 </div>
 <div id="commented-snippets" class="section level4">
 <h4>Commented Snippets</h4>
-<p>Load packages for file path specification (<code>here</code>), data wrangling (<code>tidyverse</code>) and pscyhometric data simulation and analysis (<code>psych</code>). <code>base::set.seed()</code> ensures repeatable results from sampling and modeling functions that use a random-number generator.</p>
+<p>Load packages for file path specification (<code>here</code>), data wrangling (<code>tidyverse</code>) and psychometric data simulation and analysis (<code>psych</code>). <code>base::set.seed()</code> ensures repeatable results from sampling and modeling functions that use a random-number generator.</p>
 <pre class="r"><code>suppressMessages(library(here))
 suppressMessages(library(tidyverse))
 suppressMessages(library(psych))
@@ -541,7 +542,7 @@ set.seed(123)</code></pre>
       prob = c(0.53, 0.47)
     ),</code></pre>
 <p>We use <code>dplyr::select()</code> both to keep certain columns for the output and to specify the sequence for those columns.</p>
-<pre class="r"><code>  select(ID:clin_status, CPS1_raw:CPS5_raw, cpi01:cpi50)</code></pre>
+<pre class="r"><code>  select(ID:clin_status, CPS1_raw:CPTOT_raw, cpi01:cpi50)</code></pre>
 <p>We use <code>readr::write_csv()</code> to write output to a flat file (.csv). In this instance, the arguments are:</p>
 <ol style="list-style-type: decimal">
 <li><code>data_RS_sim_child_parent</code>: data object to be written</li>

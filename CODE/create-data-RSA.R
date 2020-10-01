@@ -17,6 +17,7 @@ data_RS_sim_child_parent <-
     CPS3_raw = rowSums(.[str_c("cpi", str_pad(as.character(seq(3, 50, by = 5)), 2, side = "left", pad = "0"))]),
     CPS4_raw = rowSums(.[str_c("cpi", str_pad(as.character(seq(4, 50, by = 5)), 2, side = "left", pad = "0"))]),
     CPS5_raw = rowSums(.[str_c("cpi", str_pad(as.character(seq(5, 50, by = 5)), 2, side = "left", pad = "0"))]),
+    CPTOT_raw = rowSums(.[str_c("cpi", str_pad(as.character(1:50), 2, side = "left", pad = "0"))]),
     across(
       contains("cpi"),
       ~ case_when(
@@ -61,7 +62,7 @@ data_RS_sim_child_parent <-
       prob = c(0.8, 0.2)
     )
   ) %>%
-  select(ID:clin_status, CPS1_raw:CPS5_raw, cpi01:cpi50)
+  select(ID:clin_status, CPS1_raw:CPTOT_raw, cpi01:cpi50)
 
 write_csv(data_RS_sim_child_parent,
           here("INPUT-FILES/data-RS-sim-child-parent.csv"),
@@ -82,6 +83,7 @@ data_RS_sim_child_teacher <-
     CTS3_raw = rowSums(.[str_c("cti", str_pad(as.character(seq(3, 50, by = 5)), 2, side = "left", pad = "0"))]),
     CTS4_raw = rowSums(.[str_c("cti", str_pad(as.character(seq(4, 50, by = 5)), 2, side = "left", pad = "0"))]),
     CTS5_raw = rowSums(.[str_c("cti", str_pad(as.character(seq(5, 50, by = 5)), 2, side = "left", pad = "0"))]),
+    CTTOT_raw = rowSums(.[str_c("cti", str_pad(as.character(1:50), 2, side = "left", pad = "0"))]),
     across(
       contains("cti"),
       ~ case_when(
@@ -126,7 +128,7 @@ data_RS_sim_child_teacher <-
       prob = c(0.8, 0.2)
     )
   ) %>%
-  select(ID:clin_status, CTS1_raw:CTS5_raw, cti01:cti50)
+  select(ID:clin_status, CTS1_raw:CTTOT_raw, cti01:cti50)
 
 write_csv(data_RS_sim_child_teacher,
           here("INPUT-FILES/data-RS-sim-child-teacher.csv"),
@@ -147,6 +149,7 @@ data_RS_sim_teen_parent <-
     TPS3_raw = rowSums(.[str_c("tpi", str_pad(as.character(seq(3, 50, by = 5)), 2, side = "left", pad = "0"))]),
     TPS4_raw = rowSums(.[str_c("tpi", str_pad(as.character(seq(4, 50, by = 5)), 2, side = "left", pad = "0"))]),
     TPS5_raw = rowSums(.[str_c("tpi", str_pad(as.character(seq(5, 50, by = 5)), 2, side = "left", pad = "0"))]),
+    TPTOT_raw = rowSums(.[str_c("tpi", str_pad(as.character(1:50), 2, side = "left", pad = "0"))]),
     across(
       contains("tpi"),
       ~ case_when(
@@ -191,7 +194,7 @@ data_RS_sim_teen_parent <-
       prob = c(0.8, 0.2)
     )
   ) %>%
-  select(ID:clin_status, TPS1_raw:TPS5_raw, tpi01:tpi50)
+  select(ID:clin_status, TPS1_raw:TPTOT_raw, tpi01:tpi50)
 
 write_csv(data_RS_sim_teen_parent,
           here("INPUT-FILES/data-RS-sim-teen-parent.csv"),
@@ -212,6 +215,7 @@ data_RS_sim_teen_teacher <-
     TTS3_raw = rowSums(.[str_c("tti", str_pad(as.character(seq(3, 50, by = 5)), 2, side = "left", pad = "0"))]),
     TTS4_raw = rowSums(.[str_c("tti", str_pad(as.character(seq(4, 50, by = 5)), 2, side = "left", pad = "0"))]),
     TTS5_raw = rowSums(.[str_c("tti", str_pad(as.character(seq(5, 50, by = 5)), 2, side = "left", pad = "0"))]),
+    TTTOT_raw = rowSums(.[str_c("tti", str_pad(as.character(1:50), 2, side = "left", pad = "0"))]),
     across(
       contains("tti"),
       ~ case_when(
@@ -256,7 +260,7 @@ data_RS_sim_teen_teacher <-
       prob = c(0.8, 0.2)
     )
   ) %>%
-  select(ID:clin_status, TTS1_raw:TTS5_raw, tti01:tti50)
+  select(ID:clin_status, TTS1_raw:TTTOT_raw, tti01:tti50)
 
 write_csv(data_RS_sim_teen_teacher,
           here("INPUT-FILES/data-RS-sim-teen-teacher.csv"),
