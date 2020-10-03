@@ -137,7 +137,7 @@ hist_list <- lst(
                    fill = "blue",
                    alpha = .2,
                    width = .3) +
-          scale_y_continuous(breaks = seq(0, max(.x$n), 50)) +
+          scale_y_continuous(breaks = seq(0, max(.x$n), round(max(.x$n) / 10, -1))) +
           labs(subtitle = str_c(
             "Demo Counts - ",
             str_replace(str_sub(.y
@@ -174,7 +174,6 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
       mutate(
         data = case_when(rownames(.) == "1" ~ ..2,
                          T ~ NA_character_),
-        # data = ..2,
         across(c(mean, sd),
                ~ round(., 2))
       ) %>%
@@ -221,7 +220,9 @@ imap(
         size = 4,
         col = "blue"
       ) +
-      scale_y_continuous(breaks = seq(0, 15, by = 1), limits = c(0, 15)) +
+      scale_y_continuous(breaks = seq(0, round(max(.x$mean) + (2 * max(.x$sd)), -1), 
+                                      by = round(max(.x$sd), -1) / 2), 
+                         limits = c(0, round(max(.x$mean) + (2 * max(.x$sd))), -1)) +
       labs(
         title = str_c(
           "Raw Score Means (with SDs) - ",

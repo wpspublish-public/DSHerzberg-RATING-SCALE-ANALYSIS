@@ -716,7 +716,7 @@ hist_list &lt;- lst(
                    fill = &quot;blue&quot;,
                    alpha = .2,
                    width = .3) +
-          scale_y_continuous(breaks = seq(0, max(.x$n), 50)) +
+          scale_y_continuous(breaks = seq(0, max(.x$n), round(max(.x$n) / 10, -1))) +
           labs(subtitle = str_c(
             &quot;Demo Counts - &quot;,
             str_replace(str_sub(.y
@@ -831,8 +831,8 @@ walk2(hist_plot_prep,
                    fill = &quot;blue&quot;,
                    alpha = .2,
                    width = .3) +</code></pre>
-<p>Recall that <code>aes()</code> specified that the case count for demographic categories will be represented on the y-axis of the plot. We now use <code>scale_y_continuous()</code> to add a layer that optimizes the y-axis numerical scale for our data. The <code>breaks</code> argument specifies the numeric positions that will be represented explicitly on the vertical scale. Here we pass an ordered numeric vector returned by <code>base::seq()</code>, whose arguments are the lowest value <code>0</code>, the highest value (<code>max(.x$n)</code>, which returns the highest value in the <code>n</code> column of the input data element), and increments of <code>50</code> for the middle elements of the vector.</p>
-<pre class="r"><code>          scale_y_continuous(breaks = seq(0, max(.x$n), 50)) +</code></pre>
+<p>Recall that <code>aes()</code> specified that the case count for demographic categories will be represented on the y-axis of the plot. We now use <code>scale_y_continuous()</code> to add a layer that optimizes the y-axis numerical scale for our data. The <code>breaks</code> argument specifies the numeric positions that will be represented explicitly on the vertical scale. Here we pass an ordered numeric vector returned by <code>base::seq()</code>, whose arguments are the lowest value <code>0</code>, the highest value (<code>max(.x$n)</code>, which returns the highest value in the <code>n</code> column of the input data element), and increments of <code>round(max(.x$n) / 10, -1)</code> for the middle elements of the vector. In the latter expression, we divide the highest <code>n</code> by 10, and round it to the nearest multiple of 10, by passing <code>-1</code> as an argument to <code>round()</code>.</p>
+<pre class="r"><code>          scale_y_continuous(breaks = seq(0, max(.x$n), round(max(.x$n) / 10, -1))) +</code></pre>
 <p>Next we use <code>labs()</code> to add a title to the plot. We pass the <code>subtitle</code> argument (as opposed to <code>title</code>) simply because it prints in a preferable type size. Within the <code>labs()</code> call, we concatenate a character string for the title using the <code>str_c()</code>, <code>str_replace()</code>, and <code>str_sub()</code> functions. Within the <code>str_sub()</code> call, we pass the <code>.y</code> referent from <code>map2()</code>, which is the <code>file</code> column. This column contains the origin file names of the granular data elements, and from these names we can extract the form/age-range configuration that we need for our plot labels, (e.g., “<strong>Demo counts - child form, parent report</strong>”).</p>
 <pre class="r"><code>          labs(subtitle = str_c(
             &quot;Demo Counts - &quot;,
@@ -865,7 +865,7 @@ walk2(hist_plot_prep,
 <h4>4. Raw Score Descriptive Statistics</h4>
 <div id="tables-1" class="section level5">
 <h5>Tables</h5>
-<p>The descriptive statistics tables provide sample sizes, means, and SDs for the raw scores from five subscales. These frequency tables are named with the prefix <code>raw_desc</code> and saved to <code>.csv</code> in the <code>OUTPUT-FILES/TABLES</code> folder.</p>
+<p>The descriptive statistics tables provide sample sizes, means, and SDs for the raw scores from five subscales, as well as for the total raw score. These frequency tables are named with the prefix <code>raw_desc</code> and saved to <code>.csv</code> in the <code>OUTPUT-FILES/TABLES</code> folder.</p>
 <p>As before, only elements that differ from previously documented code will receive commentary below.</p>
 <div id="executable-code-4" class="section level6">
 <h6>EXECUTABLE CODE</h6>
@@ -880,7 +880,6 @@ walk2(hist_plot_prep,
       mutate(
         data = case_when(rownames(.) == &quot;1&quot; ~ ..2,
                          T ~ NA_character_),
-        # data = ..2,
         across(c(mean, sd),
                ~ round(., 2))
       ) %&gt;%
@@ -896,6 +895,24 @@ iwalk(mget(str_c(&quot;raw_desc_&quot;, data_name_suffix)),
               &quot;.csv&quot;)
       ),
       na = &quot;&quot;))</code></pre>
+</div>
+<div id="commented-snippets-4" class="section level6">
+<h6>COMMENTED SNIPPETS</h6>
+<p>In this segment, the input data objects are the four original input files of simulated rating scale data (e.g., <code>data_RS_sim_child_parent</code>). As before, <code>pmap()</code> is used to iterate over these objects, producing an output table for each.</p>
+<p>Here we select the columns to be analyzed (the <code>&#39;raw&#39;</code> scores). We obtain descriptive statistics on these columns using <code>psych::describe()</code>.</p>
+<pre class="r"><code>      select(contains(&#39;raw&#39;)) %&gt;%
+      describe(fast = T) %&gt;%</code></pre>
+<p>The argument <code>fast = T</code> limits the output to the most frequently reported measures (e.g., <code>n</code>, <code>mean</code>, <code>sd</code>, <code>min</code>, <code>max</code>, <code>range</code>, <code>se</code>). These measures become column names for the summary data object, which now has a row for each score being analyzed, as in:</p>
+<pre class="eval"><code>          vars    n  mean   sd min max range   se
+CPS1_raw     1 1000 10.27 2.84   1  19    18 0.09
+CPS2_raw     2 1000 10.19 2.92   2  20    18 0.09
+CPS3_raw     3 1000 10.08 2.79   2  21    19 0.09
+CPS4_raw     4 1000 10.30 2.79   2  21    19 0.09
+CPS5_raw     5 1000 10.21 2.77   1  19    18 0.09
+CPTOT_raw    6 1000 51.05 8.82  18  73    55 0.28</code></pre>
+<p>Because <code>describe()</code> converts the column names of the input object into row names, we use functions from <code>tibble</code> and <code>dplyer</code> to move these row names into a column named <code>scale</code>.</p>
+<pre class="r"><code>      rownames_to_column() %&gt;%
+      rename(scale = rowname) %&gt;%</code></pre>
 </div>
 </div>
 <div id="plots" class="section level5">

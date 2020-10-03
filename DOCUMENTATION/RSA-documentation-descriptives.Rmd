@@ -320,7 +320,7 @@ hist_list <- lst(
                    fill = "blue",
                    alpha = .2,
                    width = .3) +
-          scale_y_continuous(breaks = seq(0, max(.x$n), 50)) +
+          scale_y_continuous(breaks = seq(0, max(.x$n), round(max(.x$n) / 10, -1))) +
           labs(subtitle = str_c(
             "Demo Counts - ",
             str_replace(str_sub(.y
@@ -450,7 +450,7 @@ Note that the `cat` and `n` columns are named on `aes()`, the second argument pa
 `ggplot()` builds plots by layering graphical elements, adding additional layers with the `+` operator. A `geom` function creates a layer that visually represents the data mapping provided by `aes()`. Here we use `geom_col()` to create a histogram. The arguments to `geom_col()` specify the visual features of the plot: the color of the outline of the vertical bars (`col`), the color of the fill of those bars (`fill`), the transparency of that fill color (`alpha`), and the width of the bars (`width`).
 ```{r descriptives-freq-demos-hist, echo = 21:24, eval = F}
 ```
-Recall that `aes()` specified that the case count for demographic categories will be represented on the y-axis of the plot. We now use `scale_y_continuous()` to add a layer that optimizes the y-axis numerical scale for our data. The `breaks` argument specifies the numeric positions that will be represented explicitly on the vertical scale. Here we pass an ordered numeric vector returned by `base::seq()`, whose arguments are the lowest value `0`, the highest value (`max(.x$n)`, which returns the highest value in the `n` column of the input data element), and increments of `50` for the middle elements of the vector.
+Recall that `aes()` specified that the case count for demographic categories will be represented on the y-axis of the plot. We now use `scale_y_continuous()` to add a layer that optimizes the y-axis numerical scale for our data. The `breaks` argument specifies the numeric positions that will be represented explicitly on the vertical scale. Here we pass an ordered numeric vector returned by `base::seq()`, whose arguments are the lowest value `0`, the highest value (`max(.x$n)`, which returns the highest value in the `n` column of the input data element), and increments of `round(max(.x$n) / 10, -1)` for the middle elements of the vector. In the latter expression, we divide the highest `n` by 10, and round it to the nearest multiple of 10, by passing `-1` as an argument to `round()`.
 ```{r descriptives-freq-demos-hist, echo = 25, eval = F}
 ```
 Next we use `labs()` to add a title to the plot. We pass the `subtitle` argument (as opposed to `title`) simply because it prints in a preferable type size. Within the `labs()` call, we concatenate a character string for the title using the `str_c()`, `str_replace()`, and `str_sub()` functions. Within the `str_sub()` call, we pass the `.y` referent from `map2()`, which is the `file` column. This column contains the origin file names of the granular data elements, and from these names we can extract the form/age-range configuration that we need for our plot labels, (e.g., "__Demo counts - child form, parent report__").
@@ -476,7 +476,7 @@ Now we are ready to export the four .pdfs. We can use `walk2()` to iterate, beca
 
 ##### Tables
 
-The descriptive statistics tables provide sample sizes, means, and SDs for the raw scores from five subscales. These frequency tables are named with the prefix `raw_desc` and saved to `.csv` in the `OUTPUT-FILES/TABLES` folder.
+The descriptive statistics tables provide sample sizes, means, and SDs for the raw scores from five subscales, as well as for the total raw score. These frequency tables are named with the prefix `raw_desc` and saved to `.csv` in the `OUTPUT-FILES/TABLES` folder.
 
 As before, only elements that differ from previously documented code will receive commentary below.
 
@@ -493,7 +493,6 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
       mutate(
         data = case_when(rownames(.) == "1" ~ ..2,
                          T ~ NA_character_),
-        # data = ..2,
         across(c(mean, sd),
                ~ round(., 2))
       ) %>%
@@ -510,7 +509,25 @@ iwalk(mget(str_c("raw_desc_", data_name_suffix)),
       ),
       na = ""))
 ```
+###### COMMENTED SNIPPETS
+In this segment, the input data objects are the four original input files of simulated rating scale data (e.g., `data_RS_sim_child_parent`). As before, `pmap()` is used to iterate over these objects, producing an output table for each.
 
+Here we select the columns to be analyzed (the `'raw'` scores). We obtain descriptive statistics on these columns using `psych::describe()`. 
+```{r descriptives-raw-desc-tables, echo = 5:6, eval = F}
+```
+The argument `fast = T` limits the output to the most frequently reported measures (e.g., `n`, `mean`, `sd`, `min`, `max`, `range`, `se`). These measures become column names for the summary data object, which now has a row for each score being analyzed, as in:
+```{eval = F}
+          vars    n  mean   sd min max range   se
+CPS1_raw     1 1000 10.27 2.84   1  19    18 0.09
+CPS2_raw     2 1000 10.19 2.92   2  20    18 0.09
+CPS3_raw     3 1000 10.08 2.79   2  21    19 0.09
+CPS4_raw     4 1000 10.30 2.79   2  21    19 0.09
+CPS5_raw     5 1000 10.21 2.77   1  19    18 0.09
+CPTOT_raw    6 1000 51.05 8.82  18  73    55 0.28
+```
+Because `describe()` converts the column names of the input object into row names, we use functions from `tibble` and `dplyer` to move these row names into a column named `scale`.
+```{r descriptives-raw-desc-tables, echo = 7:8, eval = F}
+```
 
 ##### Plots
 

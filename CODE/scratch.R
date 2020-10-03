@@ -1,12 +1,16 @@
-temp1 <- data_RS_sim_child_parent %>% 
-mutate(
-  CPTOT_raw = rowSums(.[str_c("cpi", str_pad(as.character(1:50), 2, side = "left", pad = "0"))])
-)
-
-identical(sum(temp1[str_c("cpi", str_pad(as.character(1:50), 2, side = "left", pad = "0"))]), temp1$CPTOT_raw)
-mean(temp1$CPTOT_raw)
-str(temp1$CPTOT_raw)
-
-
-temp2 <- temp1 %>% filter(rownames(.) == "200")
-identical(sum(temp2[str_c("cpi", str_pad(as.character(1:50), 2, side = "left", pad = "0"))]), temp2$CPTOT_raw)
+temp1 <- data_RS_sim_child_parent %>%
+      select(contains('raw')) %>%
+      describe(fast = T) %>%
+      rownames_to_column() %>%
+      rename(scale = rowname) %>%
+      mutate(
+        data = case_when(rownames(.) == "1" ~ ..2,
+                         T ~ NA_character_),
+        # data = ..2,
+        across(c(mean, sd),
+               ~ round(., 2))
+      ) %>%
+      select(data, scale, n, mean, sd)
+  ) %>%
+  set_names(str_c("raw_desc_", data_name_suffix)) %>%
+  list2env(envir = .GlobalEnv)
