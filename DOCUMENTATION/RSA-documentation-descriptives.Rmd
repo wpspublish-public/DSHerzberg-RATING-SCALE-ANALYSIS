@@ -150,9 +150,9 @@ Here is the upper left corner of the `child-parent` input table, one of the four
 6 never  never  never never never occa… occa… never never never never never occa… never occa… occa… never
 ```
 
-We use `tidyr::pivot_longer()` to transform the data object from wide to long (nested) format. The arguments to `pivot_longer()` include the `tidyselect` helper `everything()`, which indicates that all columns will be included in the transformation, and the names of the new destination columns for the input column names (`names_to`) and the input cell values (`values_to`). `pivot_longer` returns a nested data frame with two columns, `item` and `value`. In this long object, the items and their respective response values are nested within each case of the input, running down the rows for the case and then repeating the same items for the next case, and so on.
+We use `tidyr::pivot_longer()` to transform the data object from wide to long (nested) format. The arguments to `pivot_longer()` include the `tidyselect` helper `everything()`, which indicates that all columns will be included in the transformation, and the names of the new destination columns for the input column names (`names_to`) and the input cell values (`values_to`). `pivot_longer` returns a nested data frame with two columns, `item` and `value`. In this long object, the items and their respective response values are nested within each case (person row) of the input, running down the rows for one person and then repeating the same items for the next person, and so on.
 
-We then use `dplyr::count()` to summarize this object. Passing `item` and `value` as arguments groups the summary object by these two variables, such that a new column `n` provides the case count for each pairing of item and response value (i.e., the first row is the number of cases that responded `always` to item `cpi01`, the second row is the number of cases that responded `frequently` to item `cpi01`, and so on). Because the input data file has 50 items, each with four possible response options, the summary object has 200 rows.
+We then use `dplyr::count()` to summarize this object. Passing `item` and `value` as arguments groups the summary object by these two variables, such that a new column `n` provides the person count for each pairing of item and response value (i.e., the first row is the number of persons that responded `always` to item `cpi01`, the second row is the number of persons that responded `frequently` to item `cpi01`, and so on). Because the input data file has 50 items, each with four possible response options, the summary object has 200 rows.
 ```{r descriptives-freq-item-val, echo = 8:9, eval = F}
 ```
 Here are the first 10 rows of the `child-parent` summary table.
@@ -173,7 +173,7 @@ Here are the first 10 rows of the `child-parent` summary table.
 We now transform the summary object back to wide format using `tidyr::pivot_wider()`, the mirror-image function of `pivot_longer()`. The `names_from` and `values_from` arguments indicate that the transformed object will draw its column names from the `value` column and its cell values from the `n` column, respectively, of the input object.
 ```{r descriptives-freq-item-val, echo = 10, eval = F}
 ```
-After pivoting back to wide format, the `child-parent` summary table has 50 rows (one for each item; only the first 10 are shown). The colums to the left of `item` provide the counts for each of the four response categories, for each item.
+After pivoting back to wide format, the `child-parent` summary table has 50 rows (one for each item; only the first 10 are shown below). The columns to the left of `item` provide the counts for each of the four response categories, for each item.
 ```{r eval = F}
    item  always frequently never occasionally
 
@@ -224,9 +224,9 @@ Finally, we use `base::list2env()` to assign the four summary tables to the glob
 
 ##### Tables
 
-The demographic frequency tables provide case counts for the variables of age, gender, (parental) education level, race/ethnicity, U.S. geographical region, and clinical status. The script generates a separate table for each input data file. These frequency tables are named with the prefix `freq_demos` and saved to `.csv` in the `OUTPUT-FILES/TABLES` folder.
+The demographic frequency tables provide person counts for the variables of age, gender, (parental) education level, race/ethnicity, U.S. geographical region, and clinical status. The script generates a separate table for each input data file. These frequency tables are named with the prefix `freq_demos` and saved to `.csv` in the `OUTPUT-FILES/TABLES` folder.
 
-This code is similar to the script for the item response frequency tables, so only the differing elements will receive commentary below.
+This code is similar to the script for the item response frequency tables, so only the differing elements receive commentary below.
 
 ###### EXECUTABLE CODE
 ```{r descriptives-freq-demos-table, eval = FALSE}
@@ -478,7 +478,7 @@ Now we are ready to export the four .pdfs. We can use `walk2()` to iterate, beca
 
 The descriptive statistics tables provide sample sizes, means, and SDs for the raw scores from five subscales, as well as for the total raw score. These frequency tables are named with the prefix `raw_desc` and saved to `.csv` in the `OUTPUT-FILES/TABLES` folder.
 
-As before, only elements that differ from previously documented code will receive commentary below.
+As before, only elements that differ from previously documented code receive commentary below.
 
 ###### EXECUTABLE CODE
 ```{r descriptives-raw-desc-tables, eval = FALSE}
@@ -531,9 +531,9 @@ Because `describe()` converts the column names of the input object into row name
 
 ##### Plots
 
-Using `ggplot2` functions, this section produces a .pdf output file for each of the four age-range/rater data sets. Each .pdf contains a plot of the means and SDs for the five subscale raw scores. The .pdfs are named with the prefix `raw_desc` and saved in the `OUTPUT-FILES/PLOTS` folder. The four plots are also viewable in the RStudio Plots pane.
+Using `ggplot2` functions, this section produces a .pdf output file for each of the four age-range/rater data sets. Each .pdf contains a plot of the means and SDs for the five subscale and `TOT` raw scores. The .pdfs are named with the prefix `raw_desc` and saved in the `OUTPUT-FILES/PLOTS` folder. The four plots are also viewable in the RStudio Plots pane.
 
-As before, only elements that differ from previously documented code will receive commentary below.
+As before, only elements that differ from previously documented code receive commentary below.
 
 ###### EXECUTABLE CODE
 ```{r descriptives-raw-desc-plots, eval = FALSE}
@@ -565,7 +565,9 @@ imap(
         size = 4,
         col = "blue"
       ) +
-      scale_y_continuous(breaks = seq(0, 15, by = 1), limits = c(0, 15)) +
+      scale_y_continuous(breaks = seq(0, round(max(.x$mean) + (2 * max(.x$sd)), -1), 
+                                      by = round(max(.x$sd), -1) / 2), 
+                         limits = c(0, round(max(.x$mean) + (2 * max(.x$sd))), -1)) +
       labs(
         title = str_c(
           "Raw Score Means (with SDs) - ",
@@ -587,4 +589,25 @@ imap(
     str_c("OUTPUT-FILES/PLOTS/",
           str_replace_all(.y, "_", "-"), ".pdf")
   )))
+```
+###### COMMENTED SNIPPETS
+As before, on the input side, we set up a mapping function to generate a plot for each of four input files. In this case, the inputs are the four raw score descriptives tables created in the previous code section. Here, we use `imap()`, so that we can operate on both the list of four inputs (explicitly designated as the `.x` referent), and the names of those inputs (the `.y` referent).
+```{r descriptives-raw-desc-plots, echo = 5:11, eval = F}
+```
+We call `ggplot()` and `geom_point()` to create the base layer: a univariate scatterplot in which the `scale` column of the input table is mapped to the _x_-axis, and the `mean` column is mapped to the _y_-axis.
+```{r descriptives-raw-desc-plots, echo = 13:14, eval = F}
+```
+We call `ggrepel::geom_label_repel()` to add a second layer: a label for each point that provides its value. These labels are "repelled" away from the point so that the do not cover it. We call `aes()` to map the value of `mean` into the label, and pass the arguments `hjust`, `vjust`, and `label.padding` to control the appearance of the label and its position relative to its referent point.
+```{r descriptives-raw-desc-plots, echo = 21:25, eval = F}
+```
+We optimize the _y_-axis numerical scale with `scale_y_continuous()`. We create robust code by setting `breaks` and `limits` not with numerical constants, but with variables calculated from the input data objects. This approach allows the code to create graphical output that is properly scaled to the numerical properties of its inputs.
+
+For example, we set the upper limit of this _y_-axis scale to `max(.x$mean) + (2 * max(.x$sd))`. Recall that we are graphing the raw score means of both `TOT` and its component subscales on the same plot. To scale the _y_-axis so that it has sufficient range to include the higher mean of `TOT`, we set the upper limit at the `max()` value of `.x$mean`, plus twice the `max()` value of `.x$sd`. The expressions thus scale appropriately with the numerical properties of any input file.
+```{r descriptives-raw-desc-plots, echo = 29:31, eval = F}
+```
+`geom_errorbar()` adds a vertical error-bar layer that depicts the standard deviation around each mean point. Within `aes()`, the arguments `ymin` and `ymax` map the lower and upper limits (respectively) of the error bar.
+```{r descriptives-raw-desc-plots, echo = 41:42, eval = F}
+```
+The output of the outer `imap()` call is a list containing four named `ggplot` objects. This list serves as the input to `iwalk()`, which we use as before to create the side-effect of saved .pdf output. Here, `ggplot2::ggsave()` is the function that saves a named (with the `.y` referent) .pdf file for each plot (the `.x` referent).
+```{r descriptives-raw-desc-plots, echo = 49:52, eval = F}
 ```

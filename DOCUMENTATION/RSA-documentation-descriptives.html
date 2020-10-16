@@ -546,8 +546,8 @@ cat_order &lt;- c(
 4 occas… occas… occa… occa… occa… freq… never occa… occa… freq… alwa… occa… occa… alwa… occa… freq… never
 5 never  never  never never never never occa… freq… never never never alwa… alwa… occa… never occa… occa…
 6 never  never  never never never occa… occa… never never never never never occa… never occa… occa… never</code></pre>
-<p>We use <code>tidyr::pivot_longer()</code> to transform the data object from wide to long (nested) format. The arguments to <code>pivot_longer()</code> include the <code>tidyselect</code> helper <code>everything()</code>, which indicates that all columns will be included in the transformation, and the names of the new destination columns for the input column names (<code>names_to</code>) and the input cell values (<code>values_to</code>). <code>pivot_longer</code> returns a nested data frame with two columns, <code>item</code> and <code>value</code>. In this long object, the items and their respective response values are nested within each case of the input, running down the rows for the case and then repeating the same items for the next case, and so on.</p>
-<p>We then use <code>dplyr::count()</code> to summarize this object. Passing <code>item</code> and <code>value</code> as arguments groups the summary object by these two variables, such that a new column <code>n</code> provides the case count for each pairing of item and response value (i.e., the first row is the number of cases that responded <code>always</code> to item <code>cpi01</code>, the second row is the number of cases that responded <code>frequently</code> to item <code>cpi01</code>, and so on). Because the input data file has 50 items, each with four possible response options, the summary object has 200 rows.</p>
+<p>We use <code>tidyr::pivot_longer()</code> to transform the data object from wide to long (nested) format. The arguments to <code>pivot_longer()</code> include the <code>tidyselect</code> helper <code>everything()</code>, which indicates that all columns will be included in the transformation, and the names of the new destination columns for the input column names (<code>names_to</code>) and the input cell values (<code>values_to</code>). <code>pivot_longer</code> returns a nested data frame with two columns, <code>item</code> and <code>value</code>. In this long object, the items and their respective response values are nested within each case (person row) of the input, running down the rows for one person and then repeating the same items for the next person, and so on.</p>
+<p>We then use <code>dplyr::count()</code> to summarize this object. Passing <code>item</code> and <code>value</code> as arguments groups the summary object by these two variables, such that a new column <code>n</code> provides the person count for each pairing of item and response value (i.e., the first row is the number of persons that responded <code>always</code> to item <code>cpi01</code>, the second row is the number of persons that responded <code>frequently</code> to item <code>cpi01</code>, and so on). Because the input data file has 50 items, each with four possible response options, the summary object has 200 rows.</p>
 <pre class="r"><code>      pivot_longer(everything(), names_to = &#39;item&#39;, values_to = &#39;value&#39;) %&gt;%
       count(item, value) %&gt;%</code></pre>
 <p>Here are the first 10 rows of the <code>child-parent</code> summary table.</p>
@@ -565,7 +565,7 @@ cat_order &lt;- c(
 10 cpi03 frequently     138</code></pre>
 <p>We now transform the summary object back to wide format using <code>tidyr::pivot_wider()</code>, the mirror-image function of <code>pivot_longer()</code>. The <code>names_from</code> and <code>values_from</code> arguments indicate that the transformed object will draw its column names from the <code>value</code> column and its cell values from the <code>n</code> column, respectively, of the input object.</p>
 <pre class="r"><code>      pivot_wider(names_from = value, values_from = n) %&gt;%</code></pre>
-<p>After pivoting back to wide format, the <code>child-parent</code> summary table has 50 rows (one for each item; only the first 10 are shown). The colums to the left of <code>item</code> provide the counts for each of the four response categories, for each item.</p>
+<p>After pivoting back to wide format, the <code>child-parent</code> summary table has 50 rows (one for each item; only the first 10 are shown below). The columns to the left of <code>item</code> provide the counts for each of the four response categories, for each item.</p>
 <pre class="r"><code>   item  always frequently never occasionally
 
  1 cpi01     29        116   498          357
@@ -616,8 +616,8 @@ cat_order &lt;- c(
 <h4>3. Demographic Frequency Counts</h4>
 <div id="tables" class="section level5">
 <h5>Tables</h5>
-<p>The demographic frequency tables provide case counts for the variables of age, gender, (parental) education level, race/ethnicity, U.S. geographical region, and clinical status. The script generates a separate table for each input data file. These frequency tables are named with the prefix <code>freq_demos</code> and saved to <code>.csv</code> in the <code>OUTPUT-FILES/TABLES</code> folder.</p>
-<p>This code is similar to the script for the item response frequency tables, so only the differing elements will receive commentary below.</p>
+<p>The demographic frequency tables provide person counts for the variables of age, gender, (parental) education level, race/ethnicity, U.S. geographical region, and clinical status. The script generates a separate table for each input data file. These frequency tables are named with the prefix <code>freq_demos</code> and saved to <code>.csv</code> in the <code>OUTPUT-FILES/TABLES</code> folder.</p>
+<p>This code is similar to the script for the item response frequency tables, so only the differing elements receive commentary below.</p>
 <div id="executable-code-2" class="section level6">
 <h6>EXECUTABLE CODE</h6>
 <pre class="r"><code>list(mget(str_c(&quot;data_RS_sim_&quot;, data_name_suffix)),
@@ -866,7 +866,7 @@ walk2(hist_plot_prep,
 <div id="tables-1" class="section level5">
 <h5>Tables</h5>
 <p>The descriptive statistics tables provide sample sizes, means, and SDs for the raw scores from five subscales, as well as for the total raw score. These frequency tables are named with the prefix <code>raw_desc</code> and saved to <code>.csv</code> in the <code>OUTPUT-FILES/TABLES</code> folder.</p>
-<p>As before, only elements that differ from previously documented code will receive commentary below.</p>
+<p>As before, only elements that differ from previously documented code receive commentary below.</p>
 <div id="executable-code-4" class="section level6">
 <h6>EXECUTABLE CODE</h6>
 <pre class="r"><code>list(mget(str_c(&quot;data_RS_sim_&quot;, data_name_suffix)),
@@ -917,8 +917,8 @@ CPTOT_raw    6 1000 51.05 8.82  18  73    55 0.28</code></pre>
 </div>
 <div id="plots" class="section level5">
 <h5>Plots</h5>
-<p>Using <code>ggplot2</code> functions, this section produces a .pdf output file for each of the four age-range/rater data sets. Each .pdf contains a plot of the means and SDs for the five subscale raw scores. The .pdfs are named with the prefix <code>raw_desc</code> and saved in the <code>OUTPUT-FILES/PLOTS</code> folder. The four plots are also viewable in the RStudio Plots pane.</p>
-<p>As before, only elements that differ from previously documented code will receive commentary below.</p>
+<p>Using <code>ggplot2</code> functions, this section produces a .pdf output file for each of the four age-range/rater data sets. Each .pdf contains a plot of the means and SDs for the five subscale and <code>TOT</code> raw scores. The .pdfs are named with the prefix <code>raw_desc</code> and saved in the <code>OUTPUT-FILES/PLOTS</code> folder. The four plots are also viewable in the RStudio Plots pane.</p>
+<p>As before, only elements that differ from previously documented code receive commentary below.</p>
 <div id="executable-code-5" class="section level6">
 <h6>EXECUTABLE CODE</h6>
 <pre class="r"><code>map(mget(str_c(&quot;raw_desc_&quot;, data_name_suffix)), ~ .x %&gt;% 
@@ -949,7 +949,9 @@ imap(
         size = 4,
         col = &quot;blue&quot;
       ) +
-      scale_y_continuous(breaks = seq(0, 15, by = 1), limits = c(0, 15)) +
+      scale_y_continuous(breaks = seq(0, round(max(.x$mean) + (2 * max(.x$sd)), -1), 
+                                      by = round(max(.x$sd), -1) / 2), 
+                         limits = c(0, round(max(.x$mean) + (2 * max(.x$sd))), -1)) +
       labs(
         title = str_c(
           &quot;Raw Score Means (with SDs) - &quot;,
@@ -968,6 +970,39 @@ imap(
   )
 ) %&gt;%
   iwalk(~ ggsave(plot = .x, file = here(
+    str_c(&quot;OUTPUT-FILES/PLOTS/&quot;,
+          str_replace_all(.y, &quot;_&quot;, &quot;-&quot;), &quot;.pdf&quot;)
+  )))</code></pre>
+</div>
+<div id="commented-snippets-5" class="section level6">
+<h6>COMMENTED SNIPPETS</h6>
+<p>As before, on the input side, we set up a mapping function to generate a plot for each of four input files. In this case, the inputs are the four raw score descriptives tables created in the previous code section. Here, we use <code>imap()</code>, so that we can operate on both the list of four inputs (explicitly designated as the <code>.x</code> referent), and the names of those inputs (the <code>.y</code> referent).</p>
+<pre class="r"><code>imap(
+  .x = lst(
+    raw_desc_child_parent,
+    raw_desc_child_teacher,
+    raw_desc_teen_parent,
+    raw_desc_teen_teacher
+  ),</code></pre>
+<p>We call <code>ggplot()</code> and <code>geom_point()</code> to create the base layer: a univariate scatterplot in which the <code>scale</code> column of the input table is mapped to the <em>x</em>-axis, and the <code>mean</code> column is mapped to the <em>y</em>-axis.</p>
+<pre class="r"><code>    ggplot(.x, aes(scale, mean)) +
+      geom_point(</code></pre>
+<p>We call <code>ggrepel::geom_label_repel()</code> to add a second layer: a label for each point that provides its value. These labels are “repelled” away from the point so that the do not cover it. We call <code>aes()</code> to map the value of <code>mean</code> into the label, and pass the arguments <code>hjust</code>, <code>vjust</code>, and <code>label.padding</code> to control the appearance of the label and its position relative to its referent point.</p>
+<pre class="r"><code>      geom_label_repel(
+        aes(label = mean),
+        hjust = .7,
+        vjust = -1,
+        label.padding = unit(0.1, &quot;lines&quot;),</code></pre>
+<p>We optimize the <em>y</em>-axis numerical scale with <code>scale_y_continuous()</code>. We create robust code by setting <code>breaks</code> and <code>limits</code> not with numerical constants, but with variables calculated from the input data objects. This approach allows the code to create graphical output that is properly scaled to the numerical properties of its inputs.</p>
+<p>For example, we set the upper limit of this <em>y</em>-axis scale to <code>max(.x$mean) + (2 * max(.x$sd))</code>. Recall that we are graphing the raw score means of both <code>TOT</code> and its component subscales on the same plot. To scale the <em>y</em>-axis so that it has sufficient range to include the higher mean of <code>TOT</code>, we set the upper limit at the <code>max()</code> value of <code>.x$mean</code>, plus twice the <code>max()</code> value of <code>.x$sd</code>. The expressions thus scale appropriately with the numerical properties of any input file.</p>
+<pre class="r"><code>      scale_y_continuous(breaks = seq(0, round(max(.x$mean) + (2 * max(.x$sd)), -1), 
+                                      by = round(max(.x$sd), -1) / 2), 
+                         limits = c(0, round(max(.x$mean) + (2 * max(.x$sd))), -1)) +</code></pre>
+<p><code>geom_errorbar()</code> adds a vertical error-bar layer that depicts the standard deviation around each mean point. Within <code>aes()</code>, the arguments <code>ymin</code> and <code>ymax</code> map the lower and upper limits (respectively) of the error bar.</p>
+<pre class="r"><code>      geom_errorbar(
+        aes(ymin = mean - sd, ymax = mean + sd),</code></pre>
+<p>The output of the outer <code>imap()</code> call is a list containing four named <code>ggplot</code> objects. This list serves as the input to <code>iwalk()</code>, which we use as before to create the side-effect of saved .pdf output. Here, <code>ggplot2::ggsave()</code> is the function that saves a named (with the <code>.y</code> referent) .pdf file for each plot (the <code>.x</code> referent).</p>
+<pre class="r"><code>  iwalk(~ ggsave(plot = .x, file = here(
     str_c(&quot;OUTPUT-FILES/PLOTS/&quot;,
           str_replace_all(.y, &quot;_&quot;, &quot;-&quot;), &quot;.pdf&quot;)
   )))</code></pre>

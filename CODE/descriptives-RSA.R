@@ -190,11 +190,11 @@ iwalk(mget(str_c("raw_desc_", data_name_suffix)),
       ),
       na = ""))
 
+# raw score descriptives: plots
+
 map(mget(str_c("raw_desc_", data_name_suffix)), ~ .x %>% 
       fill(data)) %>%
   list2env(envir = .GlobalEnv)
-
-# raw score descriptives: plots
 
 imap(
   .x = lst(
