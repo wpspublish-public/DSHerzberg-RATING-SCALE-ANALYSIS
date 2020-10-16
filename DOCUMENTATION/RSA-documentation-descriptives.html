@@ -439,13 +439,13 @@ item_cats &lt;- replicate(
 </div>
 <div id="commented-snippets" class="section level6">
 <h6>COMMENTED SNIPPETS</h6>
-<p>We load packages for file path specification (<code>here</code>), data wrangling (<code>tidyverse</code>) psychometric data simulation and analysis (<code>psych</code>), plot labeling (<code>ggrepel</code>), and formatting plots for export as .pdf (<code>ggpubr</code>).</p>
+<p>Load packages for file path specification (<code>here</code>), data wrangling (<code>tidyverse</code>) psychometric data simulation and analysis (<code>psych</code>), plot labeling (<code>ggrepel</code>), and formatting plots for export as .pdf (<code>ggpubr</code>).</p>
 <pre class="r"><code>suppressMessages(library(here))
 suppressMessages(suppressWarnings(library(tidyverse)))
 suppressMessages(library(psych))
 library(ggrepel)
 library(ggpubr)</code></pre>
-<p>We specify file paths and retrieve data from a remote host. The script reads in four input files consisting of simulated rating-scale (<code>RS</code>) data:</p>
+<p>Specify file paths and retrieve data from a remote host. The script reads in four input files consisting of simulated rating-scale (<code>RS</code>) data:</p>
 <ul>
 <li><code>data-RS-sim-child-parent.csv</code>: <code>child</code> age range (5-12 yo), <code>parent</code> report</li>
 <li><code>data-RS-sim-child-teacher</code>: <code>child</code> age range (5-12 yo), <code>teacher</code> report</li>
@@ -467,7 +467,7 @@ data_RS_sim_teen_parent &lt;- suppressMessages(read_csv(url(
 data_RS_sim_teen_teacher &lt;- suppressMessages(read_csv(url(
   str_c(urlRemote_path, github_path, &quot;data-RS-sim-teen-teacher.csv&quot;)
 )))</code></pre>
-<p>We initialize vectors containing file, variable, and category names, abbrievations, and pre/suffixes. These vectors will be used throughout the script.</p>
+<p>Initialize vectors containing file, variable, and category names, abbrievations, and pre/suffixes. These vectors will be used throughout the script.</p>
 <pre class="r"><code>data_name_suffix &lt;- c(&quot;child_parent&quot;, &quot;child_teacher&quot;, &quot;teen_parent&quot;, &quot;teen_teacher&quot;)
 item_col_prefix &lt;- c(&quot;cp&quot;, &quot;ct&quot;, &quot;tp&quot;, &quot;tt&quot;)
 scale_col_prefix &lt;- toupper(item_col_prefix)
@@ -482,13 +482,13 @@ cat_order &lt;- c(
   &quot;typ&quot;, &quot;clin&quot;, 
   &quot;never&quot;, &quot;occasionally&quot;,&quot;frequently&quot;, &quot;always&quot;
 )</code></pre>
-<p>We initialize a list containing four character vectors whose elements are the item column names for the four input data files. We use <code>purrr::map()</code> to iterate over the vector containing the item column prefixes (<code>item_col_prefix</code>). We apply a lambda (anonymous) function with <code>~</code> to create item column names with an <code>i01</code> to <code>i50</code> nomenclature. <code>stringr::str_pad()</code> pads a numerical sequence with zeros to the left of each number. Note the use of <code>base::as_character()</code> to coerce the number sequence <code>1:50</code> to a sequence of strings. This is wrapped in <code>stringr::str_c()</code> which concatenates the prefixes in <code>item_col_prefix</code> with the zero-padded numbers. We then use <code>purrr::set_names()</code> to name the vectors within the list, again employing <code>str_c()</code> to iteratively concatenate a prefix <code>&quot;item_cols_&quot;</code> with a vector of suffixes <code>data_name_suffix</code>.</p>
+<p>Initialize a list containing four character vectors whose elements are the item column names for the four input data files. <code>purrr::map()</code> iterates over the vector containing the item column prefixes (<code>item_col_prefix</code>). We apply a lambda (anonymous) function with <code>~</code> to create item column names with an <code>i01</code> to <code>i50</code> nomenclature. <code>stringr::str_pad()</code> pads a numerical sequence with zeros to the left of each number. Note the use of <code>base::as_character()</code> to coerce the number sequence <code>1:50</code> to a sequence of strings. This is wrapped in <code>stringr::str_c()</code> which concatenates the prefixes in <code>item_col_prefix</code> with the zero-padded numbers. We then use <code>purrr::set_names()</code> to name the vectors within the list, again employing <code>str_c()</code> to iteratively concatenate a prefix <code>&quot;item_cols_&quot;</code> with a vector of suffixes <code>data_name_suffix</code>.</p>
 <pre class="r"><code>item_cols &lt;- item_col_prefix %&gt;% 
   map(
     ~ str_c(.x, &quot;i&quot;, str_pad(as.character(1:50), 2, side = &quot;left&quot;, pad = &quot;0&quot;))
   ) %&gt;% 
   set_names(str_c(&quot;item_cols_&quot;, data_name_suffix))</code></pre>
-<p>We use <code>base::replicate()</code> to return a list (<code>item_cats</code>) containing four identical vectors whose elements are the item rating categories <code>c(&quot;never&quot;, &quot;occasionally&quot;,&quot;frequently&quot;, &quot;always&quot;)</code>. We use <code>set_names()</code> to name the vectors correspondingly to the input data files.</p>
+<p><code>base::replicate()</code> returns a list (<code>item_cats</code>) containing four identical vectors whose elements are the item rating categories <code>c(&quot;never&quot;, &quot;occasionally&quot;,&quot;frequently&quot;, &quot;always&quot;)</code>. We use <code>set_names()</code> to name the vectors correspondingly to the input data files.</p>
 <pre class="r"><code>item_cats &lt;- replicate(
   4, 
   c(&quot;never&quot;, &quot;occasionally&quot;,&quot;frequently&quot;, &quot;always&quot;), 
@@ -528,12 +528,12 @@ cat_order &lt;- c(
 </div>
 <div id="commented-snippets-1" class="section level6">
 <h6>COMMENTED SNIPPETS</h6>
-<p>We first initialize a <code>list</code> containing the objects required to assemble the tables. We use <code>base::mget()</code> to bring the four input data files into the list. Here <code>mget()</code> returns the objects named by the character vector <code>str_c(&quot;data_RS_sim_&quot;, data_name_suffix)</code>, whose elements are the names of the four input files. Also included in this list are the <code>item_cols</code>, <code>item_cats</code>, and <code>data_name_suffix</code> vectors.</p>
+<p>Initialize a <code>list</code> containing the objects required to assemble the tables. We use <code>base::mget()</code> to bring the four input data files into the list. Here <code>mget()</code> returns the objects named by the character vector <code>str_c(&quot;data_RS_sim_&quot;, data_name_suffix)</code>, whose elements are the names of the four input files. Also included in this list are the <code>item_cols</code>, <code>item_cats</code>, and <code>data_name_suffix</code> vectors.</p>
 <pre class="r"><code>list(mget(str_c(&quot;data_RS_sim_&quot;, data_name_suffix)),
      item_cols,
      item_cats,
      data_name_suffix) %&gt;%</code></pre>
-<p>We use <code>purrr::pmap()</code> to iterate simultaneously over several inputs of equal length (here all inputs have length of four). We apply a function, designated by <code>~</code>, to these inputs in parallel. Within the body of the funtion, we refer to the inputs using a numerical shorthand. Here, <code>..1</code> refers to the first input object, the list containing the four input data files. <code>..2</code> refers to the second input object (<code>item_cols</code>), a list containing vectors of item column names for each of the four input data files. Because these names are strings, we need to unquote them, using the <code>!!</code> operator, in order to pass them to <code>dplyr::select()</code>. The data object at this point is a list, with each element a data frame containing only the item columns from the input data files.</p>
+<p><code>purrr::pmap()</code> iterates simultaneously over several inputs of equal length (here all inputs have length of four). We apply a function, designated by <code>~</code>, to these inputs in parallel. Within the body of the funtion, we refer to the inputs using a numerical shorthand. Here, <code>..1</code> refers to the first input object, the list containing the four input data files. <code>..2</code> refers to the second input object (<code>item_cols</code>), a list containing vectors of item column names for each of the four input data files. Because these names are strings, we need to unquote them, using the <code>!!</code> operator, in order to pass them to <code>dplyr::select()</code>. The data object at this point is a list, with each element a data frame containing only the item columns from the input data files.</p>
 <pre class="r"><code>  pmap(
     ~ ..1 %&gt;%
       select(!!..2) %&gt;%</code></pre>
@@ -546,8 +546,8 @@ cat_order &lt;- c(
 4 occas… occas… occa… occa… occa… freq… never occa… occa… freq… alwa… occa… occa… alwa… occa… freq… never
 5 never  never  never never never never occa… freq… never never never alwa… alwa… occa… never occa… occa…
 6 never  never  never never never occa… occa… never never never never never occa… never occa… occa… never</code></pre>
-<p>We use <code>tidyr::pivot_longer()</code> to transform the data object from wide to long (nested) format. The arguments to <code>pivot_longer()</code> include the <code>tidyselect</code> helper <code>everything()</code>, which indicates that all columns will be included in the transformation, and the names of the new destination columns for the input column names (<code>names_to</code>) and the input cell values (<code>values_to</code>). <code>pivot_longer</code> returns a nested data frame with two columns, <code>item</code> and <code>value</code>. In this long object, the items and their respective response values are nested within each case (person row) of the input, running down the rows for one person and then repeating the same items for the next person, and so on.</p>
-<p>We then use <code>dplyr::count()</code> to summarize this object. Passing <code>item</code> and <code>value</code> as arguments groups the summary object by these two variables, such that a new column <code>n</code> provides the person count for each pairing of item and response value (i.e., the first row is the number of persons that responded <code>always</code> to item <code>cpi01</code>, the second row is the number of persons that responded <code>frequently</code> to item <code>cpi01</code>, and so on). Because the input data file has 50 items, each with four possible response options, the summary object has 200 rows.</p>
+<p><code>tidyr::pivot_longer()</code> transforma the data object from wide to long (nested) format. The arguments to <code>pivot_longer()</code> include the <code>tidyselect</code> helper <code>everything()</code>, which indicates that all columns will be included in the transformation, and the names of the new destination columns for the input column names (<code>names_to</code>) and the input cell values (<code>values_to</code>). <code>pivot_longer</code> returns a nested data frame with two columns, <code>item</code> and <code>value</code>. In this long object, the items and their respective response values are nested within each case (person row) of the input, running down the rows for one person and then repeating the same items for the next person, and so on.</p>
+<p><code>dplyr::count()</code> summarizes this object. Passing <code>item</code> and <code>value</code> as arguments groups the summary object by these two variables, such that a new column <code>n</code> provides the person count for each pairing of item and response value (i.e., the first row is the number of persons that responded <code>always</code> to item <code>cpi01</code>, the second row is the number of persons that responded <code>frequently</code> to item <code>cpi01</code>, and so on). Because the input data file has 50 items, each with four possible response options, the summary object has 200 rows.</p>
 <pre class="r"><code>      pivot_longer(everything(), names_to = &#39;item&#39;, values_to = &#39;value&#39;) %&gt;%
       count(item, value) %&gt;%</code></pre>
 <p>Here are the first 10 rows of the <code>child-parent</code> summary table.</p>
@@ -563,7 +563,7 @@ cat_order &lt;- c(
  8 cpi02 occasionally   367
  9 cpi03 always          24
 10 cpi03 frequently     138</code></pre>
-<p>We now transform the summary object back to wide format using <code>tidyr::pivot_wider()</code>, the mirror-image function of <code>pivot_longer()</code>. The <code>names_from</code> and <code>values_from</code> arguments indicate that the transformed object will draw its column names from the <code>value</code> column and its cell values from the <code>n</code> column, respectively, of the input object.</p>
+<p>Transform the summary object back to wide format using <code>tidyr::pivot_wider()</code>, the mirror-image function of <code>pivot_longer()</code>. The <code>names_from</code> and <code>values_from</code> arguments indicate that the transformed object will draw its column names from the <code>value</code> column and its cell values from the <code>n</code> column, respectively, of the input object.</p>
 <pre class="r"><code>      pivot_wider(names_from = value, values_from = n) %&gt;%</code></pre>
 <p>After pivoting back to wide format, the <code>child-parent</code> summary table has 50 rows (one for each item; only the first 10 are shown below). The columns to the left of <code>item</code> provide the counts for each of the four response categories, for each item.</p>
 <pre class="r"><code>   item  always frequently never occasionally
@@ -579,8 +579,8 @@ cat_order &lt;- c(
  9 cpi09     46        213   352          389
 10 cpi10     59        218   336          387</code></pre>
 <p>The next snippet formats and adds an additional column to the output tables. Recall that the piped data object is a list containing four summary tables. We use <code>dplyr::arrange()</code> and <code>base::match()</code> to sort each table by <code>item</code>, to a prespecified order. Within <code>match()</code>, we pass the <code>item</code> column and the match order provided by <code>!!..2</code>, which as noted previously, refers to a list containing four vectors of ordered item column names, one corresponding to each of the four summary tables in the pipeline. Wrapping <code>match()</code> in <code>arrange()</code> accomplishes the ordered sort.</p>
-<p>We then use <code>dplyr::mutate()</code> to create the <code>data</code> column, which identifies the data source (form name), for each of the four summary tables. With <code>dplyr::case_when()</code>, we can fill the cells of the <code>data</code> column conditionally. We want the first row of <code>data</code> to contain the form name, leaving the remaining rows <code>NA</code>. As the first argument to <code>case_when()</code>, we pass the predicate <code>rownames(.) == &quot;1&quot;</code>, which returns <code>TRUE</code> only for the first row of the data object, and thus isolates that row to receive a value in the <code>data</code> column. Using <code>~ ..4</code>, we supply that value from the list of form names that is the referent of <code>..4</code>, and which is iterating in parallel to the list containing the four summary tables. The second argument of <code>case_when()</code>, <code>T ~ NA_character_</code>, expresses the logical “else” condition, specifying that the value of <code>data</code> is <code>NA</code> whenever the predicate <code>rownames(.) == &quot;1&quot;</code> returns <code>FALSE</code>. Note the use of <code>NA_character_</code>, which is required because the <code>data</code> column is a character vector.</p>
-<p>We then use <code>select</code> to specify a final sequence of columns, with <code>!!..3</code> referring to the unquoted response category labels contined in the character vector <code>item_cats</code>.</p>
+<p><code>dplyr::mutate()</code> creates the <code>data</code> column, which identifies the data source (form name), for each of the four summary tables. With <code>dplyr::case_when()</code>, we can fill the cells of the <code>data</code> column conditionally. We want the first row of <code>data</code> to contain the form name, leaving the remaining rows <code>NA</code>. As the first argument to <code>case_when()</code>, we pass the predicate <code>rownames(.) == &quot;1&quot;</code>, which returns <code>TRUE</code> only for the first row of the data object, and thus isolates that row to receive a value in the <code>data</code> column. Using <code>~ ..4</code>, we supply that value from the list of form names that is the referent of <code>..4</code>, and which is iterating in parallel to the list containing the four summary tables. The second argument of <code>case_when()</code>, <code>T ~ NA_character_</code>, expresses the logical “else” condition, specifying that the value of <code>data</code> is <code>NA</code> whenever the predicate <code>rownames(.) == &quot;1&quot;</code> returns <code>FALSE</code>. Note the use of <code>NA_character_</code>, which is required because the <code>data</code> column is a character vector.</p>
+<p><code>select</code> specifies a final sequence of columns, with <code>!!..3</code> referring to the unquoted response category labels contined in the character vector <code>item_cats</code>.</p>
 <pre class="r"><code>      arrange(match(item, !!..2)) %&gt;%
       mutate(data = case_when(rownames(.) == &quot;1&quot; ~ ..4,
                               T ~ NA_character_)) %&gt;%
@@ -599,9 +599,9 @@ cat_order &lt;- c(
  9 NA           cpi09   352          389        213     46
 10 NA           cpi10   336          387        218     59</code></pre>
 <p>To recall, the data object at this point is a list of four tables summarizing the item response frequency counts for the four input files. We use <code>set_names()</code> to name the tables, employing <code>str_c()</code> to iteratively concatenate a prefix <code>&quot;freq_item_val_&quot;</code> with a vector of suffixes <code>data_name_suffix</code>.</p>
-<p>To save the four summary tables as .csv files for external use, we employ <code>purrr::iwalk()</code>, a variant of <code>map()</code>. Rather than returning a new list, <code>iwalk()</code> returns its input (the current data object) invisibly, passing it to the next function in the pipeline. It is thus ideal when we want to map a function that produces a “side effect” (e.g., saving external files, printing a plot, etc.).</p>
-<p>Using <code>iwalk()</code> (as opposed to <code>walk()</code>) allows us to map over both the data frames in the input list (the <code>.x</code> referent), and the <em>index</em> of that list (i.e., the names of the data frames, the <code>.y</code> referent). To save external files, we map <code>readr::write_csv()</code> over the four data frames in the input list. We designate file paths and names for those .csv files using the <code>stringr</code> functions <code>str_c()</code> and <code>str_replace_all()</code>. The latter creates the file name suffix, replacing the <code>&quot;_&quot;</code> character in the index elements (<code>.y</code>) with the <code>&quot;-&quot;</code> character. The <code>na = &quot;&quot;</code> argument, passed to <code>write_csv()</code>, indicates that that <code>NA</code> cells will be recoded to empty cells in the external files.</p>
-<p>Finally, we use <code>base::list2env()</code> to assign the four summary tables to the global environment <code>.GlobalEnv</code>, as separate data frames. The item response frequency tables are now available within the R programming environment, as well as externally as .csv files.</p>
+<p><code>purrr::iwalk()</code>, a variant of <code>map()</code>, saves the four summary tables as .csv files for external use. Rather than returning a new list, <code>iwalk()</code> returns its input (the current data object) invisibly, passing it to the next function in the pipeline. It is thus ideal to map a function that produces a “side effect” (e.g., saving external files, printing a plot, etc.).</p>
+<p>Using <code>iwalk()</code> (as opposed to <code>walk()</code>) allows maping over both the data frames in the input list (the <code>.x</code> referent), and the <em>index</em> of that list (i.e., the names of the data frames, the <code>.y</code> referent). To save external files, we map <code>readr::write_csv()</code> over the four data frames in the input list. We designate file paths and names for those .csv files using the <code>stringr</code> functions <code>str_c()</code> and <code>str_replace_all()</code>. The latter creates the file name suffix, replacing the <code>&quot;_&quot;</code> character in the index elements (<code>.y</code>) with the <code>&quot;-&quot;</code> character. The <code>na = &quot;&quot;</code> argument, passed to <code>write_csv()</code>, indicates that that <code>NA</code> cells will be recoded to empty cells in the external files.</p>
+<p>Finally, <code>base::list2env()</code> assigns the four summary tables to the global environment <code>.GlobalEnv</code>, as separate data frames. The item response frequency tables are now available within the R programming environment, as well as externally as .csv files.</p>
 <pre class="r"><code>  set_names(str_c(&quot;freq_item_val_&quot;, data_name_suffix)) %&gt;%
   iwalk(~ write_csv(.x, here(
     str_c(&quot;OUTPUT-FILES/TABLES/&quot;,
@@ -617,7 +617,7 @@ cat_order &lt;- c(
 <div id="tables" class="section level5">
 <h5>Tables</h5>
 <p>The demographic frequency tables provide person counts for the variables of age, gender, (parental) education level, race/ethnicity, U.S. geographical region, and clinical status. The script generates a separate table for each input data file. These frequency tables are named with the prefix <code>freq_demos</code> and saved to <code>.csv</code> in the <code>OUTPUT-FILES/TABLES</code> folder.</p>
-<p>This code is similar to the script for the item response frequency tables, so only the differing elements receive commentary below.</p>
+<p>This code is similar to the script for the item response frequency tables, so only the differing elements are commented.</p>
 <div id="executable-code-2" class="section level6">
 <h6>EXECUTABLE CODE</h6>
 <pre class="r"><code>list(mget(str_c(&quot;data_RS_sim_&quot;, data_name_suffix)),
@@ -654,8 +654,8 @@ cat_order &lt;- c(
 </div>
 <div id="commented-snippets-2" class="section level6">
 <h6>COMMENTED SNIPPETS</h6>
-<p>We use <code>pmap()</code> to iterate simultaneously over two inputs of equal length. Input <code>..1</code> is a list (assembled by <code>mget()</code>) containing the four input data files. Input <code>..2</code> is the <code>data_name_suffix</code> vector.</p>
-<p>We use <code>select()</code> to subset columns from each input file for further processing. These columns are named by the previously defined vector <code>var_order</code>. A <code>tidyselect</code> helper (in this case <code>all_of()</code>) is required when passing a character vector to <code>select()</code>.</p>
+<p><code>pmap()</code> iterates simultaneously over multiple inputs of equal length. Input <code>..1</code> is a list (assembled by <code>mget()</code>) containing the four input data files. Input <code>..2</code> is the <code>data_name_suffix</code> vector.</p>
+<p><code>select()</code> subsets columns from each input file for further processing. These columns are named by the previously defined vector <code>var_order</code>. A <code>tidyselect</code> helper (in this case <code>all_of()</code>) is required when passing a character vector to <code>select()</code>.</p>
 <pre class="r"><code>list(mget(str_c(&quot;data_RS_sim_&quot;, data_name_suffix)),
      data_name_suffix) %&gt;%
   pmap(
@@ -752,7 +752,7 @@ walk2(hist_plot_prep,
 <pre class="r"><code>map(mget(str_c(&quot;freq_demos_&quot;, data_name_suffix)), ~ .x %&gt;% 
    fill(c(data, var))) %&gt;%
     list2env(envir = .GlobalEnv)</code></pre>
-<p>The next section illustrates the list-column workflow, a facility provided by <code>purrr</code> that enables nested iteration. A list-column is a column within a tibble that can contain data frames, vectors, functions, or any other R object that can be held in a list. To begin, we load the four input demographic frequency tables into a list, using <code>tibble::lst()</code> to name the resulting list elements with the input object names.</p>
+<p>The next section illustrates the list-column workflow, a facility provided by <code>purrr</code> that enables nested iteration. A list-column is a column within a tibble that can contain data frames, vectors, functions, plots, or any other R object that can be held in a list. To begin, we load the four input demographic frequency tables into a list, using <code>tibble::lst()</code> to name the resulting list elements with the input object names.</p>
 <pre class="r"><code>hist_list &lt;- lst(
   freq_demos_child_parent,
   freq_demos_child_teacher,
@@ -785,7 +785,7 @@ walk2(hist_plot_prep,
 <p>It bears repeating that the output, at this stage, is a list of four named data frames, but those data frames now consist of a single list-column containing slices of the corresponding input data frames. Essentially, the input table has been carved up into segments, with each segment now residing in a row of the new list-column.</p>
 <pre class="r"><code>  map( ~
          tibble(var = map(var_order, ~ .y %&gt;% filter(var == .x), .y = .x))) %&gt;%</code></pre>
-<p>We now use <code>tibble()</code> to reduce the list of four data frames into a single data frame with two columns and four rows.</p>
+<p><code>tibble()</code> reduces the list of four data frames into a single data frame with two columns and four rows.</p>
 <pre class="r"><code>  tibble(file = names(.), data1 = .) %&gt;%</code></pre>
 <p>The first column <code>file</code> contains the names of the four input data frames, which are extracted from the input list with <code>base::names(.)</code>, where <code>.</code> refers to the input list. The second column <code>data1</code> is a list-column that holds the four input data frames. Here is the resulting structure:</p>
 <pre class="r"><code>  file                     data1           
@@ -794,7 +794,7 @@ walk2(hist_plot_prep,
 2 freq_demos_child_teacher &lt;tibble [6 × 1]&gt;
 3 freq_demos_teen_parent   &lt;tibble [6 × 1]&gt;
 4 freq_demos_teen_teacher  &lt;tibble [6 × 1]&gt;</code></pre>
-<p>Note that each tibble in the <code>data1</code> column has six rows; that is, one row for each of the six demographic variables. If we drill down into the top cell of <code>data1</code>, we see:</p>
+<p>Note that each tibble in the <code>data1</code> column has six rows; that is, one row for each of the six demographic variables. Drilling down into the top cell of <code>data1</code>, we see:</p>
 <pre class="r"><code>  var             
   &lt;list&gt;          
 1 &lt;tibble [2 × 4]&gt;
@@ -808,15 +808,15 @@ walk2(hist_plot_prep,
 
 1 child_parent age_range 5 to 8 yo    492
 2 child_parent age_range 9 to 12 yo   508</code></pre>
-<p>This slice, which shows the <code>age_range</code> counts for the <code>child_parent</code> data set, represents the granular data elements from which we will construct the output histograms. Essentially, we now have a single list-column that represents a nested structure (six demographic variables nested within four data sets) that resolves to the 24 granular data elements from which we will plot the 24 histograms that consitute the final output of our <code>ggplot()</code> call.</p>
-<p>To generate the histograms, we need each granular data element to reside in its own row. In the current data object, <code>data1</code> is a nested list-column, in which the 24 granular data elements are collapsed into four rows. We use <code>tidyr::unnest(cols = c(data1))</code> to remove one level of nesting in <code>data1</code>, transforming a four-row list-column into the required 24-row list-column. Conveniently, this operation simultaneously expands the <code>file</code> column, such that each granular data element is paired with the name of its original input file (e.g., <code>freq_demos_child_parent</code>).</p>
+<p>This slice, which shows the <code>age_range</code> counts for the <code>child_parent</code> data set, represents the granular data elements that are needed to generate the output histograms. Essentially, we now have a single list-column that represents a nested structure (six demographic variables nested within four data sets) that resolves to the 24 granular data elements from which we will plot the 24 histograms that consitute the final output of our <code>ggplot()</code> call.</p>
+<p>To generate the histograms, we need each granular data element to reside in its own row. In the current data object, <code>data1</code> is a nested list-column, in which the 24 granular data elements are collapsed into four rows. <code>tidyr::unnest(cols = c(data1))</code> removes one level of nesting in <code>data1</code>, transforming a four-row list-column into the required 24-row list-column. Conveniently, this operation simultaneously expands the <code>file</code> column, such that each granular data element is paired with the name of its original input file (e.g., <code>freq_demos_child_parent</code>).</p>
 <pre class="r"><code>  unnest(cols = c(data1)) %&gt;%</code></pre>
 <p>We now have a data structure that can be processed by <code>ggplot()</code> to generate the desired output plots. Crucially, those plots will reside in their own list-column, in the same rows as the granular data elements from which they are derived.</p>
 <p>To create a new list-column, <code>plots</code>, within the current data object, we use <code>mutate()</code>. Here, the <code>plots</code> list-column will hold the objects returned by a call of <code>map2()</code>, which will iterate over the two existing columns in the data object, applying a <code>ggplot()</code> call to <code>var</code> and <code>file</code>.</p>
 <pre class="r"><code>  mutate(plots = map2(
     var,
     file,</code></pre>
-<p>Note that the <code>ggplot()</code> call is wrapped in <code>base::print()</code>. This ensures that the 24 histograms will be viewable on the Plots pane of RStudio.</p>
+<p>Note that the <code>ggplot()</code> call is wrapped in <code>base::print()</code>. This ensures that the 24 histograms will appear on the RStudio Plots pane.</p>
 <p>Plot generation begins by passing two arguments to <code>ggplot()</code>. The first, <code>data = .x</code>, specifies that the data source for the plots will be the <code>.x</code> referent of <code>map2()</code>, which is the <code>var</code> list column that holds the 24 granular data elements. Recall the structure of these granular elements:</p>
 <pre class="r"><code>  data         var       cat            n
 
@@ -831,9 +831,9 @@ walk2(hist_plot_prep,
                    fill = &quot;blue&quot;,
                    alpha = .2,
                    width = .3) +</code></pre>
-<p>Recall that <code>aes()</code> specified that the case count for demographic categories will be represented on the y-axis of the plot. We now use <code>scale_y_continuous()</code> to add a layer that optimizes the y-axis numerical scale for our data. The <code>breaks</code> argument specifies the numeric positions that will be represented explicitly on the vertical scale. Here we pass an ordered numeric vector returned by <code>base::seq()</code>, whose arguments are the lowest value <code>0</code>, the highest value (<code>max(.x$n)</code>, which returns the highest value in the <code>n</code> column of the input data element), and increments of <code>round(max(.x$n) / 10, -1)</code> for the middle elements of the vector. In the latter expression, we divide the highest <code>n</code> by 10, and round it to the nearest multiple of 10, by passing <code>-1</code> as an argument to <code>round()</code>.</p>
+<p>Recall that <code>aes()</code> specified that the person count for demographic categories will be represented on the y-axis of the plot. <code>scale_y_continuous()</code> adds a layer that optimizes the y-axis numerical scale for the input data. The <code>breaks</code> argument specifies the numeric positions that will be represented explicitly on the vertical scale. Here we pass an ordered numeric vector returned by <code>base::seq()</code>, whose arguments are the lowest value <code>0</code>, the highest value (<code>max(.x$n)</code>, which returns the highest value in the <code>n</code> column of the input data element), and increments of <code>round(max(.x$n) / 10, -1)</code> for the middle elements of the vector. The latter expression, divides the highest <code>n</code> by 10, and rounds it to the nearest multiple of 10, by passing <code>-1</code> as an argument to <code>round()</code>.</p>
 <pre class="r"><code>          scale_y_continuous(breaks = seq(0, max(.x$n), round(max(.x$n) / 10, -1))) +</code></pre>
-<p>Next we use <code>labs()</code> to add a title to the plot. We pass the <code>subtitle</code> argument (as opposed to <code>title</code>) simply because it prints in a preferable type size. Within the <code>labs()</code> call, we concatenate a character string for the title using the <code>str_c()</code>, <code>str_replace()</code>, and <code>str_sub()</code> functions. Within the <code>str_sub()</code> call, we pass the <code>.y</code> referent from <code>map2()</code>, which is the <code>file</code> column. This column contains the origin file names of the granular data elements, and from these names we can extract the form/age-range configuration that we need for our plot labels, (e.g., “<strong>Demo counts - child form, parent report</strong>”).</p>
+<p><code>labs()</code> adds a title to the plot. We pass the <code>subtitle</code> argument (as opposed to <code>title</code>) simply because it prints in a preferable type size. Within the <code>labs()</code> call, we concatenate a character string for the title using the <code>str_c()</code>, <code>str_replace()</code>, and <code>str_sub()</code> functions. Within the <code>str_sub()</code> call, we pass the <code>.y</code> referent from <code>map2()</code>, which is the <code>file</code> column. This column contains the origin file names of the granular data elements, and from these names we can extract the form/age-range configuration that we need for our plot labels, (e.g., “<strong>Demo counts - child form, parent report</strong>”).</p>
 <pre class="r"><code>          labs(subtitle = str_c(
             &quot;Demo Counts - &quot;,
             str_replace(str_sub(.y
@@ -842,16 +842,16 @@ walk2(hist_plot_prep,
           )) +</code></pre>
 <p>We add a layer of category labels to the horizontal axis by calling <code>scale_x_discrete()</code>. Here we pass the <code>limits</code> argument, which requires a character vector that defines the possible values of the labels and their order. This vector exists as the <code>cat</code> column of the input data element, and we can pass it to <code>limits</code> with the expression <code>.x$cat</code>.</p>
 <pre class="r"><code>          scale_x_discrete(limits = .x$cat) +</code></pre>
-<p>We use the <code>theme()</code> layer to make global changes to the appearance of non-data plot elements. Here we call <code>theme()</code> to remove two unneeded visual elements, which we accomplish by passing the <code>element_blank()</code> function to arguments representing the minor lines on the coordinate grid (<code>panel.grid.minor</code>), and the title for the x-axis (<code>axis.title.x</code>)</p>
+<p>We use the <code>theme()</code> layer to make global changes to the appearance of non-data plot elements. Here, <code>theme()</code> removes two unneeded visual elements, by passing the <code>element_blank()</code> function to arguments representing the minor lines on the coordinate grid (<code>panel.grid.minor</code>), and the title for the x-axis (<code>axis.title.x</code>)</p>
 <pre class="r"><code>          theme(panel.grid.minor = element_blank(),
                 axis.title.x = element_blank())</code></pre>
 <p>Recall that the desired external output is four .pdf files (one for each input data file), each containing six histograms (one for each demographic variable). In the next snippet, we use the <code>ggpubr</code> package to set up this .pdf output.</p>
-<p>We initialize a list <code>hist_plot_prep</code> to hold the four objects that will be saved as .pdfs. To create these objects, we use a nested <code>map()</code> structure. With the inner <code>map()</code> call, we map over a four-element character vector, which we draw from the <code>file</code> column of <code>hist_list</code>, the data frame containing 24 histograms that we prepared in the previous code. With <code>unique(hist_list$file)</code>, we can extract only the four unique file labels from the 24 rows in the <code>file</code> column. We use this character vector as the <code>.x</code> referent in a function that filters <code>hist_list</code>, extracting on each iteration only the six rows that contain the current iteration of the <code>.x</code> file label vector in the <code>file</code> column. The inner <code>map()</code> call thus returns a list containing four six-row data frames, each of which holds six histograms in its <code>plots</code> list-column.</p>
+<p>We initialize a list <code>hist_plot_prep</code> to hold the four objects that will be saved as .pdfs. To create these objects, we use a nested <code>map()</code> structure. With the inner <code>map()</code> call, we map over a four-element character vector, which we draw from the <code>file</code> column of <code>hist_list</code>, the data frame containing 24 histograms that we prepared in the previous code. With <code>unique(hist_list$file)</code>, we can extract only the four unique file labels from the 24 rows in the <code>file</code> column. This character vector serves as the <code>.x</code> referent in a function that filters <code>hist_list</code>, extracting on each iteration only the six rows that contain the current iteration of the <code>.x</code> file label vector in the <code>file</code> column. The inner <code>map()</code> call thus returns a list containing four six-row data frames, each of which holds six histograms in its <code>plots</code> list-column.</p>
 <p>This list in turn constitutes the <code>.x</code> argument for the outer <code>map()</code> call. In the outer call, we apply to this list the function <code>ggpubr::ggarrange()</code>, which arranges multiple plots on a single page. Here we pass several arguments, including <code>plotlist</code>, which extracts the plots to be displayed from the <code>plots</code> list-column of the current iteration of the <code>.x</code> data frame, and <code>ncol</code> and <code>nrow</code>, which lay out the dimensions of the resulting plot grid.</p>
 <pre class="r"><code>hist_plot_prep &lt;- map(
   map(unique(hist_list$file), ~ hist_list %&gt;% filter(file == .x)), 
   ~ ggpubr::ggarrange(plotlist = .x$plots, ncol = 2, nrow = 2))</code></pre>
-<p>Now we are ready to export the four .pdfs. We can use <code>walk2()</code> to iterate, because we need only the side-effect of saving an external file. To <code>walk2()</code> we pass the list of four plot grids to export <code>hist_plot_prep</code> as the <code>.x</code> argument, and a vector of names for these grids as the <code>.y</code> argument (as before, these names are extracted by <code>unique(hist_list$file)</code>). We use <code>ggpubr::ggexport()</code> to save out the pdfs., passing the names in <code>.y</code> to the argument <code>filename</code> to create file paths for the output.</p>
+<p>To export the four .pdfs, we use <code>walk2()</code> to iterate, because we need only the side-effect of saving an external file. To <code>walk2()</code> we pass the list of four plot grids to export <code>hist_plot_prep</code> as the <code>.x</code> argument, and a vector of names for these grids as the <code>.y</code> argument (as before, these names are extracted by <code>unique(hist_list$file)</code>). <code>ggpubr::ggexport()</code> saves out the pdfs., passing the names in <code>.y</code> to the argument <code>filename</code> to create file paths for the output.</p>
 <pre class="r"><code>walk2(hist_plot_prep,
       unique(hist_list$file),
       ~ ggpubr::ggexport(.x, filename = here(
@@ -866,7 +866,7 @@ walk2(hist_plot_prep,
 <div id="tables-1" class="section level5">
 <h5>Tables</h5>
 <p>The descriptive statistics tables provide sample sizes, means, and SDs for the raw scores from five subscales, as well as for the total raw score. These frequency tables are named with the prefix <code>raw_desc</code> and saved to <code>.csv</code> in the <code>OUTPUT-FILES/TABLES</code> folder.</p>
-<p>As before, only elements that differ from previously documented code receive commentary below.</p>
+<p>As before, we comment only on elements that differ from previously documented code.</p>
 <div id="executable-code-4" class="section level6">
 <h6>EXECUTABLE CODE</h6>
 <pre class="r"><code>list(mget(str_c(&quot;data_RS_sim_&quot;, data_name_suffix)),
@@ -918,7 +918,7 @@ CPTOT_raw    6 1000 51.05 8.82  18  73    55 0.28</code></pre>
 <div id="plots" class="section level5">
 <h5>Plots</h5>
 <p>Using <code>ggplot2</code> functions, this section produces a .pdf output file for each of the four age-range/rater data sets. Each .pdf contains a plot of the means and SDs for the five subscale and <code>TOT</code> raw scores. The .pdfs are named with the prefix <code>raw_desc</code> and saved in the <code>OUTPUT-FILES/PLOTS</code> folder. The four plots are also viewable in the RStudio Plots pane.</p>
-<p>As before, only elements that differ from previously documented code receive commentary below.</p>
+<p>As before, we comment only on elements that differ from previously documented code.</p>
 <div id="executable-code-5" class="section level6">
 <h6>EXECUTABLE CODE</h6>
 <pre class="r"><code>map(mget(str_c(&quot;raw_desc_&quot;, data_name_suffix)), ~ .x %&gt;% 
@@ -976,7 +976,7 @@ imap(
 </div>
 <div id="commented-snippets-5" class="section level6">
 <h6>COMMENTED SNIPPETS</h6>
-<p>As before, on the input side, we set up a mapping function to generate a plot for each of four input files. In this case, the inputs are the four raw score descriptives tables created in the previous code section. Here, we use <code>imap()</code>, so that we can operate on both the list of four inputs (explicitly designated as the <code>.x</code> referent), and the names of those inputs (the <code>.y</code> referent).</p>
+<p>On the input side, we set up a mapping function to generate a plot for each of four input files. Here the inputs are the four raw score descriptives tables created in the previous section. We use <code>imap()</code> to operate on both the list of four inputs (explicitly designated as the <code>.x</code> referent), and the names of those inputs (the <code>.y</code> referent).</p>
 <pre class="r"><code>imap(
   .x = lst(
     raw_desc_child_parent,
@@ -987,14 +987,14 @@ imap(
 <p>We call <code>ggplot()</code> and <code>geom_point()</code> to create the base layer: a univariate scatterplot in which the <code>scale</code> column of the input table is mapped to the <em>x</em>-axis, and the <code>mean</code> column is mapped to the <em>y</em>-axis.</p>
 <pre class="r"><code>    ggplot(.x, aes(scale, mean)) +
       geom_point(</code></pre>
-<p>We call <code>ggrepel::geom_label_repel()</code> to add a second layer: a label for each point that provides its value. These labels are “repelled” away from the point so that the do not cover it. We call <code>aes()</code> to map the value of <code>mean</code> into the label, and pass the arguments <code>hjust</code>, <code>vjust</code>, and <code>label.padding</code> to control the appearance of the label and its position relative to its referent point.</p>
+<p><code>ggrepel::geom_label_repel()</code> adds a second layer: a value label for each point. These labels are “repelled” away so that the point itself remains visible. <code>aes()</code> maps the value of <code>mean</code> into the label, and the arguments <code>hjust</code>, <code>vjust</code>, and <code>label.padding</code> control the appearance of the label and its position relative to its referent point.</p>
 <pre class="r"><code>      geom_label_repel(
         aes(label = mean),
         hjust = .7,
         vjust = -1,
         label.padding = unit(0.1, &quot;lines&quot;),</code></pre>
-<p>We optimize the <em>y</em>-axis numerical scale with <code>scale_y_continuous()</code>. We create robust code by setting <code>breaks</code> and <code>limits</code> not with numerical constants, but with variables calculated from the input data objects. This approach allows the code to create graphical output that is properly scaled to the numerical properties of its inputs.</p>
-<p>For example, we set the upper limit of this <em>y</em>-axis scale to <code>max(.x$mean) + (2 * max(.x$sd))</code>. Recall that we are graphing the raw score means of both <code>TOT</code> and its component subscales on the same plot. To scale the <em>y</em>-axis so that it has sufficient range to include the higher mean of <code>TOT</code>, we set the upper limit at the <code>max()</code> value of <code>.x$mean</code>, plus twice the <code>max()</code> value of <code>.x$sd</code>. The expressions thus scale appropriately with the numerical properties of any input file.</p>
+<p>We optimize the <em>y</em>-axis numerical scale with <code>scale_y_continuous()</code>. We create robust code by setting <code>breaks</code> and <code>limits</code> not with numerical constants, but with variables calculated from the input data object. This approach generates graphical output that scales flexibly with the numerical properties of its inputs.</p>
+<p>For example, we set the upper limit of this <em>y</em>-axis scale to <code>max(.x$mean) + (2 * max(.x$sd))</code>. Recall that we are graphing the raw score means of both <code>TOT</code> and its component subscales on the same plot. To scale the <em>y</em>-axis so that it has sufficient range to include the higher mean of <code>TOT</code>, we set the upper limit at the <code>max()</code> value of <code>.x$mean</code>, plus twice the <code>max()</code> value of <code>.x$sd</code>. The output of these expressions thus scales appropriately with the numerical properties of any input file.</p>
 <pre class="r"><code>      scale_y_continuous(breaks = seq(0, round(max(.x$mean) + (2 * max(.x$sd)), -1), 
                                       by = round(max(.x$sd), -1) / 2), 
                          limits = c(0, round(max(.x$mean) + (2 * max(.x$sd))), -1)) +</code></pre>

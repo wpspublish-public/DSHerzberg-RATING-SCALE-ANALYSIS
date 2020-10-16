@@ -78,10 +78,10 @@ item_cats <- replicate(
 ```
 
 ###### COMMENTED SNIPPETS
-We load packages for file path specification (`here`), data wrangling (`tidyverse`) psychometric data simulation and analysis (`psych`), plot labeling (`ggrepel`), and formatting plots for export as .pdf (`ggpubr`).
+Load packages for file path specification (`here`), data wrangling (`tidyverse`) psychometric data simulation and analysis (`psych`), plot labeling (`ggrepel`), and formatting plots for export as .pdf (`ggpubr`).
 ```{r descriptives-load, echo = 1:5, eval = F}
 ```
-We specify file paths and retrieve data from a remote host. The script reads in four input files consisting of simulated rating-scale (`RS`) data:
+Specify file paths and retrieve data from a remote host. The script reads in four input files consisting of simulated rating-scale (`RS`) data:
 
 * `data-RS-sim-child-parent.csv`: `child` age range (5-12 yo), `parent` report
 * `data-RS-sim-child-teacher`: `child` age range (5-12 yo), `teacher` report
@@ -90,13 +90,13 @@ We specify file paths and retrieve data from a remote host. The script reads in 
 
 ```{r descriptives-load, echo = 7:21, eval = F}
 ```
-We initialize vectors containing file, variable, and category names, abbrievations, and pre/suffixes. These vectors will be used throughout the script.
+Initialize vectors containing file, variable, and category names, abbrievations, and pre/suffixes. These vectors will be used throughout the script.
 ```{r descriptives-load, echo = 23:36, eval = F}
 ```
-We initialize a list containing four character vectors whose elements are the item column names for the four input data files. We use `purrr::map()` to iterate over the vector containing the item column prefixes (`item_col_prefix`). We apply a lambda (anonymous) function with `~` to create item column names with an `i01` to `i50` nomenclature. `stringr::str_pad()` pads a numerical sequence with zeros to the left of each number. Note the use of `base::as_character()` to coerce the number sequence `1:50` to a sequence of strings. This is wrapped in `stringr::str_c()` which concatenates the prefixes in `item_col_prefix` with the zero-padded numbers. We then use `purrr::set_names()` to name the vectors within the list, again employing `str_c()` to iteratively concatenate a prefix `"item_cols_"` with a vector of suffixes `data_name_suffix`.
+Initialize a list containing four character vectors whose elements are the item column names for the four input data files. `purrr::map()` iterates over the vector containing the item column prefixes (`item_col_prefix`). We apply a lambda (anonymous) function with `~` to create item column names with an `i01` to `i50` nomenclature. `stringr::str_pad()` pads a numerical sequence with zeros to the left of each number. Note the use of `base::as_character()` to coerce the number sequence `1:50` to a sequence of strings. This is wrapped in `stringr::str_c()` which concatenates the prefixes in `item_col_prefix` with the zero-padded numbers. We then use `purrr::set_names()` to name the vectors within the list, again employing `str_c()` to iteratively concatenate a prefix `"item_cols_"` with a vector of suffixes `data_name_suffix`.
 ```{r descriptives-load, echo = 38:42, eval = F}
 ```
-We use `base::replicate()` to return a list (`item_cats`) containing four identical vectors whose elements are the item rating categories `c("never", "occasionally","frequently", "always")`. We use `set_names()` to name the vectors correspondingly to the input data files.
+`base::replicate()` returns a list (`item_cats`) containing four identical vectors whose elements are the item rating categories `c("never", "occasionally","frequently", "always")`. We use `set_names()` to name the vectors correspondingly to the input data files.
 ```{r descriptives-load, echo = 44:49, eval = F}
 ```
 
@@ -132,10 +132,10 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
 ```
 
 ###### COMMENTED SNIPPETS
-We first initialize a `list` containing the objects required to assemble the tables. We use `base::mget()` to bring the four input data files into the list. Here `mget()` returns the objects named by the character vector `str_c("data_RS_sim_", data_name_suffix)`, whose elements are the names of the four input files. Also included in this list are the `item_cols`, `item_cats`, and `data_name_suffix` vectors.
+Initialize a `list` containing the objects required to assemble the tables. We use `base::mget()` to bring the four input data files into the list. Here `mget()` returns the objects named by the character vector `str_c("data_RS_sim_", data_name_suffix)`, whose elements are the names of the four input files. Also included in this list are the `item_cols`, `item_cats`, and `data_name_suffix` vectors.
 ```{r descriptives-freq-item-val, echo = 1:4, eval = F}
 ```
-We use `purrr::pmap()` to iterate simultaneously over several inputs of equal length (here all inputs have length of four). We apply a function, designated by `~`, to these inputs in parallel. Within the body of the funtion, we refer to the inputs using a numerical shorthand. Here, `..1` refers to the first input object, the list containing the four input data files. `..2` refers to the second input object (`item_cols`), a list containing vectors of item column names for each of the four input data files. Because these names are strings, we need to unquote them, using the `!!` operator, in order to pass them to `dplyr::select()`. The data object at this point is a list, with each element a data frame containing only the item columns from the input data files.
+`purrr::pmap()` iterates simultaneously over several inputs of equal length (here all inputs have length of four). We apply a function, designated by `~`, to these inputs in parallel. Within the body of the funtion, we refer to the inputs using a numerical shorthand. Here, `..1` refers to the first input object, the list containing the four input data files. `..2` refers to the second input object (`item_cols`), a list containing vectors of item column names for each of the four input data files. Because these names are strings, we need to unquote them, using the `!!` operator, in order to pass them to `dplyr::select()`. The data object at this point is a list, with each element a data frame containing only the item columns from the input data files.
 ```{r descriptives-freq-item-val, echo = 5:7, eval = F}
 ```
 Here is the upper left corner of the `child-parent` input table, one of the four contained in the current data object.
@@ -150,9 +150,9 @@ Here is the upper left corner of the `child-parent` input table, one of the four
 6 never  never  never never never occa… occa… never never never never never occa… never occa… occa… never
 ```
 
-We use `tidyr::pivot_longer()` to transform the data object from wide to long (nested) format. The arguments to `pivot_longer()` include the `tidyselect` helper `everything()`, which indicates that all columns will be included in the transformation, and the names of the new destination columns for the input column names (`names_to`) and the input cell values (`values_to`). `pivot_longer` returns a nested data frame with two columns, `item` and `value`. In this long object, the items and their respective response values are nested within each case (person row) of the input, running down the rows for one person and then repeating the same items for the next person, and so on.
+`tidyr::pivot_longer()` transforma the data object from wide to long (nested) format. The arguments to `pivot_longer()` include the `tidyselect` helper `everything()`, which indicates that all columns will be included in the transformation, and the names of the new destination columns for the input column names (`names_to`) and the input cell values (`values_to`). `pivot_longer` returns a nested data frame with two columns, `item` and `value`. In this long object, the items and their respective response values are nested within each case (person row) of the input, running down the rows for one person and then repeating the same items for the next person, and so on.
 
-We then use `dplyr::count()` to summarize this object. Passing `item` and `value` as arguments groups the summary object by these two variables, such that a new column `n` provides the person count for each pairing of item and response value (i.e., the first row is the number of persons that responded `always` to item `cpi01`, the second row is the number of persons that responded `frequently` to item `cpi01`, and so on). Because the input data file has 50 items, each with four possible response options, the summary object has 200 rows.
+`dplyr::count()` summarizes this object. Passing `item` and `value` as arguments groups the summary object by these two variables, such that a new column `n` provides the person count for each pairing of item and response value (i.e., the first row is the number of persons that responded `always` to item `cpi01`, the second row is the number of persons that responded `frequently` to item `cpi01`, and so on). Because the input data file has 50 items, each with four possible response options, the summary object has 200 rows.
 ```{r descriptives-freq-item-val, echo = 8:9, eval = F}
 ```
 Here are the first 10 rows of the `child-parent` summary table.
@@ -170,7 +170,7 @@ Here are the first 10 rows of the `child-parent` summary table.
  9 cpi03 always          24
 10 cpi03 frequently     138
 ```
-We now transform the summary object back to wide format using `tidyr::pivot_wider()`, the mirror-image function of `pivot_longer()`. The `names_from` and `values_from` arguments indicate that the transformed object will draw its column names from the `value` column and its cell values from the `n` column, respectively, of the input object.
+Transform the summary object back to wide format using `tidyr::pivot_wider()`, the mirror-image function of `pivot_longer()`. The `names_from` and `values_from` arguments indicate that the transformed object will draw its column names from the `value` column and its cell values from the `n` column, respectively, of the input object.
 ```{r descriptives-freq-item-val, echo = 10, eval = F}
 ```
 After pivoting back to wide format, the `child-parent` summary table has 50 rows (one for each item; only the first 10 are shown below). The columns to the left of `item` provide the counts for each of the four response categories, for each item.
@@ -190,9 +190,9 @@ After pivoting back to wide format, the `child-parent` summary table has 50 rows
 ```
 The next snippet formats and adds an additional column to the output tables. Recall that the piped data object is a list containing four summary tables. We use `dplyr::arrange()` and `base::match()` to sort each table by `item`, to a prespecified order. Within `match()`, we pass the `item` column and the match order provided by `!!..2`, which as noted previously, refers to a list containing four vectors of ordered item column names, one corresponding to each of the four summary tables in the pipeline. Wrapping `match()` in `arrange()` accomplishes the ordered sort.
 
-We then use `dplyr::mutate()` to create the `data` column, which identifies the data source (form name), for each of the four summary tables. With `dplyr::case_when()`, we can fill the cells of the `data` column conditionally. We want the first row of `data` to contain the form name, leaving the remaining rows `NA`. As the first argument to `case_when()`, we pass the predicate `rownames(.) == "1"`, which returns `TRUE` only for the first row of the data object, and thus isolates that row to receive a value in the `data` column. Using `~ ..4`, we supply that value from the list of form names that is the referent of `..4`, and which is iterating in parallel to the list containing the four summary tables. The second argument of `case_when()`, `T ~ NA_character_`, expresses the logical "else" condition, specifying that the value of `data` is `NA` whenever the predicate `rownames(.) == "1"` returns `FALSE`. Note the use of `NA_character_`, which is required because the `data` column is a character vector.
+`dplyr::mutate()` creates the `data` column, which identifies the data source (form name), for each of the four summary tables. With `dplyr::case_when()`, we can fill the cells of the `data` column conditionally. We want the first row of `data` to contain the form name, leaving the remaining rows `NA`. As the first argument to `case_when()`, we pass the predicate `rownames(.) == "1"`, which returns `TRUE` only for the first row of the data object, and thus isolates that row to receive a value in the `data` column. Using `~ ..4`, we supply that value from the list of form names that is the referent of `..4`, and which is iterating in parallel to the list containing the four summary tables. The second argument of `case_when()`, `T ~ NA_character_`, expresses the logical "else" condition, specifying that the value of `data` is `NA` whenever the predicate `rownames(.) == "1"` returns `FALSE`. Note the use of `NA_character_`, which is required because the `data` column is a character vector.
 
-We then use `select` to specify a final sequence of columns, with `!!..3` referring to the unquoted response category labels contined in the character vector `item_cats`.
+`select` specifies a final sequence of columns, with `!!..3` referring to the unquoted response category labels contined in the character vector `item_cats`.
 ```{r descriptives-freq-item-val, echo = 11:14, eval = F}
 ```
 Here is a glimpse of the `child-parent` summary table, formatted for final output.
@@ -212,11 +212,11 @@ Here is a glimpse of the `child-parent` summary table, formatted for final outpu
 ```
 To recall, the data object at this point is a list of four tables summarizing the item response frequency counts for the four input files. We use `set_names()` to name the tables, employing `str_c()` to iteratively concatenate a prefix `"freq_item_val_"` with a vector of suffixes `data_name_suffix`. 
 
-To save the four summary tables as .csv files for external use, we employ `purrr::iwalk()`, a variant of `map()`. Rather than returning a new list, `iwalk()` returns its input (the current data object) invisibly, passing it to the next function in the pipeline. It is thus ideal when we want to map a function that produces a "side effect" (e.g., saving external files, printing a plot, etc.).
+`purrr::iwalk()`, a variant of `map()`, saves the four summary tables as .csv files for external use. Rather than returning a new list, `iwalk()` returns its input (the current data object) invisibly, passing it to the next function in the pipeline. It is thus ideal to map a function that produces a "side effect" (e.g., saving external files, printing a plot, etc.).
 
-Using `iwalk()` (as opposed to `walk()`) allows us to map over both the data frames in the input list (the `.x` referent), and the _index_ of that list (i.e., the names of the data frames, the `.y` referent). To save external files, we map `readr::write_csv()` over the four data frames in the input list. We designate file paths and names for those .csv files using the `stringr` functions `str_c()` and `str_replace_all()`. The latter creates the file name suffix, replacing the `"_"` character in the index elements (`.y`) with the `"-"` character. The `na = ""` argument, passed to `write_csv()`, indicates that that `NA` cells will be recoded to empty cells in the external files.
+Using `iwalk()` (as opposed to `walk()`) allows maping over both the data frames in the input list (the `.x` referent), and the _index_ of that list (i.e., the names of the data frames, the `.y` referent). To save external files, we map `readr::write_csv()` over the four data frames in the input list. We designate file paths and names for those .csv files using the `stringr` functions `str_c()` and `str_replace_all()`. The latter creates the file name suffix, replacing the `"_"` character in the index elements (`.y`) with the `"-"` character. The `na = ""` argument, passed to `write_csv()`, indicates that that `NA` cells will be recoded to empty cells in the external files.
 
-Finally, we use `base::list2env()` to assign the four summary tables to the global environment `.GlobalEnv`, as separate data frames. The item response frequency tables are now available within the R programming environment, as well as externally as .csv files.
+Finally, `base::list2env()` assigns the four summary tables to the global environment `.GlobalEnv`, as separate data frames. The item response frequency tables are now available within the R programming environment, as well as externally as .csv files.
 ```{r descriptives-freq-item-val, echo = 16:23, eval = F}
 ```
 
@@ -226,7 +226,7 @@ Finally, we use `base::list2env()` to assign the four summary tables to the glob
 
 The demographic frequency tables provide person counts for the variables of age, gender, (parental) education level, race/ethnicity, U.S. geographical region, and clinical status. The script generates a separate table for each input data file. These frequency tables are named with the prefix `freq_demos` and saved to `.csv` in the `OUTPUT-FILES/TABLES` folder.
 
-This code is similar to the script for the item response frequency tables, so only the differing elements receive commentary below.
+This code is similar to the script for the item response frequency tables, so only the differing elements are commented.
 
 ###### EXECUTABLE CODE
 ```{r descriptives-freq-demos-table, eval = FALSE}
@@ -263,9 +263,9 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
   list2env(envir = .GlobalEnv)
 ```
 ###### COMMENTED SNIPPETS
-We use `pmap()` to iterate simultaneously over two inputs of equal length. Input `..1` is a list (assembled by `mget()`) containing the four input data files. Input `..2` is the `data_name_suffix` vector.
+`pmap()` iterates simultaneously over multiple inputs of equal length. Input `..1` is a list (assembled by `mget()`) containing the four input data files. Input `..2` is the `data_name_suffix` vector.
 
-We use `select()` to subset columns from each input file for further processing. These columns are named by the previously defined vector `var_order`. A `tidyselect` helper (in this case `all_of()`) is required when passing a character vector to `select()`.
+`select()` subsets columns from each input file for further processing. These columns are named by the previously defined vector `var_order`. A `tidyselect` helper (in this case `all_of()`) is required when passing a character vector to `select()`.
 ```{r descriptives-freq-demos-table, echo = 1:5, eval = F}
 ```
 With `mutate()` and `case_when()`, we can recode specific cells of an existing column to produce a more readable output table. In the current data object, the `var` column names a demographic variable, whose categories are contained in the `cat` column. For example, one value of `var` is `region`. In the current data, object, four rows of the `var` column are coded with `region`. In the `cat` column, those four rows are coded with the categories of `region`: `northeast`,`south`, `midwest`, and `west`.
@@ -357,7 +357,7 @@ The inputs to `ggplot()` are the four demographic frequency table created by the
 
 ```{r descriptives-freq-demos-hist, echo = 1:3, eval = F}
 ```
-The next section illustrates the list-column workflow, a facility provided by `purrr` that enables nested iteration. A list-column is a column within a tibble that can contain data frames, vectors, functions, or any other R object that can be held in a list. To begin, we load the four input demographic frequency tables into a list, using `tibble::lst()` to name the resulting list elements with the input object names.
+The next section illustrates the list-column workflow, a facility provided by `purrr` that enables nested iteration. A list-column is a column within a tibble that can contain data frames, vectors, functions, plots, or any other R object that can be held in a list. To begin, we load the four input demographic frequency tables into a list, using `tibble::lst()` to name the resulting list elements with the input object names.
 ```{r descriptives-freq-demos-hist, echo = 5:10, eval = F}
 ```
 This list of data frames is piped into a nested function in which `map()` is called twice. Nesting `map()` calls in this way allows the nested function to process inputs of different lengths to each `map()` call, as opposed to `pmap()`, which handles multiple inputs but requires that they be of equal lengths.
@@ -395,7 +395,7 @@ Examining the transformation of a single input table, the call of `tibble(var = 
 It bears repeating that the output, at this stage, is a list of four named data frames, but those data frames now consist of a single list-column containing slices of the corresponding input data frames. Essentially, the input table has been carved up into segments, with each segment now residing in a row of the new list-column.
 ```{r descriptives-freq-demos-hist, echo = 11:12, eval = F}
 ```
-We now use `tibble()` to reduce the list of four data frames into a single data frame with two columns and four rows. 
+`tibble()` reduces the list of four data frames into a single data frame with two columns and four rows. 
 ```{r descriptives-freq-demos-hist, echo = 13, eval = F}
 ```
 The first column `file` contains the names of the four input data frames, which are extracted from the input list with `base::names(.)`, where `.` refers to the input list. The second column `data1` is a list-column that holds the four input data frames. Here is the resulting structure:
@@ -407,7 +407,7 @@ The first column `file` contains the names of the four input data frames, which 
 3 freq_demos_teen_parent   <tibble [6 × 1]>
 4 freq_demos_teen_teacher  <tibble [6 × 1]>
 ```
-Note that each tibble in the `data1` column has six rows; that is, one row for each of the six demographic variables. If we drill down into the top cell of `data1`, we see:
+Note that each tibble in the `data1` column has six rows; that is, one row for each of the six demographic variables. Drilling down into the top cell of `data1`, we see:
 ```{r eval = F}
   var             
   <list>          
@@ -425,9 +425,9 @@ This is the list-column of tibbles containing the six slices of `freq_demos_chil
 1 child_parent age_range 5 to 8 yo    492
 2 child_parent age_range 9 to 12 yo   508
 ```
-This slice, which shows the `age_range` counts for the `child_parent` data set, represents the granular data elements from which we will construct the output histograms. Essentially, we now have a single list-column that represents a nested structure (six demographic variables nested within four data sets) that resolves to the 24 granular data elements from which we will plot the 24 histograms that consitute the final output of our `ggplot()` call.
+This slice, which shows the `age_range` counts for the `child_parent` data set, represents the granular data elements that are needed to generate the output histograms. Essentially, we now have a single list-column that represents a nested structure (six demographic variables nested within four data sets) that resolves to the 24 granular data elements from which we will plot the 24 histograms that consitute the final output of our `ggplot()` call.
 
-To generate the histograms, we need each granular data element to reside in its own row. In the current data object, `data1` is a nested list-column, in which the 24 granular data elements are collapsed into four rows. We use `tidyr::unnest(cols = c(data1))` to remove one level of nesting in `data1`, transforming a four-row list-column into the required 24-row list-column. Conveniently, this operation simultaneously expands the `file` column, such that each granular data element is paired with the name of its original input file (e.g., `freq_demos_child_parent`).
+To generate the histograms, we need each granular data element to reside in its own row. In the current data object, `data1` is a nested list-column, in which the 24 granular data elements are collapsed into four rows. `tidyr::unnest(cols = c(data1))` removes one level of nesting in `data1`, transforming a four-row list-column into the required 24-row list-column. Conveniently, this operation simultaneously expands the `file` column, such that each granular data element is paired with the name of its original input file (e.g., `freq_demos_child_parent`).
 ```{r descriptives-freq-demos-hist, echo = 14, eval = F}
 ```
 We now have a data structure that can be processed by `ggplot()` to generate the desired output plots. Crucially, those plots will reside in their own list-column, in the same rows as the granular data elements from which they are derived.
@@ -435,7 +435,7 @@ We now have a data structure that can be processed by `ggplot()` to generate the
 To create a new list-column, `plots`, within the current data object, we use `mutate()`. Here, the `plots` list-column will hold the objects returned by a call of `map2()`, which will iterate over the two existing columns in the data object, applying a `ggplot()` call to `var` and `file`.
 ```{r descriptives-freq-demos-hist, echo = 15:17, eval = F}
 ```
-Note that the `ggplot()` call is wrapped in `base::print()`. This ensures that the 24 histograms will be viewable on the Plots pane of RStudio.
+Note that the `ggplot()` call is wrapped in `base::print()`. This ensures that the 24 histograms will appear on the RStudio Plots pane.
 
 Plot generation begins by passing two arguments to `ggplot()`. The first, `data = .x`, specifies that the data source for the plots will be the `.x` referent of `map2()`, which is the `var` list column that holds the 24 granular data elements. Recall the structure of these granular elements:
 ```{r eval = F}
@@ -450,26 +450,26 @@ Note that the `cat` and `n` columns are named on `aes()`, the second argument pa
 `ggplot()` builds plots by layering graphical elements, adding additional layers with the `+` operator. A `geom` function creates a layer that visually represents the data mapping provided by `aes()`. Here we use `geom_col()` to create a histogram. The arguments to `geom_col()` specify the visual features of the plot: the color of the outline of the vertical bars (`col`), the color of the fill of those bars (`fill`), the transparency of that fill color (`alpha`), and the width of the bars (`width`).
 ```{r descriptives-freq-demos-hist, echo = 21:24, eval = F}
 ```
-Recall that `aes()` specified that the case count for demographic categories will be represented on the y-axis of the plot. We now use `scale_y_continuous()` to add a layer that optimizes the y-axis numerical scale for our data. The `breaks` argument specifies the numeric positions that will be represented explicitly on the vertical scale. Here we pass an ordered numeric vector returned by `base::seq()`, whose arguments are the lowest value `0`, the highest value (`max(.x$n)`, which returns the highest value in the `n` column of the input data element), and increments of `round(max(.x$n) / 10, -1)` for the middle elements of the vector. In the latter expression, we divide the highest `n` by 10, and round it to the nearest multiple of 10, by passing `-1` as an argument to `round()`.
+Recall that `aes()` specified that the person count for demographic categories will be represented on the y-axis of the plot. `scale_y_continuous()` adds a layer that optimizes the y-axis numerical scale for the input data. The `breaks` argument specifies the numeric positions that will be represented explicitly on the vertical scale. Here we pass an ordered numeric vector returned by `base::seq()`, whose arguments are the lowest value `0`, the highest value (`max(.x$n)`, which returns the highest value in the `n` column of the input data element), and increments of `round(max(.x$n) / 10, -1)` for the middle elements of the vector. The latter expression, divides the highest `n` by 10, and rounds it to the nearest multiple of 10, by passing `-1` as an argument to `round()`.
 ```{r descriptives-freq-demos-hist, echo = 25, eval = F}
 ```
-Next we use `labs()` to add a title to the plot. We pass the `subtitle` argument (as opposed to `title`) simply because it prints in a preferable type size. Within the `labs()` call, we concatenate a character string for the title using the `str_c()`, `str_replace()`, and `str_sub()` functions. Within the `str_sub()` call, we pass the `.y` referent from `map2()`, which is the `file` column. This column contains the origin file names of the granular data elements, and from these names we can extract the form/age-range configuration that we need for our plot labels, (e.g., "__Demo counts - child form, parent report__").
+`labs()` adds a title to the plot. We pass the `subtitle` argument (as opposed to `title`) simply because it prints in a preferable type size. Within the `labs()` call, we concatenate a character string for the title using the `str_c()`, `str_replace()`, and `str_sub()` functions. Within the `str_sub()` call, we pass the `.y` referent from `map2()`, which is the `file` column. This column contains the origin file names of the granular data elements, and from these names we can extract the form/age-range configuration that we need for our plot labels, (e.g., "__Demo counts - child form, parent report__").
 ```{r descriptives-freq-demos-hist, echo = 26:31, eval = F}
 ```
 We add a layer of category labels to the horizontal axis by calling `scale_x_discrete()`. Here we pass the `limits` argument, which requires a character vector that defines the possible values of the labels and their order. This vector exists as the `cat` column of the input data element, and we can pass it to `limits` with the expression `.x$cat`.
 ```{r descriptives-freq-demos-hist, echo = 32, eval = F}
 ```
-We use the `theme()` layer to make global changes to the appearance of non-data plot elements. Here we call `theme()` to remove two unneeded visual elements, which we accomplish by passing the `element_blank()` function to arguments representing the minor lines on the coordinate grid (`panel.grid.minor`), and the title for the x-axis (`axis.title.x`)
+We use the `theme()` layer to make global changes to the appearance of non-data plot elements. Here, `theme()` removes two unneeded visual elements, by passing the `element_blank()` function to arguments representing the minor lines on the coordinate grid (`panel.grid.minor`), and the title for the x-axis (`axis.title.x`)
 ```{r descriptives-freq-demos-hist, echo = 33:34, eval = F}
 ```
 Recall that the desired external output is four .pdf files (one for each input data file), each containing six histograms (one for each demographic variable). In the next snippet, we use the `ggpubr` package to set up this .pdf output.
 
-We initialize a list `hist_plot_prep` to hold the four objects that will be saved as .pdfs. To create these objects, we use a nested `map()` structure. With the inner `map()` call, we map over a four-element character vector, which we draw from the `file` column of `hist_list`, the data frame containing 24 histograms that we prepared in the previous code. With `unique(hist_list$file)`, we can extract only the four unique file labels from the 24 rows in the `file` column. We use this character vector as the `.x` referent in a function that filters `hist_list`, extracting on each iteration only the six rows that contain the current iteration of the `.x` file label vector in the `file` column. The inner `map()` call thus returns a list containing four six-row data frames, each of which holds six histograms in its `plots` list-column.
+We initialize a list `hist_plot_prep` to hold the four objects that will be saved as .pdfs. To create these objects, we use a nested `map()` structure. With the inner `map()` call, we map over a four-element character vector, which we draw from the `file` column of `hist_list`, the data frame containing 24 histograms that we prepared in the previous code. With `unique(hist_list$file)`, we can extract only the four unique file labels from the 24 rows in the `file` column. This character vector serves as the `.x` referent in a function that filters `hist_list`, extracting on each iteration only the six rows that contain the current iteration of the `.x` file label vector in the `file` column. The inner `map()` call thus returns a list containing four six-row data frames, each of which holds six histograms in its `plots` list-column.
 
 This list in turn constitutes the `.x` argument for the outer `map()` call. In the outer call, we apply to this list the function `ggpubr::ggarrange()`, which arranges multiple plots on a single page. Here we pass several arguments, including `plotlist`, which extracts the plots to be displayed from the `plots` list-column of the current iteration of the `.x` data frame, and `ncol` and `nrow`, which lay out the dimensions of the resulting plot grid.
 ```{r descriptives-freq-demos-hist, echo = 38:40, eval = F}
 ```
-Now we are ready to export the four .pdfs. We can use `walk2()` to iterate, because we need only the side-effect of saving an external file. To `walk2()` we pass the list of four plot grids to export `hist_plot_prep` as the `.x` argument, and a vector of names for these grids as the `.y` argument (as before, these names are extracted by `unique(hist_list$file)`). We use `ggpubr::ggexport()` to save out the pdfs., passing the names in `.y` to the argument `filename` to create file paths for the output.
+To export the four .pdfs, we use `walk2()` to iterate, because we need only the side-effect of saving an external file. To `walk2()` we pass the list of four plot grids to export `hist_plot_prep` as the `.x` argument, and a vector of names for these grids as the `.y` argument (as before, these names are extracted by `unique(hist_list$file)`). `ggpubr::ggexport()` saves out the pdfs., passing the names in `.y` to the argument `filename` to create file paths for the output.
 ```{r descriptives-freq-demos-hist, echo = 42:47, eval = F}
 ```
 #### 4. Raw Score Descriptive Statistics
@@ -478,7 +478,7 @@ Now we are ready to export the four .pdfs. We can use `walk2()` to iterate, beca
 
 The descriptive statistics tables provide sample sizes, means, and SDs for the raw scores from five subscales, as well as for the total raw score. These frequency tables are named with the prefix `raw_desc` and saved to `.csv` in the `OUTPUT-FILES/TABLES` folder.
 
-As before, only elements that differ from previously documented code receive commentary below.
+As before, we comment only on elements that differ from previously documented code.
 
 ###### EXECUTABLE CODE
 ```{r descriptives-raw-desc-tables, eval = FALSE}
@@ -533,7 +533,7 @@ Because `describe()` converts the column names of the input object into row name
 
 Using `ggplot2` functions, this section produces a .pdf output file for each of the four age-range/rater data sets. Each .pdf contains a plot of the means and SDs for the five subscale and `TOT` raw scores. The .pdfs are named with the prefix `raw_desc` and saved in the `OUTPUT-FILES/PLOTS` folder. The four plots are also viewable in the RStudio Plots pane.
 
-As before, only elements that differ from previously documented code receive commentary below.
+As before, we comment only on elements that differ from previously documented code.
 
 ###### EXECUTABLE CODE
 ```{r descriptives-raw-desc-plots, eval = FALSE}
@@ -591,18 +591,18 @@ imap(
   )))
 ```
 ###### COMMENTED SNIPPETS
-As before, on the input side, we set up a mapping function to generate a plot for each of four input files. In this case, the inputs are the four raw score descriptives tables created in the previous code section. Here, we use `imap()`, so that we can operate on both the list of four inputs (explicitly designated as the `.x` referent), and the names of those inputs (the `.y` referent).
+On the input side, we set up a mapping function to generate a plot for each of four input files. Here the inputs are the four raw score descriptives tables created in the previous section. We use `imap()` to operate on both the list of four inputs (explicitly designated as the `.x` referent), and the names of those inputs (the `.y` referent).
 ```{r descriptives-raw-desc-plots, echo = 5:11, eval = F}
 ```
 We call `ggplot()` and `geom_point()` to create the base layer: a univariate scatterplot in which the `scale` column of the input table is mapped to the _x_-axis, and the `mean` column is mapped to the _y_-axis.
 ```{r descriptives-raw-desc-plots, echo = 13:14, eval = F}
 ```
-We call `ggrepel::geom_label_repel()` to add a second layer: a label for each point that provides its value. These labels are "repelled" away from the point so that the do not cover it. We call `aes()` to map the value of `mean` into the label, and pass the arguments `hjust`, `vjust`, and `label.padding` to control the appearance of the label and its position relative to its referent point.
+`ggrepel::geom_label_repel()` adds a second layer: a value label for each point. These labels are "repelled" away so that the point itself remains visible. `aes()` maps the value of `mean` into the label, and the arguments `hjust`, `vjust`, and `label.padding` control the appearance of the label and its position relative to its referent point.
 ```{r descriptives-raw-desc-plots, echo = 21:25, eval = F}
 ```
-We optimize the _y_-axis numerical scale with `scale_y_continuous()`. We create robust code by setting `breaks` and `limits` not with numerical constants, but with variables calculated from the input data objects. This approach allows the code to create graphical output that is properly scaled to the numerical properties of its inputs.
+We optimize the _y_-axis numerical scale with `scale_y_continuous()`. We create robust code by setting `breaks` and `limits` not with numerical constants, but with variables calculated from the input data object. This approach generates graphical output that scales flexibly with the numerical properties of its inputs.
 
-For example, we set the upper limit of this _y_-axis scale to `max(.x$mean) + (2 * max(.x$sd))`. Recall that we are graphing the raw score means of both `TOT` and its component subscales on the same plot. To scale the _y_-axis so that it has sufficient range to include the higher mean of `TOT`, we set the upper limit at the `max()` value of `.x$mean`, plus twice the `max()` value of `.x$sd`. The expressions thus scale appropriately with the numerical properties of any input file.
+For example, we set the upper limit of this _y_-axis scale to `max(.x$mean) + (2 * max(.x$sd))`. Recall that we are graphing the raw score means of both `TOT` and its component subscales on the same plot. To scale the _y_-axis so that it has sufficient range to include the higher mean of `TOT`, we set the upper limit at the `max()` value of `.x$mean`, plus twice the `max()` value of `.x$sd`. The output of these expressions thus scales appropriately with the numerical properties of any input file.
 ```{r descriptives-raw-desc-plots, echo = 29:31, eval = F}
 ```
 `geom_errorbar()` adds a vertical error-bar layer that depicts the standard deviation around each mean point. Within `aes()`, the arguments `ymin` and `ymax` map the lower and upper limits (respectively) of the error bar.
