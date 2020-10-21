@@ -21,7 +21,7 @@ data_RS_sim_teen_teacher <- suppressMessages(read_csv(url(
   str_c(urlRemote_path, github_path, "data-RS-sim-teen-teacher.csv")
 )))
 
-form_acronyms 
+form_acronyms <- c("cp", "ct", "tp", "tt")
 
 
 CPS1_items <- str_c("cpi", str_pad(as.character(seq(1, 50, by = 5)), 2, side = "left", pad = "0"))
