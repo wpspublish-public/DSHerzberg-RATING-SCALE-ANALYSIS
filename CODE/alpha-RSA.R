@@ -21,7 +21,8 @@ data_RS_sim_teen_teacher <- suppressMessages(read_csv(url(
   str_c(urlRemote_path, github_path, "data-RS-sim-teen-teacher.csv")
 )))
 
-# Create a list containing scale item vectors for each form (needed for subscale alphas)
+# Create a list containing four sublists: the scale item vectors for each form
+# (needed for subscale alphas)
 
 form_acronyms <- c("cp", "ct", "tp", "tt")
 
@@ -53,6 +54,10 @@ scale_item_vectors <- crossing(form_acronyms, scale_items_suffix) %>%
   mutate(scale_items = str_c(str_to_upper(form_acronyms), scale_items_suffix, "_items"),
          fun_item_names = rep(list_item_names, 4), 
          item_names = invoke_map(fun_item_names, form_acronyms)) %>% 
-  pull(item_names, scale_items) 
+  select(form_acronyms, scale_items, item_names) %>% 
+  group_by(form_acronyms) %>% 
+  group_split(.keep = F) %>% 
+  map( ~ .x %>% pull(item_names, scale_items)) %>% 
+  set_names(form_acronyms)
 
 # Create list of dfs containing subscale item scores for all persons
