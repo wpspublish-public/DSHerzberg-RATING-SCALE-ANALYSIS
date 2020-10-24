@@ -1,3 +1,25 @@
+# Akrun solution
+library(tidyverse)
+
+set.seed(2346)
+df <- tibble(
+  col1 = sample(c(0,1), replace=T, size=10),
+  col2 = sample(c(0,1), replace=T, size=10),
+  col3 = sample(c(0,1), replace=T, size=10),
+  col4 = sample(c(0,1), replace=T, size=10)
+)
+
+cols <- c("col1", "col3")
+
+df_list_col <- tibble(
+  data = list(df), 
+  cols = list(cols)
+)
+
+akrun <- df_list_col %>% 
+  mutate(subset = map2(data, cols, ~ .x %>% select(all_of(.y))))
+
+
 I have a list of data frames and I want to subset each one, retaining only certain columns
 The names of the columns I want are contained in character vectors unique to each dataframe.
 One way I thought of doing this was with a list-column workflow. I would create a data frame
