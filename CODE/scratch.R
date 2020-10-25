@@ -6,17 +6,13 @@ map_df(scale_order,
          ))) %>%
          assign(str_c(.x, '_item_scores_512'), ., envir = .GlobalEnv))
 
-
-vec <- c("cpi01", "cpi02", "cpi03")
-test3 <- tibble(
-  data = list(data_RS_sim_child_parent),
-  item_names = list(vec)
-) 
-
-
-
-
-test2 <- tibble(data = rep(
+# The next code block puts the four input datasets into a `data` list-column,
+# repeating each 6 times to set up a df with 24 rows. It then puts the 24
+# vectors containing the scale item names into an `item_names` list-column. It
+# then creates a third list column, `items`, to hold data frames containing only
+# the item columns corresponding to each scale. It does this by mapping select()
+# onto the `data` and 'item_names` cols.
+test1 <- tibble(data = rep(
   lst(
     data_RS_sim_child_parent,
     data_RS_sim_child_teacher,
@@ -26,53 +22,5 @@ test2 <- tibble(data = rep(
   each = 6
 ),
 item_names = flatten(scale_item_vectors)) %>%
-  mutate(items = select(data, (!!!rlang::sym(.$item_names))))
+  mutate(items = map2(data, item_names, ~ .x %>% select(all_of(.y))))
 
-
-
-%>% 
-  mutate(
-    items = map2(data, item_names, ~ x. %>% select(!!.y))
-  )
-
-
-
-
-temp_list3 <- map2(
-  lst(
-  data_RS_sim_child_parent,
-  data_RS_sim_child_teacher,
-  data_RS_sim_teen_parent,
-  data_RS_sim_teen_teacher
-),
-scale_
-)
-
-temp_list1 <- lst(
-  data_RS_sim_child_parent,
-  data_RS_sim_child_teacher,
-  data_RS_sim_teen_parent,
-  data_RS_sim_teen_teacher
-) %>% 
-  map( ~
-       map(scale_item_vectors, ~ .y %>% select(all_of(eval(as.name(.x)))), .y = .x)) 
-  
-
-
-
-temp_list2 <- map(scale_item_vectors[1:6],
-                  ~
-                    data_RS_sim_child_parent %>%
-                    select(all_of(.x))
-)
-
-temp3 <- tibble(var = map(
-  lst(
-    data_RS_sim_child_parent,
-    data_RS_sim_child_teacher,
-    data_RS_sim_teen_parent,
-    data_RS_sim_teen_teacher
-  ),
-  ~
-    rep(.x, each = 4)
-))
