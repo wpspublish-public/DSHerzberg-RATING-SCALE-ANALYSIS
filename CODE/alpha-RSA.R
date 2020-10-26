@@ -61,3 +61,23 @@ scale_item_vectors <- crossing(form_acronyms, scale_items_suffix) %>%
   set_names(form_acronyms)
 
 # Create list of dfs containing subscale item scores for all persons
+
+# The next code block puts the four input datasets into a `data` list-column,
+# repeating each 6 times to set up a df with 24 rows. It then puts the 24
+# vectors containing the scale item names into an `item_names` list-column. It
+# then creates a third list column, `items`, to hold data frames containing only
+# the item columns corresponding to each scale. It does this by mapping select()
+# onto the `data` and 'item_names` cols.
+scale_item_data <- tibble(data = rep(
+  lst(
+    data_RS_sim_child_parent,
+    data_RS_sim_child_teacher,
+    data_RS_sim_teen_parent,
+    data_RS_sim_teen_teacher
+  ),
+  each = 6
+),
+item_names = flatten(scale_item_vectors)) %>%
+  mutate(items = map2(data, item_names, ~ .x %>% select(all_of(.y))))
+
+
