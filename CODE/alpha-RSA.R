@@ -52,10 +52,15 @@ form_acronyms <- c("cp", "ct", "tp", "tt")
 
 scale_items_suffix <- c("S1", "S2", "S3", "S4", "S5", "TOT")
 
-scale_names <- crossing(str_to_upper(form_acronyms), scale_items_suffix) %>% 
-  set_names(c("pt1", "pt2")) %>% 
-  mutate(scale_names = str_c(pt1, pt2, sep = "_")) %>%
-  pull(scale_names)
+form_scale_vecs <- map(
+  c("form", "scale"),
+  ~
+    crossing(str_to_upper(form_acronyms), scale_items_suffix) %>%
+    set_names(c("form", "scale")) %>%
+    # mutate(scale_names = str_c(pt1, pt2, sep = "_")) %>%
+    pull(!!.x)
+) %>%
+  set_names(c("form", "scale"))
 
 
 # To subset the input data to estimate subscale alphas, we need a list of char
@@ -116,10 +121,57 @@ scale_item_vectors <- map(TOT_item_names_list,
 # then creates a third list column, `items`, to hold data frames containing only
 # the item columns corresponding to each scale. It does this by mapping select()
 # onto the `data` and 'item_names` cols.
-scale_item_data <- tibble(data = rep(
- input_recode_list,
-  each = 6
-),
-item_names = scale_item_vectors,
-scale_names = scale_names) %>%
+scale_item_data <- tibble(
+  data = rep(input_recode_list,
+             each = 6),
+  item_names = scale_item_vectors,
+  form = form_scale_vecs[["form"]],
+  scale = form_scale_vecs[["scale"]]
+) %>%
   mutate(items = map2(data, item_names, ~ .x %>% select(all_of(.y))))
+
+# for output table, extract n's, scale, mean, SDs from input data sets.
+scale_n_mean_sd <- map_df(
+  lst(
+    data_RS_sim_child_parent,
+    data_RS_sim_child_teacher,
+    data_RS_sim_teen_parent,
+    data_RS_sim_teen_teacher
+  ),
+  ~
+    .x %>%
+    select(contains("raw")) %>%
+    describe(fast = T) %>%
+    rownames_to_column() %>%
+    rename(scale_name = rowname) %>%
+    mutate(
+      form = str_sub(scale_name, 1, 2),
+      scale = str_sub(scale_name, 3,-5)
+    ) %>%
+    select(form, scale, n, mean, sd)
+) 
+
+# Create alpha output table with SEM, CVs, using `psych::alpha()`. Unnest the
+# alpha column to get those data frames flattened out into columns.
+alpha_output <- scale_item_data %>%
+  mutate(alpha = map(items, ~ alpha(cor(.x))[["total"]])) %>%
+  unnest(alpha) %>%
+  select(form, scale, raw_alpha) %>%
+  rename(alpha = raw_alpha) %>%
+  left_join(scale_n_mean_sd, by = c("form", "scale")) %>%
+  group_by(form) %>%
+  mutate(
+    SEM = sd * (sqrt(1 - alpha)),
+    CV_90_UB = round(mean + 1.6449 * SEM),
+    CV_90_LB = round(mean - 1.6449 * SEM),
+    CV_95_UB = round(mean + 1.96 * SEM),
+    CV_95_LB = round(mean - 1.96 * SEM),
+    CI_90 = str_c(CV_90_LB, " - ", CV_90_UB),
+    CI_95 = str_c(CV_95_LB, " - ", CV_95_UB),
+    across(is.numeric, ~ round(., 2)),
+    form = case_when(row_number() == 1 ~ form,
+                     T ~ NA_character_),
+    n = case_when(row_number() == 1 ~ n,
+                  T ~ NA_real_)
+  ) %>%
+  select(form, n, scale, alpha, SEM, CI_90, CI_95)
