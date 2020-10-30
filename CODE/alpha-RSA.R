@@ -2,7 +2,6 @@
 
 suppressPackageStartupMessages(library(here))
 suppressMessages(suppressWarnings(library(tidyverse)))
-suppressMessages(library(data.table))
 suppressMessages(library(psych))
 
 urlRemote_path  <- "https://raw.githubusercontent.com/"
@@ -20,6 +19,20 @@ data_RS_sim_teen_parent <- suppressMessages(read_csv(url(
 data_RS_sim_teen_teacher <- suppressMessages(read_csv(url(
   str_c(urlRemote_path, github_path, "data-RS-sim-teen-teacher.csv")
 )))
+
+form_acronyms <- c("cp", "ct", "tp", "tt")
+
+scale_items_suffix <- c("S1", "S2", "S3", "S4", "S5", "TOT")
+
+form_scale_vecs <- map(
+  c("form", "scale"),
+  ~
+    crossing(str_to_upper(form_acronyms), scale_items_suffix) %>%
+    set_names(c("form", "scale")) %>%
+    pull(!!.x)
+) %>%
+  set_names(c("form", "scale"))
+
 
 # recode the input data to numerical coding for the item responses, and hold the
 # resulting data frames in a list.
@@ -48,19 +61,6 @@ input_recode_list <- map(
 )
 
 
-form_acronyms <- c("cp", "ct", "tp", "tt")
-
-scale_items_suffix <- c("S1", "S2", "S3", "S4", "S5", "TOT")
-
-form_scale_vecs <- map(
-  c("form", "scale"),
-  ~
-    crossing(str_to_upper(form_acronyms), scale_items_suffix) %>%
-    set_names(c("form", "scale")) %>%
-    # mutate(scale_names = str_c(pt1, pt2, sep = "_")) %>%
-    pull(!!.x)
-) %>%
-  set_names(c("form", "scale"))
 
 
 # To subset the input data to estimate subscale alphas, we need a list of char
@@ -166,12 +166,16 @@ alpha_output <- scale_item_data %>%
     CV_90_LB = round(mean - 1.6449 * SEM),
     CV_95_UB = round(mean + 1.96 * SEM),
     CV_95_LB = round(mean - 1.96 * SEM),
-    CI_90 = str_c(CV_90_LB, " - ", CV_90_UB),
-    CI_95 = str_c(CV_95_LB, " - ", CV_95_UB),
+    CI_90 = str_c("'", CV_90_LB, " - ", CV_90_UB),
+    CI_95 = str_c("'", CV_95_LB, " - ", CV_95_UB),
     across(is.numeric, ~ round(., 2)),
     form = case_when(row_number() == 1 ~ form,
                      T ~ NA_character_),
     n = case_when(row_number() == 1 ~ n,
                   T ~ NA_real_)
   ) %>%
-  select(form, n, scale, alpha, SEM, CI_90, CI_95)
+  select(form, n, scale, alpha, SEM, CI_90, CI_95) 
+
+write_csv(alpha_output,
+          here("OUTPUT-FILES/TABLES/alpha-summary-by-form.csv"),
+          na = "")
