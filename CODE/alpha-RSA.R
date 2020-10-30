@@ -20,6 +20,7 @@ data_RS_sim_teen_teacher <- suppressMessages(read_csv(url(
   str_c(urlRemote_path, github_path, "data-RS-sim-teen-teacher.csv")
 )))
 
+# Initialize containers for form, scale abbreviations
 form_acronyms <- c("cp", "ct", "tp", "tt")
 
 scale_items_suffix <- c("S1", "S2", "S3", "S4", "S5", "TOT")
@@ -124,10 +125,8 @@ scale_item_vectors <- map(TOT_item_names_list,
 scale_item_data <- tibble(
   data = rep(input_recode_list,
              each = 6),
-  item_names = scale_item_vectors,
-  form = form_scale_vecs[["form"]],
-  scale = form_scale_vecs[["scale"]]
-) %>%
+  item_names = scale_item_vectors) %>% 
+  bind_cols(form_scale_cols) %>% 
   mutate(items = map2(data, item_names, ~ .x %>% select(all_of(.y))))
 
 # for output table, extract n's, scale, mean, SDs from input data sets.
@@ -166,8 +165,8 @@ alpha_output <- scale_item_data %>%
     CV_90_LB = round(mean - 1.6449 * SEM),
     CV_95_UB = round(mean + 1.96 * SEM),
     CV_95_LB = round(mean - 1.96 * SEM),
-    CI_90 = str_c("'", CV_90_LB, " - ", CV_90_UB),
-    CI_95 = str_c("'", CV_95_LB, " - ", CV_95_UB),
+    CI_90 = str_c(CV_90_LB, "--", CV_90_UB),
+    CI_95 = str_c(CV_95_LB, "--", CV_95_UB),
     across(is.numeric, ~ round(., 2)),
     form = case_when(row_number() == 1 ~ form,
                      T ~ NA_character_),

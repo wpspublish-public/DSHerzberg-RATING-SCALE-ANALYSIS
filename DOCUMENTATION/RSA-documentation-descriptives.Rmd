@@ -90,7 +90,7 @@ Specify file paths and retrieve data from a remote host. The script reads in fou
 
 ```{r descriptives-load, echo = 7:21, eval = F}
 ```
-Initialize vectors containing file, variable, and category names, abbrievations, and pre/suffixes. These vectors will be used throughout the script.
+Initialize vectors containing file, variable, and category names, abbreviations, and pre/suffixes. These vectors will be used throughout the script.
 ```{r descriptives-load, echo = 23:36, eval = F}
 ```
 Initialize a list containing four character vectors whose elements are the item column names for the four input data files. `purrr::map()` iterates over the vector containing the item column prefixes (`item_col_prefix`). We apply a lambda (anonymous) function with `~` to create item column names with an `i01` to `i50` nomenclature. `stringr::str_pad()` pads a numerical sequence with zeros to the left of each number. Note the use of `base::as_character()` to coerce the number sequence `1:50` to a sequence of strings. This is wrapped in `stringr::str_c()` which concatenates the prefixes in `item_col_prefix` with the zero-padded numbers. We then use `purrr::set_names()` to name the vectors within the list, again employing `str_c()` to iteratively concatenate a prefix `"item_cols_"` with a vector of suffixes `data_name_suffix`.
