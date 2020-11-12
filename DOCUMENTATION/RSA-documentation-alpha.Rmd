@@ -27,7 +27,7 @@ This code can handle a set of input files that represent different forms (e.g., 
 
 Where `CI_90` and `CI_95` are the 90% and 95% confidence intervals, respectively. Note that alpha values are unexpectedly low, due to the use of simulated (as opposed to human-generated) data.
 
-#### 1. Load packages, read data, specify input parameters
+#### 1. Load packages, read data
 
 ###### EXECUTABLE CODE
 ```{r alpha-load, eval = FALSE}
@@ -96,14 +96,125 @@ Specify file paths and retrieve data from a remote host. The script reads in fou
 
 ```{r alpha-load, echo = 5:19, eval = F}
 ```
+
+<br>
+
+#### 2. Set up data structures for analysis, output
+
+###### EXECUTABLE CODE
+```{r alpha-setup, eval = FALSE}
+form_acronyms <- c("cp", "ct", "tp", "tt")
+
+scale_items_suffix <- c("S1", "S2", "S3", "S4", "S5", "TOT")
+
+form_scale_cols <-
+  crossing(str_to_upper(form_acronyms), scale_items_suffix) %>%
+  set_names(c("form", "scale")) 
+
+input_recode_list <- map(
+  lst(
+    data_RS_sim_child_parent,
+    data_RS_sim_child_teacher,
+    data_RS_sim_teen_parent,
+    data_RS_sim_teen_teacher
+  ),
+  ~
+    .x %>%
+    mutate(
+      across(
+        contains("cpi") |
+          contains("cti") | contains("tpi") | contains("tti"),
+        ~ case_when(
+          .x == "never" ~ 1,
+          .x == "occasionally" ~ 2,
+          .x == "frequently" ~ 3,
+          .x == "always" ~ 4
+        )
+      )
+    )
+)
+
+TOT_item_names_list <- map(form_acronyms,
+                           ~
+                             str_c(str_c(.x, "i"), str_pad(
+                               as.character(1:50), 2, side = "left", pad = "0"
+                             )))
+
+nth_element <- function(vector, starting_position, interval) { 
+  vector[seq(starting_position, length(vector), interval)] 
+}
+
+scale_item_vectors <- map(TOT_item_names_list,
+                          ~ splice(map(1:5, ~ nth_element(.y, .x, 5), .y = .x), .x)) %>%
+  flatten()
+
+scale_item_data <- tibble(
+  data = rep(input_recode_list,
+             each = 6),
+  item_names = scale_item_vectors) %>% 
+  bind_cols(form_scale_cols) %>% 
+  mutate(items = map2(data, item_names, ~ .x %>% select(all_of(.y))))
+
+scale_n_mean_sd <- map_df(
+  lst(
+    data_RS_sim_child_parent,
+    data_RS_sim_child_teacher,
+    data_RS_sim_teen_parent,
+    data_RS_sim_teen_teacher
+  ),
+  ~
+    .x %>%
+    select(contains("raw")) %>%
+    describe(fast = T) %>%
+    rownames_to_column() %>%
+    rename(scale_name = rowname) %>%
+    mutate(
+      form = str_sub(scale_name, 1, 2),
+      scale = str_sub(scale_name, 3,-5)
+    ) %>%
+    select(form, scale, n, mean, sd)
+) 
+```
+###### COMMENTED SNIPPETS
 Initialize containers for form and scale abbreviations, to be used elsewhere in the script.
 
 `form_scale_cols` is a 24-row data frame holding the `form` and `scale` columns of the final output table. It is assembled with `tidyr::crossing()` which takes the two character vectors `form_acronyms` and `scale_items_suffix` as its arguments. `crossing()` creates a data frame with the two input vectors as columns, expanding each vector so that all possible combinations of the vector elements are represented. This provides the required structure for the output table, where each `form` has an identical set of six `scale` rows. We wrap `form_acronyms` in `stringr::str_to_upper()` to change the case of the form acronyms.
-```{r alpha-load, echo = 21:27, eval = F}
+```{r alpha-setup, echo = 1:7, eval = F}
 ```
 To conduct the analysis, we need to recode the item responses to numeric variables. We put the four input data frames into a list, using `tibble::lst()`, which retains the input object names as list element names. We then `map()` an anonymous recoding function over this list. `case_when()` specifies the logic for recoding the input strings into numbers (e.g., if the input cell value is `"never"`, the recode output is `1`). `across()` specifies the subset of columns that will be recoded. `contains()` is a `tidyselect` helper that captures columns whose names contain a certain substring (e.g., `"cpi`, the acronym for child-parent items). 
 
 To account for the four different item name prefixes in the four input files, we pass a four-element predicate as the first argument to `across()`, in which we use the `|` operator to denote a disjunctive set. That is, if _any_ of the four item name prefixes is present in the current iteration of the input data set, `across()` will capture and recode all the columns whose names contain that prefix. The mapping operation returns a four-element list containing the four input data frames, with all item responses recoded to numeric.
-```{r alpha-load, echo = 29:50, eval = F}
+```{r alpha-setup, echo = 9:30, eval = F}
+```
+The output table provides alpha coefficients for the total score (`TOT`) and five subscale scores (`S1`, `S2`, `S3`, `S4`, `S5`). To get these values, we need character vectors containing the column names of the items that contribute to each score. We start with vectors for the `TOT` items. These can be considered "master" vectors in that the subscale item names are simply subsets of the `TOT` item names.
+
+To get the `TOT` vectors, we `map()` a string concatenation function over the character vector `form_acronyms`, whose four elements are needed to assemble the item column names. The concatenation function uses `stringr::str_c` to combine string elements. In the inner call of `str_c()`, the token `.x` represents the element of `form_acronyms` in the current iteration of `map()`. It is combined with `"i"` to yield the four item-name prefixes `cti`, `cpi`, `tpi`, `tti`. The item name suffixes are a numerical sequence `1:50`, with single-digit numbers left-padded with zeros using `stringr::str_pad()`. `map()` returns a list containing the four `TOT` vectors, whose elements (the item column names) are `cpi01`, `cpi02`, `cpi03` and so on (for example).
+```{r alpha-setup, echo = 32:36, eval = F}
+```
+Now that we have vectors containing all possible item column names, we can define a function named `nth_element()` that extracts subsets of names for each subscale. Conveniently, the subscale structure in the input files is regularized, such that in the `child-parent` input, for example, the `S1` names start with item `cpi01`, and include every fifth item (e.g., `cpi06`, `cpi11`, and so on). The item composition of the other subscales follows this same logic (e.g., `S2` includes `cpi02`, `cpi07`, `cpi12`, and so on).
+
+`function(vector, starting_position, interval)` specifies that `nth_element` will take three arguments: a `TOT` item vector, the starting position of the first item of the subscale, and the number of items (or interval) between each subscale item. The body of `nth_element()` is defined within curly braces `{}`. It returns a subset of the input `TOT` vector, using the expression `vector[]`, where the straight braces `[]` specify how the input is to be subsetted. That specification is provided as a numerical sequence using `base::seq()`, which takes three arguments: the starting number of the sequence (given by the `starting_position` argument provided to `nth_element`), the largest possible number in the sequence (given by the `base::length()` of the input vector), and the increment of the sequence (given by the `interval` argument provided to `nth_element()`). Thus, `seq(1, 50, 5)` returns the vector of positions `1 6 11 16 21 26 31 36 41 46`.
+```{r alpha-setup, echo = 38:40, eval = F}
+```
+We want to write robust, flexible code that can specify item-name vectors for all forms and subscales in a single operation. In general, if we have _k_ forms, and each form includes a `TOT` scale and _j_ subscales, then we need to specify _k_ * ( _j_ + 1) item-name vectors. In the current example, _k_ = 4 and _j_ = 5, thus necessitating 24 item name vectors across all forms.
+
+To get the 24 vectors into a list, we employ a nested mapping structure, using the inner call of `map()` to deploy the `nth_element()` subsetting function. In this inner call, we map `nth_element()` over a numerical vector, the sequence `1:5`. We pass `.y`, `.x`, and 5 as the three arguments to `nth_element()`:
+
+* `vector` is passed as `.y`, which refers to the `.x` referent from the _outer_ call of `map()`.
+* `starting_position` is passed as `.x`, which refers to the `.x` referent from the _inner_ call of `map()`.
+* interval is passed as 5, a constant in this application.
+
+Because the inner `map()` call is processing two vectors (its own `.x` argument, and the `.x` argument from the outer `map()` call) we need to also supply the `.y = .x` argument, which tells R that the `.y` argument of the inner `map()` call refers to the `.x` vector passed by the outer `map()` call.
+
+The mapping operation is completed by the outer `map()` call, which iterates over `TOT_item_names_list`, the list containing the item column name vectors for the four `TOT` scales. The function applied to this is the inner `map` call, wrapped in `purrr::splice()`.
+
+To understand how `splice` works in this application, we need to unpack the iterations of the inner `map()` call. Each iteration returns a vector of column names specific to the pairing of a particular form (e.g., `cp`) passed from the outer `map()` call, and a particular subscale (e.g., `S1`) identified by the inner `map()` call. The complete iteration cycle of inner `map()` call of inner `map()` call thus returns a list of the five subscale item-name vectors for a particular form (e.g., `cp`). 
+
+But, because the inner `map()` call is nested within the outer `map()` call, that complete iteration cycle itself iterates four times, over the four elements of `TOT_item_names_list` (the `.x` argument of the outer `map()` call). The result of this outer iteration cycle is a "list of lists", i.e., a four-element list (one element for each form), with each element a five-item list (containing the five subscale item vectors for a particular form). The "list of lists" thus contains all subscale vectors across all forms, thus constituting 20 of the 24 needed vectors. The remaining four are the `TOT` item vectors held by `TOT_item_names_list`.
+
+`splice()` joins two objects into a single list. Here it takes two arguments: the current iteration of the `.x` argument from the outer `map()` call, and the output of a single iteration of the inner `map()` call. Thus, for any single iteration of the outer `map()`call, `splice()` is joining into a single list the `TOT` item vector for a particular form (`.x` from the outer `map` call) with the five subscale item vectors for that same form (the output of a single iteration of the inner `map()` call. The complete iteration cylcle of the outer `map()` call thereby returns a four-element "list of lists", in which each list element is itself a list of all six item vectors (`TOT` and subscales) for a particular form. This "list of lists" contains all 24 required vectors.
+
+A final step is required to prepare the output for downstream processing. Piping the "list of lists" through `purrr::flatten()` removes one level of hierarchy and returns the 24 vectors in a single flat list named `scale_item_vectors`. The item-name vectors are arranged in the desired sequence, e.g., all six vectors for one form, followed by all six vectors for the next form, and so on.
+```{r alpha-setup, echo = 42:44, eval = F}
 ```
 

@@ -381,8 +381,8 @@ summary {
  9             S3     0.07  2.73 6 -- 15  5 -- 16 
 10             S4     0.04  2.76 6 -- 15  5 -- 16 </code></pre>
 <p>Where <code>CI_90</code> and <code>CI_95</code> are the 90% and 95% confidence intervals, respectively. Note that alpha values are unexpectedly low, due to the use of simulated (as opposed to human-generated) data.</p>
-<div id="load-packages-read-data-specify-input-parameters" class="section level4">
-<h4>1. Load packages, read data, specify input parameters</h4>
+<div id="load-packages-read-data" class="section level4">
+<h4>1. Load packages, read data</h4>
 <div id="executable-code" class="section level6">
 <h6>EXECUTABLE CODE</h6>
 <pre class="r"><code>suppressPackageStartupMessages(library(here))
@@ -464,6 +464,87 @@ data_RS_sim_teen_parent &lt;- suppressMessages(read_csv(url(
 data_RS_sim_teen_teacher &lt;- suppressMessages(read_csv(url(
   str_c(urlRemote_path, github_path, &quot;data-RS-sim-teen-teacher.csv&quot;)
 )))</code></pre>
+<p><br></p>
+</div>
+</div>
+<div id="set-up-data-structures-for-analysis-output" class="section level4">
+<h4>2. Set up data structures for analysis, output</h4>
+<div id="executable-code-1" class="section level6">
+<h6>EXECUTABLE CODE</h6>
+<pre class="r"><code>form_acronyms &lt;- c(&quot;cp&quot;, &quot;ct&quot;, &quot;tp&quot;, &quot;tt&quot;)
+
+scale_items_suffix &lt;- c(&quot;S1&quot;, &quot;S2&quot;, &quot;S3&quot;, &quot;S4&quot;, &quot;S5&quot;, &quot;TOT&quot;)
+
+form_scale_cols &lt;-
+  crossing(str_to_upper(form_acronyms), scale_items_suffix) %&gt;%
+  set_names(c(&quot;form&quot;, &quot;scale&quot;)) 
+
+input_recode_list &lt;- map(
+  lst(
+    data_RS_sim_child_parent,
+    data_RS_sim_child_teacher,
+    data_RS_sim_teen_parent,
+    data_RS_sim_teen_teacher
+  ),
+  ~
+    .x %&gt;%
+    mutate(
+      across(
+        contains(&quot;cpi&quot;) |
+          contains(&quot;cti&quot;) | contains(&quot;tpi&quot;) | contains(&quot;tti&quot;),
+        ~ case_when(
+          .x == &quot;never&quot; ~ 1,
+          .x == &quot;occasionally&quot; ~ 2,
+          .x == &quot;frequently&quot; ~ 3,
+          .x == &quot;always&quot; ~ 4
+        )
+      )
+    )
+)
+
+TOT_item_names_list &lt;- map(form_acronyms,
+                           ~
+                             str_c(str_c(.x, &quot;i&quot;), str_pad(
+                               as.character(1:50), 2, side = &quot;left&quot;, pad = &quot;0&quot;
+                             )))
+
+nth_element &lt;- function(vector, starting_position, interval) { 
+  vector[seq(starting_position, length(vector), interval)] 
+}
+
+scale_item_vectors &lt;- map(TOT_item_names_list,
+                          ~ splice(map(1:5, ~ nth_element(.y, .x, 5), .y = .x), .x)) %&gt;%
+  flatten()
+
+scale_item_data &lt;- tibble(
+  data = rep(input_recode_list,
+             each = 6),
+  item_names = scale_item_vectors) %&gt;% 
+  bind_cols(form_scale_cols) %&gt;% 
+  mutate(items = map2(data, item_names, ~ .x %&gt;% select(all_of(.y))))
+
+scale_n_mean_sd &lt;- map_df(
+  lst(
+    data_RS_sim_child_parent,
+    data_RS_sim_child_teacher,
+    data_RS_sim_teen_parent,
+    data_RS_sim_teen_teacher
+  ),
+  ~
+    .x %&gt;%
+    select(contains(&quot;raw&quot;)) %&gt;%
+    describe(fast = T) %&gt;%
+    rownames_to_column() %&gt;%
+    rename(scale_name = rowname) %&gt;%
+    mutate(
+      form = str_sub(scale_name, 1, 2),
+      scale = str_sub(scale_name, 3,-5)
+    ) %&gt;%
+    select(form, scale, n, mean, sd)
+) </code></pre>
+</div>
+<div id="commented-snippets-1" class="section level6">
+<h6>COMMENTED SNIPPETS</h6>
 <p>Initialize containers for form and scale abbreviations, to be used elsewhere in the script.</p>
 <p><code>form_scale_cols</code> is a 24-row data frame holding the <code>form</code> and <code>scale</code> columns of the final output table. It is assembled with <code>tidyr::crossing()</code> which takes the two character vectors <code>form_acronyms</code> and <code>scale_items_suffix</code> as its arguments. <code>crossing()</code> creates a data frame with the two input vectors as columns, expanding each vector so that all possible combinations of the vector elements are represented. This provides the required structure for the output table, where each <code>form</code> has an identical set of six <code>scale</code> rows. We wrap <code>form_acronyms</code> in <code>stringr::str_to_upper()</code> to change the case of the form acronyms.</p>
 <pre class="r"><code>form_acronyms &lt;- c(&quot;cp&quot;, &quot;ct&quot;, &quot;tp&quot;, &quot;tt&quot;)
@@ -497,6 +578,34 @@ form_scale_cols &lt;-
       )
     )
 )</code></pre>
+<p>The output table provides alpha coefficients for the total score (<code>TOT</code>) and five subscale scores (<code>S1</code>, <code>S2</code>, <code>S3</code>, <code>S4</code>, <code>S5</code>). To get these values, we need character vectors containing the column names of the items that contribute to each score. We start with vectors for the <code>TOT</code> items. These can be considered “master” vectors in that the subscale item names are simply subsets of the <code>TOT</code> item names.</p>
+<p>To get the <code>TOT</code> vectors, we <code>map()</code> a string concatenation function over the character vector <code>form_acronyms</code>, whose four elements are needed to assemble the item column names. The concatenation function uses <code>stringr::str_c</code> to combine string elements. In the inner call of <code>str_c()</code>, the token <code>.x</code> represents the element of <code>form_acronyms</code> in the current iteration of <code>map()</code>. It is combined with <code>&quot;i&quot;</code> to yield the four item-name prefixes <code>cti</code>, <code>cpi</code>, <code>tpi</code>, <code>tti</code>. The item name suffixes are a numerical sequence <code>1:50</code>, with single-digit numbers left-padded with zeros using <code>stringr::str_pad()</code>. <code>map()</code> returns a list containing the four <code>TOT</code> vectors, whose elements (the item column names) are <code>cpi01</code>, <code>cpi02</code>, <code>cpi03</code> and so on (for example).</p>
+<pre class="r"><code>TOT_item_names_list &lt;- map(form_acronyms,
+                           ~
+                             str_c(str_c(.x, &quot;i&quot;), str_pad(
+                               as.character(1:50), 2, side = &quot;left&quot;, pad = &quot;0&quot;
+                             )))</code></pre>
+<p>Now that we have vectors containing all possible item column names, we can define a function named <code>nth_element()</code> that extracts subsets of names for each subscale. Conveniently, the subscale structure in the input files is regularized, such that in the <code>child-parent</code> input, for example, the <code>S1</code> names start with item <code>cpi01</code>, and include every fifth item (e.g., <code>cpi06</code>, <code>cpi11</code>, and so on). The item composition of the other subscales follows this same logic (e.g., <code>S2</code> includes <code>cpi02</code>, <code>cpi07</code>, <code>cpi12</code>, and so on).</p>
+<p><code>function(vector, starting_position, interval)</code> specifies that <code>nth_element</code> will take three arguments: a <code>TOT</code> item vector, the starting position of the first item of the subscale, and the number of items (or interval) between each subscale item. The body of <code>nth_element()</code> is defined within curly braces <code>{}</code>. It returns a subset of the input <code>TOT</code> vector, using the expression <code>vector[]</code>, where the straight braces <code>[]</code> specify how the input is to be subsetted. That specification is provided as a numerical sequence using <code>base::seq()</code>, which takes three arguments: the starting number of the sequence (given by the <code>starting_position</code> argument provided to <code>nth_element</code>), the largest possible number in the sequence (given by the <code>base::length()</code> of the input vector), and the increment of the sequence (given by the <code>interval</code> argument provided to <code>nth_element()</code>). Thus, <code>seq(1, 50, 5)</code> returns the vector of positions <code>1 6 11 16 21 26 31 36 41 46</code>.</p>
+<pre class="r"><code>nth_element &lt;- function(vector, starting_position, interval) { 
+  vector[seq(starting_position, length(vector), interval)] 
+}</code></pre>
+<p>We want to write robust, flexible code that can specify item-name vectors for all forms and subscales in a single operation. In general, if we have <em>k</em> forms, and each form includes a <code>TOT</code> scale and <em>j</em> subscales, then we need to specify <em>k</em> * ( <em>j</em> + 1) item-name vectors. In the current example, <em>k</em> = 4 and <em>j</em> = 5, thus necessitating 24 item name vectors across all forms.</p>
+<p>To get the 24 vectors into a list, we employ a nested mapping structure, using the inner call of <code>map()</code> to deploy the <code>nth_element()</code> subsetting function. In this inner call, we map <code>nth_element()</code> over a numerical vector, the sequence <code>1:5</code>. We pass <code>.y</code>, <code>.x</code>, and 5 as the three arguments to <code>nth_element()</code>:</p>
+<ul>
+<li><code>vector</code> is passed as <code>.y</code>, which refers to the <code>.x</code> referent from the <em>outer</em> call of <code>map()</code>.</li>
+<li><code>starting_position</code> is passed as <code>.x</code>, which refers to the <code>.x</code> referent from the <em>inner</em> call of <code>map()</code>.</li>
+<li>interval is passed as 5, a constant in this application.</li>
+</ul>
+<p>Because the inner <code>map()</code> call is processing two vectors (its own <code>.x</code> argument, and the <code>.x</code> argument from the outer <code>map()</code> call) we need to also supply the <code>.y = .x</code> argument, which tells R that the <code>.y</code> argument of the inner <code>map()</code> call refers to the <code>.x</code> vector passed by the outer <code>map()</code> call.</p>
+<p>The mapping operation is completed by the outer <code>map()</code> call, which iterates over <code>TOT_item_names_list</code>, the list containing the item column name vectors for the four <code>TOT</code> scales. The function applied to this is the inner <code>map</code> call, wrapped in <code>purrr::splice()</code>.</p>
+<p>To understand how <code>splice</code> works in this application, we need to unpack the iterations of the inner <code>map()</code> call. Each iteration returns a vector of column names specific to the pairing of a particular form (e.g., <code>cp</code>) passed from the outer <code>map()</code> call, and a particular subscale (e.g., <code>S1</code>) identified by the inner <code>map()</code> call. The complete iteration cycle of inner <code>map()</code> call of inner <code>map()</code> call thus returns a list of the five subscale item-name vectors for a particular form (e.g., <code>cp</code>).</p>
+<p>But, because the inner <code>map()</code> call is nested within the outer <code>map()</code> call, that complete iteration cycle itself iterates four times, over the four elements of <code>TOT_item_names_list</code> (the <code>.x</code> argument of the outer <code>map()</code> call). The result of this outer iteration cycle is a “list of lists”, i.e., a four-element list (one element for each form), with each element a five-item list (containing the five subscale item vectors for a particular form). The “list of lists” thus contains all subscale vectors across all forms, thus constituting 20 of the 24 needed vectors. The remaining four are the <code>TOT</code> item vectors held by <code>TOT_item_names_list</code>.</p>
+<p><code>splice()</code> joins two objects into a single list. Here it takes two arguments: the current iteration of the <code>.x</code> argument from the outer <code>map()</code> call, and the output of a single iteration of the inner <code>map()</code> call. Thus, for any single iteration of the outer <code>map()</code>call, <code>splice()</code> is joining into a single list the <code>TOT</code> item vector for a particular form (<code>.x</code> from the outer <code>map</code> call) with the five subscale item vectors for that same form (the output of a single iteration of the inner <code>map()</code> call. The complete iteration cylcle of the outer <code>map()</code> call thereby returns a four-element “list of lists”, in which each list element is itself a list of all six item vectors (<code>TOT</code> and subscales) for a particular form. This “list of lists” contains all 24 required vectors.</p>
+<p>A final step is required to prepare the output for downstream processing. Piping the “list of lists” through <code>purrr::flatten()</code> removes one level of hierarchy and returns the 24 vectors in a single flat list named <code>scale_item_vectors</code>. The item-name vectors are arranged in the desired sequence, e.g., all six vectors for one form, followed by all six vectors for the next form, and so on.</p>
+<pre class="r"><code>scale_item_vectors &lt;- map(TOT_item_names_list,
+                          ~ splice(map(1:5, ~ nth_element(.y, .x, 5), .y = .x), .x)) %&gt;%
+  flatten()</code></pre>
 </div>
 </div>
 </div>

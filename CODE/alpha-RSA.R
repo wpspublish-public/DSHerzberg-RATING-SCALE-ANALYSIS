@@ -61,23 +61,14 @@ input_recode_list <- map(
     )
 )
 
-
-
-
-# To subset the input data to estimate subscale alphas, we need a list of char
-# vecs containing the col names of the items in each subscale, across forms. We
-# start with the "master" char vec, the TOT score (which includes all items),
-# and we map `form_acronyms` to create a list of four TOT item vectors, one for
-# each form.
+# Create a list containing the four TOT scale item name vectors.
 TOT_item_names_list <- map(form_acronyms,
                            ~
                              str_c(str_c(.x, "i"), str_pad(
                                as.character(1:50), 2, side = "left", pad = "0"
                              )))
 
-# We define a function that allows us to subset a char vec, from any starting
-# position, by any fixed interval length (where "interval" refers to, e.g.,
-# every fifth element).
+# define a function to subset a vector by numerical positions.
 nth_element <- function(vector, starting_position, interval) { 
   vector[seq(starting_position, length(vector), interval)] 
 }
