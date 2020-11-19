@@ -94,13 +94,13 @@ scale_n_mean_sd <- map_df(
     .x %>%
     select(contains("raw")) %>%
     describe(fast = T) %>%
-    rownames_to_column() %>%
-    rename(scale_name = rowname) %>%
+    rownames_to_column(var = "scale_name") %>%
     mutate(
       form = str_sub(scale_name, 1, 2),
       scale = str_sub(scale_name, 3,-5)
     ) %>%
-    select(form, scale, n, mean, sd)
+    select(form, scale, n, mean, sd) %>% 
+    tibble()
 ) 
 
 # Create alpha output table with SEM, CVs, using `psych::alpha()`. Unnest the

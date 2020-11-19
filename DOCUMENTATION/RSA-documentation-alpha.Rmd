@@ -166,13 +166,13 @@ scale_n_mean_sd <- map_df(
     .x %>%
     select(contains("raw")) %>%
     describe(fast = T) %>%
-    rownames_to_column() %>%
-    rename(scale_name = rowname) %>%
+    rownames_to_column(var = "scale_name") %>%
     mutate(
       form = str_sub(scale_name, 1, 2),
       scale = str_sub(scale_name, 3,-5)
     ) %>%
-    select(form, scale, n, mean, sd)
+    select(form, scale, n, mean, sd) %>% 
+    tibble()
 ) 
 ```
 ###### COMMENTED SNIPPETS
@@ -223,7 +223,80 @@ We initialize a new data frame `scale_item_data`, and call `tibble::tibble()` to
 
 Next we use `dplyr::bind_cols()` to join two additional two columns containing scale and form acronyms (held, in the required sort order, in the previously created `form_scale_cols` data frame).
 
-The final operation in this snippet is to subset the input data frames. The list-column work flow facilitates this by enabling the row-wise mapping of `select()`, sourcing required arguments from the same row. `select()` takes two arguments: an input data frame, and a vector of column names that constitute the subsetted output data frame. We use `purrr::map2()` to map `select()` over the `data` and `item_names` list-columns. `data` contains the input data frame (the `.x` referent within `map2()`), and `item_names` contains the vector of column names for a particular scale (the `.y` referent within `map2()`). `mutate()` puts the output of this mapping into a new list-column `items`, which holds data frames consting of the subsets of item columns required for the internal consistency analysis of each scale.
+The final operation in this snippet is to subset the input data frames. The list-column work flow facilitates this by enabling the row-wise mapping of `select()`, sourcing required arguments from the same row. In essence, each row of the data frame becomes a self-contained data-processing workflow, holding the input data frame, other arguments passed to the mapped-on `select()` function, and the ouput data frame.
+
+`select()` takes two arguments: an input data frame, and a vector of column names that determines the structure of the output data frame. We use `purrr::map2()` to map `select()` over the `data` and `item_names` list-columns, each of which passes an argument to `select()`. `data` contains the input data frame (the `.x` referent within `map2()`), and `item_names` contains the vector of column names for a particular scale (the `.y` referent within `map2()`). `mutate()` puts the output of this mapping into a new list-column `items`, which holds data frames consting of the subsets of item columns required for the internal consistency analysis of each scale.
 ```{r alpha-setup, echo = 46:51, eval = F}
+```
+We now extract certain raw score descriptive statistics needed for the final output table. The four input data sets are put into a named list using `lst()`, and we map an anonymous function over this input list using `map_df()`, which returns a single data frame containing the descriptive statistics for all four input files.
+
+The anonymous function (set of with the formula shorthand `~`) pipes the input data frame (the `.x` referent of `map_df()`) into `select(contains("raw"))`, which returns only the raw score columns. We obtain descriptive statistics on these columns using `psych::describe()`. The argument `fast = T` limits the output to the most frequently reported measures (e.g., `n`, `mean`, `sd`, `min`, `max`, `range`, `se`). These measures become column names for a summary data object, which now has a row for each score being analyzed, as in:
+```
+          vars    n  mean   sd min max range   se
+CPS1_raw     1 1000 10.27 2.84   1  19    18 0.09
+CPS2_raw     2 1000 10.19 2.92   2  20    18 0.09
+CPS3_raw     3 1000 10.08 2.79   2  21    19 0.09
+CPS4_raw     4 1000 10.30 2.79   2  21    19 0.09
+CPS5_raw     5 1000 10.21 2.77   1  19    18 0.09
+CPTOT_raw    6 1000 51.05 8.82  18  73    55 0.28
+```
+We then use a series of functions to create `form` and `scale` columns for the summary data object:
+
+* `tibble::rownames_to_column(var = "scale_name")`: extracts the scale names (which are row names in the current data object) into a "proper" column, named `scale_name`.
+* `mutate()`: initializes the `form` and `scale` columns, and populates them (using `stringr::str_sub()`) with substrings from the `scale_name` column.
+* `select()`: keeps only the columns needed for the final output table.
+* `tibble()`: regularizes the object into a tibble, removing unneeded attributes created by the `psych` package.
+
+```{r alpha-setup, echo = 53:71, eval = F}
+```
+Here is the output structure of `scale_n_mean_sd`:
+```
+form  scale     n  mean    sd
+CP    S1     1000  10.3  2.84
+CP    S2     1000  10.2  2.92
+CP    S3     1000  10.1  2.79
+...[intervening rows]
+TT    S4     1000  10.3  2.82
+TT    S5     1000  10.2  2.90
+TT    TOT    1000  51.1  9.11
+```
+<br>
+
+#### 3. Conduct internal consistency analysis; assemble and write final output table
+
+###### EXECUTABLE CODE
+```{r alpha-output, eval = FALSE}
+alpha_output <- scale_item_data %>%
+  mutate(alpha = map(items, ~ alpha(cor(.x))[["total"]])) %>%
+  unnest(alpha) %>%
+  select(form, scale, raw_alpha) %>%
+  rename(alpha = raw_alpha) %>%
+  left_join(scale_n_mean_sd, by = c("form", "scale")) %>%
+  group_by(form) %>%
+  mutate(
+    SEM = sd * (sqrt(1 - alpha)),
+    CV_90_UB = round(mean + 1.6449 * SEM),
+    CV_90_LB = round(mean - 1.6449 * SEM),
+    CV_95_UB = round(mean + 1.96 * SEM),
+    CV_95_LB = round(mean - 1.96 * SEM),
+    CI_90 = str_c(CV_90_LB, "--", CV_90_UB),
+    CI_95 = str_c(CV_95_LB, "--", CV_95_UB),
+    across(is.numeric, ~ round(., 2)),
+    form = case_when(row_number() == 1 ~ form,
+                     T ~ NA_character_),
+    n = case_when(row_number() == 1 ~ n,
+                  T ~ NA_real_)
+  ) %>%
+  select(form, n, scale, alpha, SEM, CI_90, CI_95) 
+
+write_csv(alpha_output,
+          here("OUTPUT-FILES/TABLES/alpha-summary-by-form.csv"),
+          na = "")
+```
+###### COMMENTED SNIPPETS
+We are now ready to conduct the internal consistency analysis and obtain coefficient alpha for each scale. The required output structure, with rows ordered by form, and scale rows nested within each form, is present in the previously created `scale_item_data` data frame. `scale_item_data` is piped into `mutate()` to create a new list-column`alpha`, which will hold the analysis output of the `psych::alpha()` function.
+
+Within `mutate()`, `map()` is used to apply a function to each row and return the ouput to the new `alpha` column. The `.x` argument to `map()` is the same-row element of the `items` column (i.e., the data frame containing the item columns for the scale being analyzed in that row).
+```{r alpha-output, echo = 1:2, eval = F}
 ```
 

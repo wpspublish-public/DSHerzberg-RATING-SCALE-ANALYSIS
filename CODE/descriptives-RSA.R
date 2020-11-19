@@ -169,8 +169,7 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
     ~ ..1 %>%
       select(contains('raw')) %>%
       describe(fast = T) %>%
-      rownames_to_column() %>%
-      rename(scale = rowname) %>%
+      rownames_to_column(var = "scale") %>%
       mutate(
         data = case_when(rownames(.) == "1" ~ ..2,
                          T ~ NA_character_),

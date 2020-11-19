@@ -488,8 +488,7 @@ list(mget(str_c("data_RS_sim_", data_name_suffix)),
     ~ ..1 %>%
       select(contains('raw')) %>%
       describe(fast = T) %>%
-      rownames_to_column() %>%
-      rename(scale = rowname) %>%
+    rownames_to_column(var = "scale") %>%
       mutate(
         data = case_when(rownames(.) == "1" ~ ..2,
                          T ~ NA_character_),
@@ -525,8 +524,8 @@ CPS4_raw     4 1000 10.30 2.79   2  21    19 0.09
 CPS5_raw     5 1000 10.21 2.77   1  19    18 0.09
 CPTOT_raw    6 1000 51.05 8.82  18  73    55 0.28
 ```
-Because `describe()` converts the column names of the input object into row names, we use functions from `tibble` and `dplyer` to move these row names into a column named `scale`.
-```{r descriptives-raw-desc-tables, echo = 7:8, eval = F}
+Because `describe()` converts the column names of the input object into row names, we use `tibble::rownames_to_column()` to move these row names into a column named `scale`.
+```{r descriptives-raw-desc-tables, echo = 7, eval = F}
 ```
 
 ##### Plots
