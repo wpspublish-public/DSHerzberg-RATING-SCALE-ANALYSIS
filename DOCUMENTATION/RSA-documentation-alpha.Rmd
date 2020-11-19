@@ -9,7 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Internal Consistency (coefficient alpha)
 
-This code can handle a set of input files that represent different forms (e.g., different combinations of age-range and rater). It generates a single .csv output file summarizing internal consistency analysis across all forms. The output table is formatted as in this example: 
+This code template can handle a set of input files that represent different forms (e.g., different combinations of age-range and rater). It generates a single .csv output file summarizing internal consistency analysis across all forms. The output table is formatted as in this example: 
 
 ```{eval = F}
    form      n scale alpha   SEM CI_90    CI_95   
@@ -193,7 +193,7 @@ To get the `TOT` vectors, we `map()` a string concatenation function over the ch
 ```
 Now that we have vectors containing all possible item column names, we can define a function named `nth_element()` that extracts subsets of names for each subscale. Conveniently, the subscale structure in the input files is regularized, such that in the `child-parent` input, for example, the `S1` names start with item `cpi01`, and include every fifth item (e.g., `cpi06`, `cpi11`, and so on). The item composition of the other subscales follows this same logic (e.g., `S2` includes `cpi02`, `cpi07`, `cpi12`, and so on).
 
-`function(vector, starting_position, interval)` specifies that `nth_element` will take three arguments: a `TOT` item vector, the starting position of the first item of the subscale, and the number of items (or interval) between each subscale item. The body of `nth_element()` is defined within curly braces `{}`. It returns a subset of the input `TOT` vector, using the expression `vector[]`, where the straight braces `[]` specify how the input is to be subsetted. That specification is provided as a numerical sequence using `base::seq()`, which takes three arguments: the starting number of the sequence (given by the `starting_position` argument provided to `nth_element`), the largest possible number in the sequence (given by the `base::length()` of the input vector), and the increment of the sequence (given by the `interval` argument provided to `nth_element()`). Thus, `seq(1, 50, 5)` returns the vector of positions `1 6 11 16 21 26 31 36 41 46`.
+`function(vector, starting_position, interval)` specifies that `nth_element` will take three arguments: a `TOT` item vector, the starting position of the first item of the subscale, and the number of items (or interval) between each subscale item. The body of `nth_element()` is defined within curly braces `{}`. It returns a subset of the input `TOT` vector, using the expression `vector[]`, where the straight braces `[]` specify how the input is to be subsetted. That specification is provided as a numerical sequence using `base::seq()`, which takes three arguments: the starting number of the sequence (given by the `starting_position` argument passed to `nth_element`), the largest possible number in the sequence (given by the `base::length()` of the input vector), and the increment of the sequence (given by the `interval` argument passed to `nth_element()`). Thus, `seq(1, 50, 5)` returns the vector of positions `1 6 11 16 21 26 31 36 41 46`.
 ```{r alpha-setup, echo = 38:40, eval = F}
 ```
 We want to write robust, flexible code that can specify item-name vectors for all forms and subscales in a single operation. In general, if we have _k_ forms, and each form includes a `TOT` scale and _j_ subscales, then we need to specify _k_ * ( _j_ + 1) item-name vectors. In the current example, _k_ = 4 and _j_ = 5, thus necessitating 24 item name vectors across all forms.
@@ -206,11 +206,11 @@ To get the 24 vectors into a list, we employ a nested mapping structure, using t
 
 Because the inner `map()` call is processing two vectors (its own `.x` argument, and the `.x` argument from the outer `map()` call) we need to also supply the `.y = .x` argument, which tells R that the `.y` argument of the inner `map()` call refers to the `.x` vector passed by the outer `map()` call.
 
-The mapping operation is completed by the outer `map()` call, which iterates over `TOT_item_names_list`, the list containing the item column name vectors for the four `TOT` scales. The function applied to this is the inner `map` call, wrapped in `purrr::splice()`.
+The mapping operation is completed by the outer `map()` call, which iterates over `TOT_item_names_list`, the list containing the item column name vectors for the four `TOT` scales. The function applied to this list is the inner `map` call, wrapped in `purrr::splice()`.
 
 To understand how `splice` works in this application, we need to unpack the iterations of the inner `map()` call. Each iteration returns a vector of column names specific to the pairing of a particular form (e.g., `cp`) passed from the outer `map()` call, and a particular subscale (e.g., `S1`) identified by the inner `map()` call. The complete iteration cycle of the inner `map()` call thus returns a list of the five subscale item-name vectors for a particular form (e.g., `cp`). 
 
-But, because the inner `map()` call is nested within the outer `map()` call, that complete iteration cycle itself iterates four times, over the four elements of `TOT_item_names_list` (the `.x` argument of the outer `map()` call). The result of this outer iteration cycle is a "list of lists", i.e., a four-element list (one element for each form), with each element a five-item list (containing the five subscale item vectors for a particular form). The "list of lists" thus contains all subscale vectors across all forms, thus constituting 20 of the 24 needed vectors. The remaining four are the `TOT` item vectors held by `TOT_item_names_list`.
+But, because the inner `map()` call is nested within the outer `map()` call, that complete iteration cycle itself iterates four times, over the four elements of `TOT_item_names_list` (the `.x` argument of the outer `map()` call). The result of this outer iteration cycle is a "list of lists", i.e., a four-element list (one element for each form), with each element itself a five-element list (containing the five subscale item vectors for a particular form). The "list of lists" thus contains all subscale vectors across all forms, thus constituting 20 of the 24 needed vectors. The remaining four are the `TOT` item vectors held by `TOT_item_names_list`.
 
 `splice()` joins two objects into a single list. Here it takes two arguments: the current iteration of the `.x` argument from the outer `map()` call, and the output of a single iteration of the inner `map()` call. Thus, for any single iteration of the outer `map()`call, `splice()` is joining into a single list the `TOT` item vector for a particular form (`.x` from the outer `map` call) with the five subscale item vectors for that same form (the output of a single iteration of the inner `map()` call). The complete iteration cylcle of the outer `map()` call thereby returns a four-element "list of lists", in which each list element is itself a list of all six item vectors (`TOT` and subscales) for a particular form. This "list of lists" contains all 24 required vectors.
 
@@ -219,18 +219,18 @@ A final step is required to prepare the output for downstream processing. Piping
 ```
 The next snippet uses the `purrr` list-column workflow to subset the input data sets so that they include only the item columns needed for the internal consistency analysis of each scale. In the same operation, we also set up the basic structure of the final output table, which includes 24 rows (four forms X six scales), each containing the internal consistency output for one scale.
 
-We initialize a new data frame `scale_item_data`, and call `tibble::tibble()` to create two 24-row list-columns. The `data` list-column contains the four recoded input data frames (held in `input_recode_list`, which is repeated six times with `base::rep(each = 6)`). The `item_names` list-column holds the list (created in the previous snippet) of the 24 scale-wise item-column name vectors. At this point, `scale_item_data` has the input data sets paired up row-wise with their item-column names for `TOT` and the five subscales.
+We initialize a new data frame `scale_item_data`, and call `tibble::tibble()` to create two 24-row list-columns. The `data` list-column contains the four recoded input data frames (held in `input_recode_list`, which is repeated six times with `base::rep(each = 6)`). The `item_names` list-column holds the list (created in the previous snippet) of the 24 scale-wise item-column name vectors. Thus, each row of the `data` list-column contains a data frame, and each row of the `item_names` list-column contains a vector. At this point, `scale_item_data` has the input data sets paired up row-wise with their item-column names for `TOT` and the five subscales.
 
 Next we use `dplyr::bind_cols()` to join two additional two columns containing scale and form acronyms (held, in the required sort order, in the previously created `form_scale_cols` data frame).
 
-The final operation in this snippet is to subset the input data frames. The list-column work flow facilitates this by enabling the row-wise mapping of `select()`, sourcing required arguments from the same row. In essence, each row of the data frame becomes a self-contained data-processing workflow, holding the input data frame, other arguments passed to the mapped-on `select()` function, and the ouput data frame.
+The final operation in this snippet is to subset the input data frames. The list-column workflow enables the row-wise mapping of `select()`, sourcing required arguments from the same row. In essence, each row of piped data object becomes a self-contained data-processing workflow, holding the input data frame, other arguments passed to the mapped-on `select()` function, and the ouput data frame.
 
-`select()` takes two arguments: an input data frame, and a vector of column names that determines the structure of the output data frame. We use `purrr::map2()` to map `select()` over the `data` and `item_names` list-columns, each of which passes an argument to `select()`. `data` contains the input data frame (the `.x` referent within `map2()`), and `item_names` contains the vector of column names for a particular scale (the `.y` referent within `map2()`). `mutate()` puts the output of this mapping into a new list-column `items`, which holds data frames consting of the subsets of item columns required for the internal consistency analysis of each scale.
+`select()` takes two arguments: an input data frame, and a vector of column names that determines the structure of the output data frame. We use `purrr::map2()` to map `select()` over the `data` and `item_names` list-columns, each of which passes an argument to `select()`. `data` contains the input data frame (the `.x` referent within `map2()`), and `item_names` contains the vector of column names for a particular scale (the `.y` referent within `map2()`). `mutate()` puts the output of this mapping into a new list-column `items`, which holds data frames consisting of the subsets of item columns required for the internal consistency analysis of each scale.
 ```{r alpha-setup, echo = 46:51, eval = F}
 ```
 We now extract certain raw score descriptive statistics needed for the final output table. The four input data sets are put into a named list using `lst()`, and we map an anonymous function over this input list using `map_df()`, which returns a single data frame containing the descriptive statistics for all four input files.
 
-The anonymous function (set of with the formula shorthand `~`) pipes the input data frame (the `.x` referent of `map_df()`) into `select(contains("raw"))`, which returns only the raw score columns. We obtain descriptive statistics on these columns using `psych::describe()`. The argument `fast = T` limits the output to the most frequently reported measures (e.g., `n`, `mean`, `sd`, `min`, `max`, `range`, `se`). These measures become column names for a summary data object, which now has a row for each score being analyzed, as in:
+The anonymous function (set off with the formula shorthand `~`) pipes the input data frame (the `.x` referent of `map_df()`) into `select(contains("raw"))`, which returns only the raw score columns. We obtain descriptive statistics on these columns using `psych::describe()`. The argument `fast = T` limits the output to the most frequently reported measures (e.g., `n`, `mean`, `sd`, `min`, `max`, `range`, `se`). These measures become column names for a summary data object, which now has a row for each score being analyzed, as in:
 ```
           vars    n  mean   sd min max range   se
 CPS1_raw     1 1000 10.27 2.84   1  19    18 0.09
@@ -242,7 +242,7 @@ CPTOT_raw    6 1000 51.05 8.82  18  73    55 0.28
 ```
 We then use a series of functions to create `form` and `scale` columns for the summary data object:
 
-* `tibble::rownames_to_column(var = "scale_name")`: extracts the scale names (which are row names in the current data object) into a "proper" column, named `scale_name`.
+* `tibble::rownames_to_column(var = "scale_name")`: extracts the scale names (which are row names in the current data object) into a regular column, named `scale_name`.
 * `mutate()`: initializes the `form` and `scale` columns, and populates them (using `stringr::str_sub()`) with substrings from the `scale_name` column.
 * `select()`: keeps only the columns needed for the final output table.
 * `tibble()`: regularizes the object into a tibble, removing unneeded attributes created by the `psych` package.
@@ -255,7 +255,7 @@ form  scale     n  mean    sd
 CP    S1     1000  10.3  2.84
 CP    S2     1000  10.2  2.92
 CP    S3     1000  10.1  2.79
-...[intervening rows]
+...[intervening rows]...
 TT    S4     1000  10.3  2.82
 TT    S5     1000  10.2  2.90
 TT    TOT    1000  51.1  9.11
@@ -294,9 +294,19 @@ write_csv(alpha_output,
           na = "")
 ```
 ###### COMMENTED SNIPPETS
-We are now ready to conduct the internal consistency analysis and obtain coefficient alpha for each scale. The required output structure, with rows ordered by form, and scale rows nested within each form, is present in the previously created `scale_item_data` data frame. `scale_item_data` is piped into `mutate()` to create a new list-column`alpha`, which will hold the analysis output of the `psych::alpha()` function.
+We are now ready to conduct the internal consistency analysis and obtain coefficient alpha for each scale. The required output structure, with rows sorted by form, and scale rows nested within each form, is present in the previously created `scale_item_data` data frame. `scale_item_data` is piped into `mutate()` to create a new list-column`alpha`, which will hold the analysis output of the `psych::alpha()` function.
 
 Within `mutate()`, `map()` is used to apply a function to each row and return the ouput to the new `alpha` column. The `.x` argument to `map()` is the same-row element of the `items` column (i.e., the data frame containing the item columns for the scale being analyzed in that row).
-```{r alpha-output, echo = 1:2, eval = F}
-```
 
+`alpha()` requires as its primary argument a correlation matrix of the columns to be analyzed (supplied here by `stats::cor(.x)`). `alpha()` returns a list, with the desired analysis output held in the `"total"` element as single-row data frame, which is extracted using double brackets `[[]]` and placed by `mutate()` into the new `alpha` list-column. By calling `tidyr::unnest()`, we flatten out the data frames contained in the `alpha` list-column into regular columns in the piped data object. We then `select()` and `rename()` columns needed for the output table.
+```{r alpha-output, echo = 1:5, eval = F}
+```
+Using `dplyr::left_join()`, we bring in the descriptive statistics columns in the `scale_n_mean_sd` data frame, indexing `by = c("form", "scale")` to ensure correct alignment of rows. We then `group_by(form)` so that subsequent functions can process subsets of rows consisting of the six scales for each form.
+```{r alpha-output, echo = 6:7, eval = F}
+```
+The remaining code in this section uses `mutate()` to create new columns for SEM and confidence intervals, to round numerical values, and to make labeling in the `form` and `scale` columns more readable in the final output table. We then `select()` the columns for the final output table and write that table to .csv. Some additional detail:
+
+* `CI_90 = str_c(CV_90_LB, "--", CV_90_UB)`: `str_c()` concatenates numerical lower and upper bounds (`LB`, `UB`) into a character string, the 90% confidence interval. `"--"` is used as a separator to prevent MS Excel from automatically reformatting the confidence interval as a date when it opens the .csv output table.
+* `across(is.numeric, ~ round(., 2))`: selects only numeric columns to `round()`, by including the predicate `base::is.numeric()` as its first argument.
+* `form = case_when(row_number() == 1 ~ form, T ~ NA_character_)`: makes the `form` column more readable in the output table. Prior to this operation, the `form` column repeats a form's label in each of its six scale rows. `case_when` specifies that the label will appear only in the first row for that form (`row_number() == 1`), and not in the that form's remaining five rows (`T ~ NA_character_`). Because the data object was previously grouped by `form`, `case_when()` treats each form's set of six rows as an independent group, with row numbers going from 1 to 6. Along the 24 rows of `form`, therefore, row labels remain present only in the first row of each form group.
+* `write_csv(na = "")`: writes `NA` values as blank cells in the output .csv.
