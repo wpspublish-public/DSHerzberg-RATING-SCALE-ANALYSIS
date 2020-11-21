@@ -1,0 +1,92 @@
+---
+title: "Rating Scale Analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Check for duplicate, missing IDs
+
+This code processes a single input file and generates a .csv report that includes rows with missing or duplicated case IDs. 
+
+###### EXECUTABLE CODE
+```{r dup, eval = FALSE}
+suppressMessages(library(here))
+suppressMessages(suppressWarnings(library(tidyverse)))
+
+urlRemote_path  <- "https://raw.githubusercontent.com/"
+github_path <- "DSHerzberg/RATING-SCALE-ANALYSIS/master/INPUT-FILES/"
+
+data_RS_sim_child_parent <- suppressMessages(read_csv(url(
+  str_c(urlRemote_path, github_path, "data-RS-sim-child-parent.csv")
+)))
+
+miss_dup <- data_RS_sim_child_parent %>%
+  mutate(across(ID,
+                ~
+                  case_when(
+                    row_number() %in% c(10, 35, 579, 991) ~ lag(.x),
+                    row_number() %in% c(11) ~ lag(lag(.x)),
+                    row_number() %in% c(1, 2, 414, 793) ~ NA_real_,
+                    T ~ .x
+                  )))
+
+anyDuplicated(miss_dup$ID)
+any(is.na(miss_dup$ID))
+
+data_RS_sim_child_parent_dupMissIDs <- miss_dup %>%
+  arrange(ID) %>% 
+  mutate(dup = duplicated(ID)) %>%
+  filter(dup == T | lead(dup) == T | is.na(ID)) %>%
+  select(-dup)
+
+write_csv(data_RS_sim_child_parent_dupMissIDs,
+  here(
+    str_c(
+      'OUTPUT-FILES/DUP-IDS/data-RS-sim-child-parent-dupIDs-missingIDs-',
+      format(Sys.Date(), "%Y-%m-%d"),
+      '.csv'
+    )
+  ), 
+  na = 'missing'
+)
+```
+
+###### COMMENTED SNIPPETS
+Load packages for file path specification (`here`) and data wrangling (`tidyverse`).
+```{r dup, echo = 1:2, eval = F}
+```
+Specify file paths and retrieve data from a remote host. 
+```{r dup, echo = 4:9, eval = F}
+```
+Recode `ID` to include missing and duplicate values, for demonstration purposes, and hold the recoded data frame in `miss_dup`. In this example, one duplicate ID appears three times. This code chunk should be commented out when processing actual data.
+```{r dup, echo = 11:19, eval = F}
+```
+Check for the presence of duplicate and/or missing case IDs.
+
+* `base::anyDuplicated()`
+  + If duplicate case IDs are present, returns the row number of the first duplicate.
+  + If no duplicates, returns `0`.
+* `base::any(base::is.na())`
+  + If at least one case ID is missing, returns `TRUE`.
+  + If no missing case IDs, returns `FALSE`.
+  
+If `ID` has no duplicate or missing values, the analysis stops here.
+```{r dup, echo = 21:22, eval = F}
+```
+Prepare a report containing rows with duplicate and/or missing case IDs. Sorting the input `miss_dup` by `ID` (with `dplyr::arrange()`) places any rows missing on `ID` at the tail of the data frame, ensuring that rows immediately preceding those that are `NA` on ID will not be mislabeled as duplicates.
+
+`dplyr::mutate()` creates a `dup` column. We populate that column with `base::duplicated(ID)`, which returns `TRUE` for any row containing an additional instance of an ID value (inluding `NA`) that appeared in a previous row.
+
+`dplyr:filter()` keeps only rows needed for the output report, i.e., those where:
+
+* `dup` is `TRUE`
+* `dup` is `TRUE` in the _next_ row
+* `ID` is `NA`
+
+The second logical condition is required because `duplicated(ID)` returns `FALSE` for the FIRST instance of a duplicated case ID. Because we sorted the input data frame by `ID`, however, duplicate values of `ID` appear in adjacent rows, so the first instance of a duplicate is captured when the predicate `lead(dup) == T` returns `TRUE`.
+```{r dup, echo = 24:29, eval = F}
+```
+The remainder of the code writes the output report to .csv.
