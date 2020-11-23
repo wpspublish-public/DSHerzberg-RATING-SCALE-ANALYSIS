@@ -449,8 +449,8 @@ data_RS_sim_child_parent &lt;- suppressMessages(read_csv(url(
 <p>If <code>ID</code> has no duplicate or missing values, the analysis stops here.</p>
 <pre class="r"><code>anyDuplicated(miss_dup$ID)
 any(is.na(miss_dup$ID))</code></pre>
-<p>Prepare a report containing rows with duplicate and/or missing case IDs. Sorting the input <code>miss_dup</code> by <code>ID</code> (with <code>dplyr::arrange()</code>) places any rows missing on <code>ID</code> at the tail of the data frame, ensuring that rows immediately preceding those that are <code>NA</code> on ID will not be mislabeled as duplicates.</p>
-<p><code>dplyr::mutate()</code> creates a <code>dup</code> column. We populate that column with <code>base::duplicated(ID)</code>, which returns <code>TRUE</code> for any row containing an additional instance of an ID value (inluding <code>NA</code>) that appeared in a previous row.</p>
+<p>Prepare a report containing rows with duplicate and/or missing case IDs. Sorting the input <code>miss_dup</code> by <code>ID</code> (with <code>dplyr::arrange()</code>) places any rows missing on <code>ID</code> at the tail of the data frame, ensuring that rows immediately preceding those that are <code>NA</code> on <code>ID</code> will not be mislabeled as duplicates.</p>
+<p><code>dplyr::mutate()</code> creates a <code>dup</code> column. It populates that column with <code>base::duplicated(ID)</code>, which returns <code>TRUE</code> for any row containing an additional instance of an <code>ID</code> value (inluding <code>NA</code>) that appeared in a previous row.</p>
 <p><code>dplyr:filter()</code> keeps only rows needed for the output report, i.e., those where:</p>
 <ul>
 <li><code>dup</code> is <code>TRUE</code></li>
@@ -463,7 +463,11 @@ any(is.na(miss_dup$ID))</code></pre>
   mutate(dup = duplicated(ID)) %&gt;%
   filter(dup == T | lead(dup) == T | is.na(ID)) %&gt;%
   select(-dup)</code></pre>
-<p>The remainder of the code writes the output report to .csv.</p>
+<p>The remainder of the code writes the output report to .csv, using <code>readr::write_csv()</code>. Some additional detail:</p>
+<ul>
+<li><code>format(Sys.Date(), &quot;%Y-%m-%d&quot;)</code> returns the current data in ISO 8601 format. This date is appended to the output file name with <code>str_c()</code>.</li>
+<li><code>na = &quot;&quot;</code>: writes <code>NA</code> values as blank cells in the output .csv.</li>
+</ul>
 </div>
 </div>
 

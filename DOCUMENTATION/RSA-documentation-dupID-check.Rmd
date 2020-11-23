@@ -76,9 +76,9 @@ Check for the presence of duplicate and/or missing case IDs.
 If `ID` has no duplicate or missing values, the analysis stops here.
 ```{r dup, echo = 21:22, eval = F}
 ```
-Prepare a report containing rows with duplicate and/or missing case IDs. Sorting the input `miss_dup` by `ID` (with `dplyr::arrange()`) places any rows missing on `ID` at the tail of the data frame, ensuring that rows immediately preceding those that are `NA` on ID will not be mislabeled as duplicates.
+Prepare a report containing rows with duplicate and/or missing case IDs. Sorting the input `miss_dup` by `ID` (with `dplyr::arrange()`) places any rows missing on `ID` at the tail of the data frame, ensuring that rows immediately preceding those that are `NA` on `ID` will not be mislabeled as duplicates.
 
-`dplyr::mutate()` creates a `dup` column. We populate that column with `base::duplicated(ID)`, which returns `TRUE` for any row containing an additional instance of an ID value (inluding `NA`) that appeared in a previous row.
+`dplyr::mutate()` creates a `dup` column. It populates that column with `base::duplicated(ID)`, which returns `TRUE` for any row containing an additional instance of an `ID` value (inluding `NA`) that appeared in a previous row.
 
 `dplyr:filter()` keeps only rows needed for the output report, i.e., those where:
 
@@ -89,4 +89,8 @@ Prepare a report containing rows with duplicate and/or missing case IDs. Sorting
 The second logical condition is required because `duplicated(ID)` returns `FALSE` for the FIRST instance of a duplicated case ID. Because we sorted the input data frame by `ID`, however, duplicate values of `ID` appear in adjacent rows, so the first instance of a duplicate is captured when the predicate `lead(dup) == T` returns `TRUE`.
 ```{r dup, echo = 24:29, eval = F}
 ```
-The remainder of the code writes the output report to .csv.
+The remainder of the code writes the output report to .csv, using `readr::write_csv()`. Some additional detail:
+
+* `format(Sys.Date(), "%Y-%m-%d")` returns the current data in ISO 8601 format. This date is appended to the output file name with `str_c()`.
+* `na = ""`: writes `NA` values as blank cells in the output .csv.
+
