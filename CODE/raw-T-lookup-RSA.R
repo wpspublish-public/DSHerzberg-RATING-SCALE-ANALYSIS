@@ -62,17 +62,55 @@ nzScore_perCase <- raw_score_nz_transform_list %>%
   bind_cols() %>% 
   set_names(str_c(scale_suffix, "_nz"))
 
-# START HERE: the next snippet successfully collapses the previous two code
-# blocks. We are left with the single 6 col df containing the six normalized
-# z-scores per case. The next step is to mutate 6 new columns containing the
-# normalized T-scores per case. The question for automation is: should that
-# operation be performed on the list of 6 single col dfs, leading to a list of 6
-# two-cols dfs that can then be bound, or should it be done on the single df
-# with 6 cols?
+# This next pipeline starts with the list of 6 raw score cols. First call of
+# map() map() iterates over the list of raw score cols, and applies the chosen
+# normalizing function to each raw score col iteratively. To call the
+# normalizing function, we use base::get(), which takes a string as input and
+# returns the function named by that string. The list, which now contains
+# normalization objects, is piped into a second map() call, which extracts
+# columns of normalized z-scores per case. These scores are held in the "x.t." element
+# of the normalization object for each scale. purrr::pluck() extracts an element
+# from a list, and wrapping pluck in tibble() gets it into the desired data frame
+# structure. Piping that list through dplyr::bind_cols() binds the 6 dfs into a
+# single df, set_names() names the 6 cols within the single df.
 nzScore_perCase <- raw_score_cols_list %>% 
   map(~ get(chosen_transform)(.x)) %>% 
-  map(~ data.frame(pluck(.x, "x.t"))) %>% 
-  bind_cols() %>% 
+  map(~ tibble(pluck(.x, "x.t"), .name_repair = "universal")) %>% 
+  bind_cols() %>%
   set_names(str_c(scale_suffix, "_nz")) 
+
+# we now apply an arithmetic transformation to convert each normalized Z score
+# (over the 6 scales) into a normalized t-score. Here we map over scale_suffix,
+# because we need to refer to the scale identifiers, and we use map_dfc() to
+# return a data frame. Within the mapping function, we pipe the six col df
+# containing the normalized z-scores (nzScore_perCase) into dplyr::transmute(),
+# which is similar to mutate except that it drops the input cols from the
+# output. We use !!rlang::sym() to convert a character string col name to
+# unquoted symbol, so it can be passed to transmute(). We also need to use the
+# NSE := operator instead of a conventional equals sign. We return a six col df
+# consisting only of the 6 rounded normalize t-scores. We then use
+# mutate(across(everything())) to transform all six columns, applying a function
+# that first truncates the score distribution in each col to 40-80 range, and
+# then coerces all numbers to integer
+ntScore_perCase <- map_dfc(scale_suffix,
+                           ~
+                             nzScore_perCase %>%
+                             transmute(!!rlang::sym(str_c(.x, "_nt")) := round(!!rlang::sym(str_c(
+                               .x, "_nz"
+                             )) * 10) + 50)) %>%
+  mutate(across(
+    everything(),
+    ~
+      case_when(. < 40 ~ 40,
+                . > 80 ~ 80,
+                TRUE ~ .) %>%
+      as.integer(.)
+  ))
+
+# NEXT USE SET SEED TO GET SAME NORMALIZING MODEL EVERYTIME?
+
+
+
+
 
 
