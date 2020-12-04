@@ -9,11 +9,17 @@ suppressMessages(library(data.table))
 urlRemote_path  <- "https://raw.githubusercontent.com/"
 github_path <- "DSHerzberg/RATING-SCALE-ANALYSIS/master/INPUT-FILES/"
 
-data_RS_sim_child_parent <- suppressMessages(read_csv(url(
-  str_c(urlRemote_path, github_path, "data-RS-sim-child-parent.csv")
-)))
-
+item_prefix <- "cp"
+scale_prefix <- "CP"
 scale_suffix <- c("S1", "S2", "S3", "S4", "S5", "TOT")
+age_range_name <- "child"
+form_name <- "parent"
+
+assign(str_c("data", age_range_name, form_name, sep = "_"),
+       suppressMessages(read_csv(url(
+         str_c(urlRemote_path, github_path, "data-RS-sim-child-parent.csv")
+       ))))
+
 
 
 # DETERMINE BEST NORMALIZATION MODEL --------------------------------------
@@ -23,7 +29,10 @@ scale_suffix <- c("S1", "S2", "S3", "S4", "S5", "TOT")
 
 # # # create a bestNormalize object to lock down the normalizing function that
 # will be used on repeated runs of the norms. This should be done on TOT score
-# or analogous score
+# or analogous score. We use set.seed() to control R's random number generator,
+# ensuring that the same normalization model is selected every time we run the
+# script.
+set.seed(12345)
 TOT_nz_obj <- bestNormalize(data_RS_sim_child_parent$CPTOT_raw)
 
 # # print transformation (to show normalizing function in console)
@@ -107,10 +116,14 @@ ntScore_perCase <- map_dfc(scale_suffix,
       as.integer(.)
   ))
 
-# NEXT USE SET SEED TO GET SAME NORMALIZING MODEL EVERYTIME?
+# Bind the normalized T-score columns to the table containing raw scores for
+# each case.
+data_RS_sim_child_parent_nt <- data_RS_sim_child_parent %>% bind_cols(ntScore_perCase) %>% 
+  mutate(clin_status = 'typ',
+         clin_dx = NA) %>% 
+  select(IDNumber, Age, age_range, Gender:Region, data, clin_status, clin_dx, everything())
 
 
-
-
-
+# NEXT LOOK AT OPENING CODE, DOCUMENT USE OF assign(), use new object names
+# throughout script
 
