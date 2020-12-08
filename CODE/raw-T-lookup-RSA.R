@@ -15,12 +15,27 @@ scale_suffix <- c("S1", "S2", "S3", "S4", "S5", "TOT")
 age_range_name <- "child"
 form_name <- "parent"
 
+# base::assign() can be used to name objects which require names that are
+# concatentations of strings and character vectors. The first argument is the
+# desired name as a string.
 assign(str_c("data", age_range_name, form_name, sep = "_"),
        suppressMessages(read_csv(url(
          str_c(urlRemote_path, github_path, "data-RS-sim-child-parent.csv")
        ))))
 
-
+# Here we extract a single column as an argument for the bestNormalize()
+# function. To get the col into the right format, we use select() to isolate the
+# col (which is now a single col data frame), purrr::as_vector() to convert the
+# df into a named numeric vector, and purrr::set_names() to get rid of the the
+# name on the vector
+ assign(str_c("data", age_range_name, form_name, "TOT", sep = "_"),
+       suppressMessages(read_csv(url(
+         str_c(urlRemote_path, github_path, "data-RS-sim-child-parent.csv")
+       ))) %>% 
+         select(!!sym(str_c(scale_prefix, "TOT_raw"))) %>% 
+         as_vector() %>% 
+         set_names(NULL)
+)
 
 # DETERMINE BEST NORMALIZATION MODEL --------------------------------------
 
@@ -33,7 +48,7 @@ assign(str_c("data", age_range_name, form_name, sep = "_"),
 # ensuring that the same normalization model is selected every time we run the
 # script.
 set.seed(12345)
-TOT_nz_obj <- bestNormalize(data_RS_sim_child_parent$CPTOT_raw)
+TOT_nz_obj <- bestNormalize(data_child_parent_TOT)
 
 # # print transformation (to show normalizing function in console)
 TOT_nz_obj$chosen_transform
@@ -124,6 +139,5 @@ data_RS_sim_child_parent_nt <- data_RS_sim_child_parent %>% bind_cols(ntScore_pe
   select(IDNumber, Age, age_range, Gender:Region, data, clin_status, clin_dx, everything())
 
 
-# NEXT LOOK AT OPENING CODE, DOCUMENT USE OF assign(), use new object names
-# throughout script
+# NEXT CONTINUE TO SUBSTITUTE ROBUST OBJECT NAMES THROUGHOUT SCRIPT
 
