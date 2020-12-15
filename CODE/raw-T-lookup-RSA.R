@@ -16,7 +16,7 @@ age_range_name <- "child"
 form_name <- "parent"
 
 # base::assign() can be used to name objects which require names that are
-# concatentations of strings and character vectors. The first argument is the
+# concatenations of strings and character vectors. The first argument is the
 # desired name as a string.
 assign(str_c("data", age_range_name, form_name, sep = "_"),
        suppressMessages(read_csv(url(
@@ -60,43 +60,29 @@ TOT_nz_obj$chosen_transform
 # for each case in the input data set.
 chosen_transform <- class(TOT_nz_obj$chosen_transform)[1]
 
-# pull 6 raw score columns into a named list
+# pull 6 raw score columns into a named list. In the pipeline within the map()
+# call, we start with the input data file. Because the name of that file is a
+# concatenated string (to facilitate robust code), we have to wrap the string in
+# get(), which returns the object (the input data file) named by the
+# concatenated string.
 raw_score_cols_list <-
-  map(str_c("CP", scale_suffix),
-      ~ data_RS_sim_child_parent %>%
+  map(str_c(scale_prefix, scale_suffix),
+      ~ get(str_c("data", age_range_name, form_name, sep = "_")) %>%
         pull(!!rlang::sym(str_c(.x, "_raw")))) %>% 
-  set_names(str_c("CP", scale_suffix, "_raw"))
+  set_names(str_c(scale_prefix, scale_suffix, "_raw"))
 
-# create a named list containing the normalizations for each raw score
-# distribution. map() iterates over the list of raw score cols, and applies the
-# chosen normalizing function to each raw score col iteratively. To call the
-# normalizing function, we use base::get(), which takes a string as input and
-# returns the function named by that string
-raw_score_nz_transform_list <- raw_score_cols_list %>% 
-  map(~ get(chosen_transform)(.x)) %>% 
-  set_names(str_c(scale_suffix, '_nz_transform'))
-
-# map() over the list of . These scores are held in the "x.t." element
-# of the normalization object for each scale. purrr::pluck() extracts an element
-# from a list, and wrapping pluck in data.frame() gets it into the desired df
-# structure. Piping that list through dplyr::bind_cols() binds the 6 dfs into a
-# single df, set_names() names the 6 cols within the single df.
-nzScore_perCase <- raw_score_nz_transform_list %>% 
-  map(~ data.frame(pluck(.x, "x.t"))) %>% 
-  bind_cols() %>% 
-  set_names(str_c(scale_suffix, "_nz"))
 
 # This next pipeline starts with the list of 6 raw score cols. First call of
-# map() map() iterates over the list of raw score cols, and applies the chosen
+# map() iterates over the list of raw score cols, and applies the chosen
 # normalizing function to each raw score col iteratively. To call the
 # normalizing function, we use base::get(), which takes a string as input and
 # returns the function named by that string. The list, which now contains
 # normalization objects, is piped into a second map() call, which extracts
-# columns of normalized z-scores per case. These scores are held in the "x.t." element
-# of the normalization object for each scale. purrr::pluck() extracts an element
-# from a list, and wrapping pluck in tibble() gets it into the desired data frame
-# structure. Piping that list through dplyr::bind_cols() binds the 6 dfs into a
-# single df, set_names() names the 6 cols within the single df.
+# columns of normalized z-scores per case. These scores are held in the "x.t."
+# element of the normalization object for each scale. purrr::pluck() extracts an
+# element from a list, and wrapping pluck in tibble() gets it into the desired
+# data frame structure. Piping that list through dplyr::bind_cols() binds the 6
+# dfs into a single df, set_names() names the 6 cols within the single df.
 nzScore_perCase <- raw_score_cols_list %>% 
   map(~ get(chosen_transform)(.x)) %>% 
   map(~ tibble(pluck(.x, "x.t"), .name_repair = "universal")) %>% 
@@ -133,11 +119,18 @@ ntScore_perCase <- map_dfc(scale_suffix,
 
 # Bind the normalized T-score columns to the table containing raw scores for
 # each case.
-data_RS_sim_child_parent_nt <- data_RS_sim_child_parent %>% bind_cols(ntScore_perCase) %>% 
-  mutate(clin_status = 'typ',
-         clin_dx = NA) %>% 
-  select(IDNumber, Age, age_range, Gender:Region, data, clin_status, clin_dx, everything())
+assign(
+  str_c("data", age_range_name, form_name, "nt", sep = "_"),
+  get(str_c("data", age_range_name, form_name, sep = "_")) %>% bind_cols(ntScore_perCase) %>%
+    mutate(clin_status = 'typ',
+           clin_dx = NA) %>%
+    select(
+      ID:region,
+      clin_status,
+      clin_dx,
+      everything()
+    )
+)
 
-
-# NEXT CONTINUE TO SUBSTITUTE ROBUST OBJECT NAMES THROUGHOUT SCRIPT
+# PROCEED WITH ADAPTING SPM-2 CODE, SUBSTITUTING ROBUST OBJECT NAMES
 
