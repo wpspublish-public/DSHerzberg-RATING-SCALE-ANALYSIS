@@ -11,6 +11,9 @@ data_RS_sim_child_parent <-
   rename_with(~ str_c("cpi", str_pad(
     as.character(1:50), 2, side = "left", pad = "0"
   ))) %>%
+  mutate((across(everything(),
+                 ~
+                   .x + 1))) %>%
   mutate(
     CPS1_raw = rowSums(.[str_c("cpi", str_pad(as.character(seq(1, 50, by = 5)), 2, side = "left", pad = "0"))]),
     CPS2_raw = rowSums(.[str_c("cpi", str_pad(as.character(seq(2, 50, by = 5)), 2, side = "left", pad = "0"))]),
@@ -21,10 +24,10 @@ data_RS_sim_child_parent <-
     across(
       contains("cpi"),
       ~ case_when(
-        .x == 0 ~ "never",
-        .x == 1 ~ "occasionally",
-        .x == 2 ~ "frequently",
-        .x == 3 ~ "always"
+        .x == 1 ~ "never",
+        .x == 2 ~ "occasionally",
+        .x == 3 ~ "frequently",
+        .x == 4 ~ "always"
       )
     ),
     ID = 100001:101000,
@@ -77,6 +80,9 @@ data_RS_sim_child_teacher <-
   rename_with(~ str_c("cti", str_pad(
     as.character(1:50), 2, side = "left", pad = "0"
   ))) %>%
+  mutate((across(everything(),
+                 ~
+                   .x + 1))) %>%
   mutate(
     CTS1_raw = rowSums(.[str_c("cti", str_pad(as.character(seq(1, 50, by = 5)), 2, side = "left", pad = "0"))]),
     CTS2_raw = rowSums(.[str_c("cti", str_pad(as.character(seq(2, 50, by = 5)), 2, side = "left", pad = "0"))]),
@@ -87,10 +93,10 @@ data_RS_sim_child_teacher <-
     across(
       contains("cti"),
       ~ case_when(
-        .x == 0 ~ "never",
-        .x == 1 ~ "occasionally",
-        .x == 2 ~ "frequently",
-        .x == 3 ~ "always"
+        .x == 1 ~ "never",
+        .x == 2 ~ "occasionally",
+        .x == 3 ~ "frequently",
+        .x == 4 ~ "always"
       )
     ),
     ID = 100001:101000,
@@ -143,6 +149,9 @@ data_RS_sim_teen_parent <-
   rename_with(~ str_c("tpi", str_pad(
     as.character(1:50), 2, side = "left", pad = "0"
   ))) %>%
+  mutate((across(everything(),
+                 ~
+                   .x + 1))) %>%
   mutate(
     TPS1_raw = rowSums(.[str_c("tpi", str_pad(as.character(seq(1, 50, by = 5)), 2, side = "left", pad = "0"))]),
     TPS2_raw = rowSums(.[str_c("tpi", str_pad(as.character(seq(2, 50, by = 5)), 2, side = "left", pad = "0"))]),
@@ -153,10 +162,10 @@ data_RS_sim_teen_parent <-
     across(
       contains("tpi"),
       ~ case_when(
-        .x == 0 ~ "never",
-        .x == 1 ~ "occasionally",
-        .x == 2 ~ "frequently",
-        .x == 3 ~ "always"
+        .x == 1 ~ "never",
+        .x == 2 ~ "occasionally",
+        .x == 3 ~ "frequently",
+        .x == 4 ~ "always"
       )
     ),
     ID = 150001:151000,
@@ -209,6 +218,9 @@ data_RS_sim_teen_teacher <-
   rename_with(~ str_c("tti", str_pad(
     as.character(1:50), 2, side = "left", pad = "0"
   ))) %>%
+  mutate((across(everything(),
+                 ~
+                   .x + 1))) %>%
   mutate(
     TTS1_raw = rowSums(.[str_c("tti", str_pad(as.character(seq(1, 50, by = 5)), 2, side = "left", pad = "0"))]),
     TTS2_raw = rowSums(.[str_c("tti", str_pad(as.character(seq(2, 50, by = 5)), 2, side = "left", pad = "0"))]),
@@ -219,10 +231,10 @@ data_RS_sim_teen_teacher <-
     across(
       contains("tti"),
       ~ case_when(
-        .x == 0 ~ "never",
-        .x == 1 ~ "occasionally",
-        .x == 2 ~ "frequently",
-        .x == 3 ~ "always"
+        .x == 1 ~ "never",
+        .x == 2 ~ "occasionally",
+        .x == 3 ~ "frequently",
+        .x == 4 ~ "always"
       )
     ),
     ID = 150001:151000,

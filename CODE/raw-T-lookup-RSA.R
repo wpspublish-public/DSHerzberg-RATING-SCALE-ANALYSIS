@@ -14,14 +14,28 @@ scale_prefix <- "CP"
 scale_suffix <- c("S1", "S2", "S3", "S4", "S5", "TOT")
 age_range_name <- "child"
 form_name <- "parent"
+TOT_range <- 50:200
+subscale_range <- 10:40
 
 # base::assign() can be used to name objects which require names that are
 # concatenations of strings and character vectors. The first argument is the
-# desired name as a string.
-assign(str_c("data", age_range_name, form_name, sep = "_"),
-       suppressMessages(read_csv(url(
-         str_c(urlRemote_path, github_path, "data-RS-sim-child-parent.csv")
-       ))))
+# desired name as a string. Redode item responses to numeric (still within
+# assign()).
+assign(
+  str_c("data", age_range_name, form_name, sep = "_"),
+  suppressMessages(read_csv(url(
+    str_c(urlRemote_path, github_path, "data-RS-sim-child-parent.csv")
+  ))) %>%
+    mutate(across(
+      contains(str_c(item_prefix, "i")),
+      ~ case_when(
+        .x == "never" ~ 1,
+        .x == "occasionally" ~ 2,
+        .x == "frequently" ~ 3,
+        .x == "always" ~ 4
+      )
+    ))
+)
 
 # Here we extract a single column as an argument for the bestNormalize()
 # function. To get the col into the right format, we use select() to isolate the
@@ -105,7 +119,9 @@ nzScore_perCase <- raw_score_cols_list %>%
 ntScore_perCase <- map_dfc(scale_suffix,
                            ~
                              nzScore_perCase %>%
-                             transmute(!!rlang::sym(str_c(.x, "_nt")) := round(!!rlang::sym(str_c(
+                             transmute(!!rlang::sym(str_c(
+                               scale_prefix, .x, "_nt"
+                             )) := round(!!rlang::sym(str_c(
                                .x, "_nz"
                              )) * 10) + 50)) %>%
   mutate(across(
@@ -128,9 +144,38 @@ assign(
       ID:region,
       clin_status,
       clin_dx,
+      contains("raw"),
+      contains("nt"),
       everything()
     )
 )
+
+# write T-scores per case table to .csv
+write_csv(get(str_c(
+  "data", age_range_name, form_name, "nt", sep = "_"
+)),
+here(str_c(
+  "OUTPUT-FILES/TABLES/",
+  str_c("nt-Scores-per-case",
+        age_range_name,
+        form_name,
+        sep = "-"),
+  ".csv"
+)),
+na = '')
+
+
+# Quick visual check of normality with MASS::truehist() plot. Use
+# purrr::as_vector() to convert df col to numeric vector, which truehist() needs
+# as input.
+get(str_c("data", age_range_name, form_name, "nt", sep = "_")) %>%
+  select(contains("TOT_nt")) %>%
+  as_vector() %>%
+  MASS::truehist(.,
+                 h = 1,
+                 prob = F,
+                 xlab = "TOT_nt")
+
 
 # PROCEED WITH ADAPTING SPM-2 CODE, SUBSTITUTING ROBUST OBJECT NAMES
 
