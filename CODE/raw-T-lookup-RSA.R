@@ -14,8 +14,9 @@ scale_prefix <- "CP"
 scale_suffix <- c("S1", "S2", "S3", "S4", "S5", "TOT")
 age_range_name <- "child"
 form_name <- "parent"
-TOT_range <- 50:200
-subscale_range <- 10:40
+all_raw_range <- 10:200
+TOT_raw_lower_bound <- 50
+subscale_raw_upper_bound <- 40
 
 # base::assign() can be used to name objects which require names that are
 # concatenations of strings and character vectors. The first argument is the
@@ -176,6 +177,7 @@ get(str_c("data", age_range_name, form_name, "nt", sep = "_")) %>%
                  prob = F,
                  xlab = "TOT_nt")
 
+# NEXT: CONTINUE WORKING ON RAW-T LOOKUPS IN scratch.R
 
 # PROCEED WITH ADAPTING SPM-2 CODE, SUBSTITUTING ROBUST OBJECT NAMES
 

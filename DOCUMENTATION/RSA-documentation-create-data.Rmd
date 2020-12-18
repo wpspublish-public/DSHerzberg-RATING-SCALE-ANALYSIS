@@ -30,6 +30,9 @@ data_RS_sim_child_parent <-
   rename_with(~ str_c("cpi", str_pad(
     as.character(1:50), 2, side = "left", pad = "0"
   ))) %>%
+  mutate((across(everything(),
+                 ~
+                   .x + 1))) %>%
   mutate(
     CPS1_raw = rowSums(.[str_c("cpi", str_pad(as.character(seq(1, 50, by = 5)), 2, side = "left", pad = "0"))]),
     CPS2_raw = rowSums(.[str_c("cpi", str_pad(as.character(seq(2, 50, by = 5)), 2, side = "left", pad = "0"))]),
@@ -40,10 +43,10 @@ data_RS_sim_child_parent <-
     across(
       contains("cpi"),
       ~ case_when(
-        .x == 0 ~ "never",
-        .x == 1 ~ "occasionally",
-        .x == 2 ~ "frequently",
-        .x == 3 ~ "always"
+        .x == 1 ~ "never",
+        .x == 2 ~ "occasionally",
+        .x == 3 ~ "frequently",
+        .x == 4 ~ "always"
       )
     ),
     ID = 100001:101000,
@@ -159,21 +162,24 @@ Load packages for file path specification (`here`), data wrangling (`tidyverse`)
 `dplyr::rename_with()` renames columns by applying a function (here set off with the formula shortand `~`). Here we write a function to rename the fifty item-response columns with an `i01` to `i50` nomenclature. `stringr::str_pad()` pads a numerical sequence with zeros to the left of each number. Note the use of `base::as_character()` to coerce the number sequence `1:50` to a sequence of strings. This is wrapped in `stringr::str_c()` which concatenates the prefix `cpi` with the padded numbers.
 ```{r create-data-rsa, echo = 9:11, eval = F}
 ```
-We use `dplyr::mutate()` to create/compute new variables. Within `mutate()`, we use `base::rowSums()` to sum across a subset of 10 items to compute the raw score  `S1_raw`. We identify the target items by their column names, including only items `i01`, `i06`, `i11`, `i16`, `i21`, `i26`, `i31`, `i36`, `i41`, and `i46` by calling `base::seq(1, 50, by = 5)`. This latter function is wrapped in the `str_c()` function described previously to concatenate the complete column names.
-```{r create-data-rsa, echo = 12:13, eval = F}
+We call `dplyr::mutate()` twice consecutively, to recode existing variables, and to create/compute new ones. The initial call is to recode the item responses from the `0-1-2-3` coding returned by `sim.poly.ideal()`, to the preferred `1-2-3-4` coding. We use a separate `mutate()` call to ensure that the recode function is evaluated _before_ we start summing item responses to calculated raw scores (the use of `across()` is explained when it apears in the next code snippet).
+```{r create-data-rsa, echo = 12:14, eval = F}
+```
+Within the second call of `mutate()`, we use `base::rowSums()` to sum across a subset of 10 items to compute the raw score  `S1_raw`. We identify the target items by their column names, including only items `i01`, `i06`, `i11`, `i16`, `i21`, `i26`, `i31`, `i36`, `i41`, and `i46` by calling `base::seq(1, 50, by = 5)`. This latter function is wrapped in the `str_c()` function described previously to concatenate the complete column names.
+```{r create-data-rsa, echo = 15:16, eval = F}
 ```
 `across()` can be used within `dplyr` verbs to delineate a subset of columns and apply a function to them. The first argument of `across()` designates the columns, using the `tidyselect` helper `contains("i")` to select only columns whose names contain `cpi`, (i.e., the item columns).
 
-The second argument of `across()` is the function (set off by `~`) to be applied to the selected columns. Here we use `dplyr::case_when()` to recode the numerical item codes to frequency descriptors. The `.x` shorthand signifies the input cell value, which is recoded according to the predicate functions passed as arguments to `case_when()`. As an example, `.x == 0 ~ "never",` indicates that when the input cell value is 0, the value of that cell will be changed to the string "never". The formula shorthand `~` indicates the "if-then" relationship between LHS (logical predicate) and RHS (outcome).
+The second argument of `across()` is the function (set off by the formula shorthand `~`) to be applied to the selected columns. Here we use `dplyr::case_when()` to recode the numerical item codes to frequency descriptors. The `.x` shorthand signifies the input cell value, which is recoded according to the predicate functions passed as arguments to `case_when()`. As an example, `.x == 1 ~ "never",` indicates that when the input cell value is 0, the value of that cell will be changed to the string "never". The formula shorthand `~` indicates the "if-then" relationship between LHS (logical predicate) and RHS (outcome).
 
 Note that when across is used in this manner, no new columns are created; rather, existing columns are transformed. Thus, both the columns to be transformed (first argument) and the function (second argument) need to be within the parentheses of `across()`.
-```{r create-data-rsa, echo = 19:27, eval = F}
+```{r create-data-rsa, echo = 22:30, eval = F}
 ```
 The next snippet is an example of creating a new column `gender` and using `base::sample()` to populate it with proportionally sampled data. The arguments to `sample()` are as follows: a vector giving cell values from which to sample (`c("female", "male")`), the number of rows in the current data object (`1000`), sampling with or without replacement (`replace = TRUE`), and a vector of probability weights corresponding to each cell value (`c(0.53, 0.47)`). In this way, we compute a new variable that establishes a distribution of gender values equivalent to the U.S. census proportions for gender.
-```{r create-data-rsa, echo = 32:37, eval = F}
+```{r create-data-rsa, echo = 35:40, eval = F}
 ```
 We use `dplyr::select()` both to keep certain columns for the output and to specify the sequence for those columns.
-```{r create-data-rsa, echo = 63, eval = F}
+```{r create-data-rsa, echo = 66, eval = F}
 ```
 We use `readr::write_csv()` to write output to a flat file (.csv). In this instance, the arguments are:
 
@@ -181,9 +187,9 @@ We use `readr::write_csv()` to write output to a flat file (.csv). In this insta
 2. `here("INPUT-FILES/data-RS-sim-child-parent.csv")`: file path (specified using `here::here()`, which enables writing the file path out of the R project folder without a leading `/`)
 3. `na = ""`: values that are `NA` in R will be written to the .csv as empty cells.
 
-```{r create-data-rsa, echo = 65:67, eval = F}
+```{r create-data-rsa, echo = 68:70, eval = F}
 ```
 Here we process the `bfi` data set, which has 2800 cases and is included in the `psych` package. Because we have many more cases than we need, we can clean up the data by simply dropping any row that has `NA`, which we do with `tidyr::drop_na()`. We then pare the data down to a random sample of 1000 rows, using `dplyr::sample_n()`.
-```{r create-data-rsa, echo = 68:71, eval = F}
+```{r create-data-rsa, echo = 71:74, eval = F}
 ```
 

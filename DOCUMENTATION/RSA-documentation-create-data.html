@@ -387,6 +387,9 @@ data_RS_sim_child_parent &lt;-
   rename_with(~ str_c(&quot;cpi&quot;, str_pad(
     as.character(1:50), 2, side = &quot;left&quot;, pad = &quot;0&quot;
   ))) %&gt;%
+  mutate((across(everything(),
+                 ~
+                   .x + 1))) %&gt;%
   mutate(
     CPS1_raw = rowSums(.[str_c(&quot;cpi&quot;, str_pad(as.character(seq(1, 50, by = 5)), 2, side = &quot;left&quot;, pad = &quot;0&quot;))]),
     CPS2_raw = rowSums(.[str_c(&quot;cpi&quot;, str_pad(as.character(seq(2, 50, by = 5)), 2, side = &quot;left&quot;, pad = &quot;0&quot;))]),
@@ -397,10 +400,10 @@ data_RS_sim_child_parent &lt;-
     across(
       contains(&quot;cpi&quot;),
       ~ case_when(
-        .x == 0 ~ &quot;never&quot;,
-        .x == 1 ~ &quot;occasionally&quot;,
-        .x == 2 ~ &quot;frequently&quot;,
-        .x == 3 ~ &quot;always&quot;
+        .x == 1 ~ &quot;never&quot;,
+        .x == 2 ~ &quot;occasionally&quot;,
+        .x == 3 ~ &quot;frequently&quot;,
+        .x == 4 ~ &quot;always&quot;
       )
     ),
     ID = 100001:101000,
@@ -519,19 +522,23 @@ set.seed(123)</code></pre>
 <pre class="r"><code>  rename_with(~ str_c(&quot;cpi&quot;, str_pad(
     as.character(1:50), 2, side = &quot;left&quot;, pad = &quot;0&quot;
   ))) %&gt;%</code></pre>
-<p>We use <code>dplyr::mutate()</code> to create/compute new variables. Within <code>mutate()</code>, we use <code>base::rowSums()</code> to sum across a subset of 10 items to compute the raw score <code>S1_raw</code>. We identify the target items by their column names, including only items <code>i01</code>, <code>i06</code>, <code>i11</code>, <code>i16</code>, <code>i21</code>, <code>i26</code>, <code>i31</code>, <code>i36</code>, <code>i41</code>, and <code>i46</code> by calling <code>base::seq(1, 50, by = 5)</code>. This latter function is wrapped in the <code>str_c()</code> function described previously to concatenate the complete column names.</p>
+<p>We call <code>dplyr::mutate()</code> twice consecutively, to recode existing variables, and to create/compute new ones. The initial call is to recode the item responses from the <code>0-1-2-3</code> coding returned by <code>sim.poly.ideal()</code>, to the preferred <code>1-2-3-4</code> coding. We use a separate <code>mutate()</code> call to ensure that the recode function is evaluated <em>before</em> we start summing item responses to calculated raw scores (the use of <code>across()</code> is explained when it apears in the next code snippet).</p>
+<pre class="r"><code>  mutate((across(everything(),
+                 ~
+                   .x + 1))) %&gt;%</code></pre>
+<p>Within the second call of <code>mutate()</code>, we use <code>base::rowSums()</code> to sum across a subset of 10 items to compute the raw score <code>S1_raw</code>. We identify the target items by their column names, including only items <code>i01</code>, <code>i06</code>, <code>i11</code>, <code>i16</code>, <code>i21</code>, <code>i26</code>, <code>i31</code>, <code>i36</code>, <code>i41</code>, and <code>i46</code> by calling <code>base::seq(1, 50, by = 5)</code>. This latter function is wrapped in the <code>str_c()</code> function described previously to concatenate the complete column names.</p>
 <pre class="r"><code>  mutate(
     CPS1_raw = rowSums(.[str_c(&quot;cpi&quot;, str_pad(as.character(seq(1, 50, by = 5)), 2, side = &quot;left&quot;, pad = &quot;0&quot;))]),</code></pre>
 <p><code>across()</code> can be used within <code>dplyr</code> verbs to delineate a subset of columns and apply a function to them. The first argument of <code>across()</code> designates the columns, using the <code>tidyselect</code> helper <code>contains(&quot;i&quot;)</code> to select only columns whose names contain <code>cpi</code>, (i.e., the item columns).</p>
-<p>The second argument of <code>across()</code> is the function (set off by <code>~</code>) to be applied to the selected columns. Here we use <code>dplyr::case_when()</code> to recode the numerical item codes to frequency descriptors. The <code>.x</code> shorthand signifies the input cell value, which is recoded according to the predicate functions passed as arguments to <code>case_when()</code>. As an example, <code>.x == 0 ~ &quot;never&quot;,</code> indicates that when the input cell value is 0, the value of that cell will be changed to the string “never”. The formula shorthand <code>~</code> indicates the “if-then” relationship between LHS (logical predicate) and RHS (outcome).</p>
+<p>The second argument of <code>across()</code> is the function (set off by the formula shorthand <code>~</code>) to be applied to the selected columns. Here we use <code>dplyr::case_when()</code> to recode the numerical item codes to frequency descriptors. The <code>.x</code> shorthand signifies the input cell value, which is recoded according to the predicate functions passed as arguments to <code>case_when()</code>. As an example, <code>.x == 1 ~ &quot;never&quot;,</code> indicates that when the input cell value is 0, the value of that cell will be changed to the string “never”. The formula shorthand <code>~</code> indicates the “if-then” relationship between LHS (logical predicate) and RHS (outcome).</p>
 <p>Note that when across is used in this manner, no new columns are created; rather, existing columns are transformed. Thus, both the columns to be transformed (first argument) and the function (second argument) need to be within the parentheses of <code>across()</code>.</p>
 <pre class="r"><code>    across(
       contains(&quot;cpi&quot;),
       ~ case_when(
-        .x == 0 ~ &quot;never&quot;,
-        .x == 1 ~ &quot;occasionally&quot;,
-        .x == 2 ~ &quot;frequently&quot;,
-        .x == 3 ~ &quot;always&quot;
+        .x == 1 ~ &quot;never&quot;,
+        .x == 2 ~ &quot;occasionally&quot;,
+        .x == 3 ~ &quot;frequently&quot;,
+        .x == 4 ~ &quot;always&quot;
       )
     ),</code></pre>
 <p>The next snippet is an example of creating a new column <code>gender</code> and using <code>base::sample()</code> to populate it with proportionally sampled data. The arguments to <code>sample()</code> are as follows: a vector giving cell values from which to sample (<code>c(&quot;female&quot;, &quot;male&quot;)</code>), the number of rows in the current data object (<code>1000</code>), sampling with or without replacement (<code>replace = TRUE</code>), and a vector of probability weights corresponding to each cell value (<code>c(0.53, 0.47)</code>). In this way, we compute a new variable that establishes a distribution of gender values equivalent to the U.S. census proportions for gender.</p>
