@@ -35,6 +35,12 @@ assign(
   fill(
     !!sym(str_c(scale_prefix, "TOT_nt")),
     .direction = "up"
+  ) %>%
+  # we need to drop the subscale identifier from the "raw" col, because this col
+  # will be used as the index to join the TOT lookup table to the subscale
+  # lookup tables
+  rename(
+    raw = !!sym(str_c(scale_prefix, "TOT_raw"))
   ) %>% 
   # next code is because TOT lookup table will be bound to subscales lookup
   # table, and the two have different raw score ranges. The joined table will
@@ -43,7 +49,7 @@ assign(
    mutate(
     across(!!sym(str_c(scale_prefix, "TOT_nt")), 
     ~ case_when(
-      !!sym(str_c(scale_prefix, "TOT_raw")) < TOT_raw_lower_bound ~ NA_integer_,
+      raw < TOT_raw_lower_bound ~ NA_integer_,
       TRUE ~ .x
     )
   )
