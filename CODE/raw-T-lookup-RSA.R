@@ -195,7 +195,7 @@ assign(
     # current data object jumps possible raw values (e.g, raw = 62 and raw = 65
     # might be adjacent rows in this table)
     summarize(
-      !!sym(str_c(scale_prefix, "TOT_nt")) := min(!!rlang::sym(str_c(scale_prefix, "TOT_nt"))
+      !!sym(str_c(scale_prefix, "TOT_nt")) := min(!!sym(str_c(scale_prefix, "TOT_nt"))
       )) %>% 
     # complete() expands the table vertically, filling in missing values of raw
     # within the range given. This leaves NA cells for T for those rows that
@@ -235,6 +235,8 @@ assign(
     ))
 
 
-# NEXT: CONTINUE WORKING ON RAW-T LOOKUPS, ADAPTING SPM-2 CODE, SUBSTITUTING
+# NEXT: TEST AND INTEGRATE SUBSCALE LOOKUP CODE FROM scratch.R
+
+# CONTINUE WORKING ON RAW-T LOOKUPS, ADAPTING SPM-2 CODE, SUBSTITUTING
 # ROBUST OBJECT NAMES
 
