@@ -179,63 +179,101 @@ get(str_c("data", age_range_name, form_name, "nt", sep = "_")) %>%
 
 # GENERATE RAW-TO-T LOOKUP TABLES -----------------------------------------
 
-# Generate raw-to-T lookup columns. Handle TOT and subscale scores separately,
-# because each type has different raw score range. Start wtih TOT. Input is
-# stand sample with raw scores and normalized T scores for each case. Group
-# cases by raw score, relationship between raw and T is many-to-one.
-assign(
-  "TOT_lookup", 
-  get(str_c("data", age_range_name, form_name, "nt", sep = "_")) %>% 
-    group_by(!!sym(str_c(scale_prefix, "TOT_raw"))
-    ) %>% 
-    # Because raw-to-T is many to one, all values of T are identical for each raw,
-    # and summarizing by the min value of T per raw returns the ONLY value of T per
-    # raw. But we need the raw column to contain all possible values of raw, and
-    # not all possible values of raw are represented in the stand sample. Thus
-    # current data object jumps possible raw values (e.g, raw = 62 and raw = 65
-    # might be adjacent rows in this table)
-    summarize(
-      !!sym(str_c(scale_prefix, "TOT_nt")) := min(!!sym(str_c(scale_prefix, "TOT_nt"))
-      )) %>% 
-    # complete() expands the table vertically, filling in missing values of raw
-    # within the range given. This leaves NA cells for T for those rows that
-    # didn't have raw values in the input object.
-    complete(
-      !!sym(str_c(scale_prefix, "TOT_raw")) := all_raw_range
-    ) %>% 
+# Generate raw-to-T lookup columns. Input is stand sample with raw scores and
+# normalized T scores for each case. map() generates a list of two-col lookup
+# tables, one for each scale. Each 2-col lookup has raw col and nt (t-score)
+# col. Group cases by raw score, relationship between raw and T is many-to-one.
+#
+# map() iterates over scale_suffix, the char vec containing the six strings that
+# identify (differentiate) the six scale names. The names themselves are
+# concatenated with a static prefic. the .x argument of map(), and a static
+# score type suffix (e.g., "_raw"). !!sym() is used to unquote the names (which
+# are strings) so they can be arguments in dplyr functions.
+all_lookup <- map(
+  scale_suffix,
+  ~ get(str_c(
+    "data", age_range_name, form_name, "nt", sep = "_"
+  )) %>%
+    group_by(!!sym(str_c(
+      scale_prefix, .x, "_raw"
+    ))) %>%
+    # Because raw-to-T is many to one, each value of raw has one and only one
+    # value of T, and thus summarizing by the min value of T per raw returns the
+    # ONLY value of T per raw. But we need the raw column to contain all
+    # possible values of raw, and not all possible values of raw are represented
+    # in the stand sample. Thus current data object jumps possible raw values
+    # (e.g, raw = 62 and raw = 65 might be adjacent rows in this table)
+    summarise(!!sym(str_c(
+      scale_prefix, .x, "_nt"
+    )) := min(!!sym(
+      str_c(scale_prefix, .x, "_nt")
+      # complete() expands the table vertically, filling in missing values of raw
+      # within the range given. This leaves NA cells for T for those rows that
+      # didn't have raw values in the input object.
+    ))) %>%
+    complete(!!sym(str_c(
+      scale_prefix, .x, "_raw"
+    )) := all_raw_range) %>%
     # fill() replaces NA in T going down the table, with values from the last
     # preceding (lagging) cell that was not NA.
-    fill(
-      !!sym(str_c(scale_prefix, "TOT_nt")) 
-    ) %>% 
+    fill(!!sym(str_c(
+      scale_prefix, .x, "_nt"
+    ))) %>%
     # A second call of fill() is needed to handle inputs where the first cell(s) of
     # T are NA. 2nd fill call() is uses direction up to fill those first NA cells
     # with the value from the first subsequent (leading) cell that is not NA.
-    fill(
-      !!sym(str_c(scale_prefix, "TOT_nt")),
-      .direction = "up"
-    ) %>%
-    # we need to drop the subscale identifier from the "raw" col, because this col
-    # will be used as the index to join the TOT lookup table to the subscale
-    # lookup tables
-    rename(
-      raw = !!sym(str_c(scale_prefix, "TOT_raw"))
-    ) %>% 
-    # next code is because TOT lookup table will be bound to subscales lookup
-    # table, and the two have different raw score ranges. The joined table will
-    # represent raw scores that are not possible for TOT, therefore these rawscore
-    # rows need to be recoded to NA in the NT col
-    mutate(
-      across(!!sym(str_c(scale_prefix, "TOT_nt")), 
-             ~ case_when(
-               raw < TOT_raw_lower_bound ~ NA_integer_,
-               TRUE ~ .x
-             )
-      )
-    ))
+    fill(!!sym(str_c(
+      scale_prefix, .x, "_nt"
+    )),
+    .direction = "up") %>%
+    # Recall that the data object at this point is a list of 2-col dfs. We need
+    # to drop the subscale identifier from the "raw" col, because this col will
+    # be used as the index to join the separate dfs into a single lookup table.
+    rename(raw = !!sym(str_c(
+      scale_prefix, .x, "_raw"
+    ))) 
+) %>%
+  # purrr::reduce() is used to reduce the six element list to a single df.
+  # reduce() applies left_join() iteratively over the input list, such that it
+  # joins the first two 2-col dfs by "raw", returning a 3-col df, which it then
+  # joins to the next list element (2-col df), returning a 4-col df, and so on,
+  # until the final returned object is a 7-col df, with the "raw" col on the far
+  # left, and the remaining 6 cols are the t-score lookup cols for each scale.
+  reduce(left_join,
+         by = 'raw') %>% 
+  # The combined look up table has rows that represent impossible raw scores for
+  # the subscales (too high) and total score (too low). The next call of
+  # mutate() recodes the t-score lookup cols to NA for impossible raw scores. It
+  # accomplishes this with two separate calls of across(), isolating first the
+  # subscale cols for conditional recoding with case_when(), and then the TOT_nt
+  # col for same. We can extract elements of the vector of scale suffixes with
+  # the [] subsetting brackets. Because by design, the suffix for TOT is the
+  # last element in this vector, we can isolate it with length(scale_suffix),
+  # which returns the numerical value of the last position in the vector. To
+  # retain all BUT the last element, we simple prepend the expression with a
+  # minus (-) sign.
+mutate(across(
+  contains(scale_suffix[-length(scale_suffix)]),
+  ~ case_when(raw > subscale_raw_upper_bound ~ NA_integer_,
+              TRUE ~ .x)
+),
+across(
+  contains(scale_suffix[length(scale_suffix)]),
+  ~ case_when(raw < TOT_raw_lower_bound ~ NA_integer_,
+              TRUE ~ .x)
+))
 
-
-# NEXT: TEST AND INTEGRATE SUBSCALE LOOKUP CODE FROM scratch.R
+# write combined raw-to-T lookup table to .csv
+write_csv(all_lookup,
+here(str_c(
+  "OUTPUT-FILES/TABLES/",
+  str_c("raw-T-lookup",
+        age_range_name,
+        form_name,
+        sep = "-"),
+  ".csv"
+)),
+na = '')
 
 # CONTINUE WORKING ON RAW-T LOOKUPS, ADAPTING SPM-2 CODE, SUBSTITUTING
 # ROBUST OBJECT NAMES

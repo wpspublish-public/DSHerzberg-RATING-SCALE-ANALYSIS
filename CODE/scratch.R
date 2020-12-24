@@ -1,38 +1,50 @@
-# Repeat above for subscale raw-to-T columns.
-subscale_lookup <- map(
-  # for this mapping we need all subscale suffixes except TOT. Because we set up
-  # the scale_suffix vector with "TOT" in the last position, we can drop it from
-  # the vector with the following code, where we get the last position in the
-  # vector with base::length()
-  scale_suffix[-length(scale_suffix)], 
-  ~ get(str_c("data", age_range_name, form_name, "nt", sep = "_")) %>% 
-    group_by(!!sym(str_c(scale_prefix, .x, "_raw"))
-  ) %>% 
-    summarise(
-      !!sym(str_c(scale_prefix, .x, "_nt")) := min(!!sym(str_c(scale_prefix, .x, "_nt"))
-      )) %>% 
-    complete(
-      !!sym(str_c(scale_prefix, .x, "_raw")) := all_raw_range
-    ) %>% 
-    fill(
-      !!sym(str_c(scale_prefix, .x, "_nt")) 
-    ) %>% 
-    fill(
-      !!sym(str_c(scale_prefix, .x, "_nt")), 
-      .direction = "up"
-    ) %>% 
-    rename(
-      raw = !!sym(str_c(scale_prefix, .x, "_raw"))
-    ) %>% 
-    mutate(
-      across(!!sym(str_c(scale_prefix, .x, "_nt")), 
-             ~ case_when(
-        raw > subscale_raw_upper_bound ~ NA_integer_,
-        TRUE ~ .x
-      )
-    )
-)) %>% 
-  reduce(
-    left_join, 
-    by = 'raw'
-  )
+# generate print pub format raw-to-T table
+all_lookup_print <- all_lookup %>% 
+  # pivot_longer() collapses wide table into three-column tall table. First
+  # argument (-raw) specifies that raw score column will exclude from pivot, and
+  # its rows will be expanded as needed to accomdate pivot of remaining cols,
+  # Second argument (names_to = "scale") names the col that will hold in its
+  # rows the col names from the input object. Third argument (values_to = "T")
+  # names the col that will hold the cell values from the input object.
+  # pivot_longer returns a 3-col df in which the key-value pairs of scale-Tscore
+  # are nested within each value of raw score.
+  
+  # df %>% gather("key", "value", x, y, z) is equivalent to df %>%
+  # pivot_longer(c(x, y, z), names_to = "key", values_to = "value")
+
+# START HERE - DATA OBJECT MUST BE TRANSFORMED EXACTLY AS THE SPM-2 CODE RUNS
+  pivot_longer(contains("nt"), names_to = "scale", values_to = "NT") %>% 
+  arrange(scale) %>% 
+  group_by(scale) %>%
+  # expand the table vertically, adding new rows, so there's a row for every possible T value
+  complete(NT = 40:80) %>% 
+  ungroup() %>%
+  # regroup table by two levels
+  group_by(scale, T) %>%
+  # filter step retains all 1-row groups, and the first and last rows of any
+  # multi-row groups. n() == 1 returns 1-row groups; n() > 1 & row_number()
+  # %in% c(1, n()) returns rows of multi-row groups with the row number of
+  # either 1 (first row), or n() which is the number of rows and also the
+  # number of the last row. The first and last rows hold the min and max
+  # values of raw for that value of T (the grouping variable)
+  filter(n() == 1 | n() > 1 & row_number()  %in% c(1, n())) %>%
+  # Summarise creates a table with one row per group (one row per
+  # possible value of T). For the 1-row groups, str_c simply passes the
+  # value of raw as a string; for the multi-row groups, str_c joins the min
+  # and max values of raw with the '--' separator.
+  summarise(raw = str_c(raw, collapse = '--')) %>%
+  # recode missing values of raw to '-'
+  mutate_at(vars(raw), ~ case_when(is.na(.x) ~ '-', TRUE ~ .x)) %>%
+  # sort on two levels
+  arrange(scale, desc(T)) %>% 
+  # spread table back to wide, all values of T (one row for each), scale
+  # columns filled with values of rawscore
+  spread(scale, raw) %>%
+  # sort descending on T
+  arrange(desc(T)) %>% 
+  # rename with desired final column names
+  rename_at(vars(ends_with('_NT')), ~ gsub("_NT", "_raw", .)) %>% 
+  # order columns left-to-right
+  select(T, all_of(all_lookup_col_names)) %>% 
+  # drop row where T == NA
+  filter(!is.na(T))
