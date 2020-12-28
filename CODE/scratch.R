@@ -12,7 +12,6 @@ all_lookup_print <- all_lookup %>%
   # df %>% gather("key", "value", x, y, z) is equivalent to df %>%
   # pivot_longer(c(x, y, z), names_to = "key", values_to = "value")
 
-# START HERE - DATA OBJECT MUST BE TRANSFORMED EXACTLY AS THE SPM-2 CODE RUNS
   pivot_longer(contains("nt"), names_to = "scale", values_to = "NT") %>% 
   arrange(scale) %>% 
   group_by(scale) %>%
@@ -20,19 +19,22 @@ all_lookup_print <- all_lookup %>%
   complete(NT = 40:80) %>% 
   ungroup() %>%
   # regroup table by two levels
-  group_by(scale, T) %>%
+  group_by(scale, NT) %>%
   # filter step retains all 1-row groups, and the first and last rows of any
-  # multi-row groups. n() == 1 returns 1-row groups; n() > 1 & row_number()
-  # %in% c(1, n()) returns rows of multi-row groups with the row number of
-  # either 1 (first row), or n() which is the number of rows and also the
-  # number of the last row. The first and last rows hold the min and max
-  # values of raw for that value of T (the grouping variable)
+  # multi-row groups. n() == 1 returns 1-row groups; n() > 1 & row_number() %in%
+  # c(1, n()) returns rows of multi-row groups with the row number of either 1
+  # (first row), or n() which is the number of rows and also the number of the
+  # last row. The first and last rows hold the min and max values of raw for
+  # that value of T (the grouping variable). dplyr::n() works within summarize()
+  # and returns the number of rows in the current group.
   filter(n() == 1 | n() > 1 & row_number()  %in% c(1, n())) %>%
-  # Summarise creates a table with one row per group (one row per
+  
+  # START HERE - DATA OBJECT GOOD UP TO THIS POINT
+  # SummariZe creates a table with one row per group (one row per
   # possible value of T). For the 1-row groups, str_c simply passes the
   # value of raw as a string; for the multi-row groups, str_c joins the min
   # and max values of raw with the '--' separator.
-  summarise(raw = str_c(raw, collapse = '--')) %>%
+  summarize(raw = str_c(raw, collapse = '--')) %>%
   # recode missing values of raw to '-'
   mutate_at(vars(raw), ~ case_when(is.na(.x) ~ '-', TRUE ~ .x)) %>%
   # sort on two levels
