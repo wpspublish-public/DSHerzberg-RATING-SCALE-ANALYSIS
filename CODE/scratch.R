@@ -28,22 +28,23 @@ all_lookup_print <- all_lookup %>%
   # that value of T (the grouping variable). dplyr::n() works within summarize()
   # and returns the number of rows in the current group.
   filter(n() == 1 | n() > 1 & row_number()  %in% c(1, n())) %>%
-  
-  # START HERE - DATA OBJECT GOOD UP TO THIS POINT
   # SummariZe creates a table with one row per group (one row per
   # possible value of T). For the 1-row groups, str_c simply passes the
   # value of raw as a string; for the multi-row groups, str_c joins the min
   # and max values of raw with the '--' separator.
   summarize(raw = str_c(raw, collapse = '--')) %>%
   # recode missing values of raw to '-'
-  mutate_at(vars(raw), ~ case_when(is.na(.x) ~ '-', TRUE ~ .x)) %>%
-  # sort on two levels
-  arrange(scale, desc(T)) %>% 
+  mutate(across(raw, ~ case_when(is.na(.x) ~ '-', TRUE ~ .x))) %>%
+  # sort on two cols
+  arrange(scale, desc(NT)) %>% 
   # spread table back to wide, all values of T (one row for each), scale
   # columns filled with values of rawscore
-  spread(scale, raw) %>%
+  pivot_wider(names_from = scale,
+              values_from = raw) %>% 
+  
+  # START HERE - DATA OBJECT GOOD UP TO THIS POINT
   # sort descending on T
-  arrange(desc(T)) %>% 
+  arrange(desc(NT)) %>% 
   # rename with desired final column names
   rename_at(vars(ends_with('_NT')), ~ gsub("_NT", "_raw", .)) %>% 
   # order columns left-to-right
