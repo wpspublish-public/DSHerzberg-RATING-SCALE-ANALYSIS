@@ -41,13 +41,10 @@ all_lookup_print <- all_lookup %>%
   # columns filled with values of rawscore
   pivot_wider(names_from = scale,
               values_from = raw) %>% 
-  
-  # START HERE - DATA OBJECT GOOD UP TO THIS POINT
   # sort descending on T
   arrange(desc(NT)) %>% 
   # rename with desired final column names
-  rename_at(vars(ends_with('_NT')), ~ gsub("_NT", "_raw", .)) %>% 
-  # order columns left-to-right
-  select(T, all_of(all_lookup_col_names)) %>% 
+  rename_with(~ str_replace_all(., "_nt", "_raw")) %>%
+  rename(T_score = NT) %>% 
   # drop row where T == NA
-  filter(!is.na(T))
+  filter(!is.na(T_score))
