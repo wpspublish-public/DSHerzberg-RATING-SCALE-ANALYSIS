@@ -327,10 +327,21 @@ pivot_longer(contains("nt"), names_to = "scale", values_to = "NT") %>%
   # drop row where T == NA
   filter(!is.na(T_score))
 
+# write print format lookup table to .csv
+write_csv(all_lookup_print,
+          here(str_c(
+            "OUTPUT-FILES/TABLES/",
+            str_c("raw-T-lookup-print",
+                  age_range_name,
+                  form_name,
+                  sep = "-"),
+            ".csv"
+          )),
+          na = '')
 
 
 # CONTINUE WORKING ON RAW-T LOOKUPS, ADAPTING SPM-2 CODE, SUBSTITUTING
 # ROBUST OBJECT NAMES
 
-# NEXT: WRITE PRINT FORMAT LOOKUP TO CSV.
+# NEXT: RAW SCORE DESCRIPTIVES
 
