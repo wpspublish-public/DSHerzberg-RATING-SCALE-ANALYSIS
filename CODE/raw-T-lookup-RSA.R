@@ -2,12 +2,12 @@
 
 suppressMessages(library(here))
 suppressMessages(suppressWarnings(library(tidyverse)))
-library(bestNormalize)
 suppressMessages(library(psych))
-suppressMessages(library(data.table))
+suppressMessages(library(bestNormalize))
 
 urlRemote_path  <- "https://raw.githubusercontent.com/"
 github_path <- "DSHerzberg/RATING-SCALE-ANALYSIS/master/INPUT-FILES/"
+input_name <- "data-RS-sim-child-parent.csv"
 
 item_prefix <- "cp"
 scale_prefix <- "CP"
@@ -25,7 +25,7 @@ subscale_raw_upper_bound <- 40
 assign(
   str_c("data", age_range_name, form_name, sep = "_"),
   suppressMessages(read_csv(url(
-    str_c(urlRemote_path, github_path, "data-RS-sim-child-parent.csv")
+    str_c(urlRemote_path, github_path, input_name)
   ))) %>%
     mutate(across(
       contains(str_c(item_prefix, "i")),
@@ -45,7 +45,7 @@ assign(
 # name on the vector
  assign(str_c("data", age_range_name, form_name, "TOT", sep = "_"),
        suppressMessages(read_csv(url(
-         str_c(urlRemote_path, github_path, "data-RS-sim-child-parent.csv")
+         str_c(urlRemote_path, github_path, input_name)
        ))) %>% 
          select(!!sym(str_c(scale_prefix, "TOT_raw"))) %>% 
          as_vector() %>% 
@@ -174,7 +174,7 @@ get(str_c("data", age_range_name, form_name, "nt", sep = "_")) %>%
   as_vector() %>%
   MASS::truehist(.,
                  h = 1,
-                 prob = F,
+                 prob = FALSE,
                  xlab = "TOT_nt")
 
 # GENERATE RAW-TO-T LOOKUP TABLES -----------------------------------------
@@ -339,9 +339,78 @@ write_csv(all_lookup_print,
           )),
           na = '')
 
+# raw score descriptives for all scales (using psych::describe)
+assign(
+  str_c("raw_score_desc", age_range_name, form_name, sep = "_"),
+  data_child_parent %>%
+    select(contains('raw')) %>%
+    describe(fast = T) %>%
+    rownames_to_column() %>%
+    rename(scale = rowname) %>%
+    select(scale, n, mean, sd) %>%
+    mutate(across(c(mean, sd), ~ (round(
+      ., 2
+    ))))
+)
 
-# CONTINUE WORKING ON RAW-T LOOKUPS, ADAPTING SPM-2 CODE, SUBSTITUTING
-# ROBUST OBJECT NAMES
+# write raw score descriptives table to .csv
+write_csv(get(str_c(
+  "raw_score_desc", age_range_name, form_name, sep = "_"
+)),
+here(str_c(
+  "OUTPUT-FILES/TABLES/",
+  str_c("raw-score-desc",
+        age_range_name,
+        form_name,
+        sep = "-"),
+  ".csv"
+)),
+na = '')
 
-# NEXT: RAW SCORE DESCRIPTIVES
+# table of demographic counts (make vector code robust wherever possible)
 
+var_order <- c("age_range", "gender", "educ", "ethnic", "region")
+
+cat_order <- c(
+  # age_range
+  str_sort(unique(get(str_c("data", age_range_name, form_name, sep = "_"))$age_range)),
+  # gender
+  str_sort(unique(get(str_c("data", age_range_name, form_name, sep = "_"))$gender), 
+           decreasing = T),
+  # educ
+  "no_HS", "HS_grad", "some_college", "BA_plus" , 
+  # ethnic
+  "hispanic", "asian", "black", "white", "other",
+  # Region
+  "northeast", "midwest", "south", "west")
+
+assign(
+  str_c("demo_counts", age_range_name, form_name, sep = "_"),
+  get(str_c("data", age_range_name, form_name, sep = "_")) %>%
+    select(all_of(var_order)) %>%
+    pivot_longer(everything(), names_to = "variable", values_to = "category") %>%
+    group_by(variable, category) %>%
+    count(variable, category) %>%
+    arrange(match(variable, var_order), match(category, cat_order)) %>%
+    ungroup() %>%
+    mutate(across(
+      variable,
+      ~
+        case_when(lag(.x) == .x ~ NA_character_,
+                  T ~ .x)
+    ))
+)
+
+# write demo counts table to .csv
+write_csv(get(str_c(
+  "demo_counts", age_range_name, form_name, sep = "_"
+)),
+here(str_c(
+  "OUTPUT-FILES/TABLES/",
+  str_c("demo-counts",
+        age_range_name,
+        form_name,
+        sep = "-"),
+  ".csv"
+)),
+na = '')
