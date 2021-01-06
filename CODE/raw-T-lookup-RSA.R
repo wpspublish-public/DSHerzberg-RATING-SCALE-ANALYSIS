@@ -38,12 +38,17 @@ assign(
     ))
 )
 
+# DETERMINE BEST NORMALIZATION MODEL --------------------------------------
+
+# (NOTE: THIS SECTION SHOULD BE TOGGLED OFF AFTER SELECTION OF NORMALIZATION
+# MODEL)
+
 # Here we extract a single column as an argument for the bestNormalize()
 # function. To get the col into the right format, we use select() to isolate the
 # col (which is now a single col data frame), purrr::as_vector() to convert the
 # df into a named numeric vector, and purrr::set_names() to get rid of the the
 # name on the vector
- assign(str_c("data", age_range_name, form_name, "TOT", sep = "_"),
+assign(str_c("data", age_range_name, form_name, "TOT", sep = "_"),
        suppressMessages(read_csv(url(
          str_c(urlRemote_path, github_path, input_name)
        ))) %>% 
@@ -51,11 +56,6 @@ assign(
          as_vector() %>% 
          set_names(NULL)
 )
-
-# DETERMINE BEST NORMALIZATION MODEL --------------------------------------
-
-# (NOTE: THIS SECTION SHOULD BE TOGGLED OFF AFTER SELECTION OF NORMALIZATION
-# MODEL)
 
 # # # create a bestNormalize object to lock down the normalizing function that
 # will be used on repeated runs of the norms. This should be done on TOT score
@@ -83,7 +83,7 @@ chosen_transform <- class(TOT_nz_obj$chosen_transform)[1]
 raw_score_cols_list <-
   map(str_c(scale_prefix, scale_suffix),
       ~ get(str_c("data", age_range_name, form_name, sep = "_")) %>%
-        pull(!!rlang::sym(str_c(.x, "_raw")))) %>% 
+        pull(!!sym(str_c(.x, "_raw")))) %>% 
   set_names(str_c(scale_prefix, scale_suffix, "_raw"))
 
 
@@ -110,7 +110,7 @@ nzScore_perCase <- raw_score_cols_list %>%
 # return a data frame. Within the mapping function, we pipe the six col df
 # containing the normalized z-scores (nzScore_perCase) into dplyr::transmute(),
 # which is similar to mutate except that it drops the input cols from the
-# output. We use !!rlang::sym() to convert a character string col name to
+# output. We use !!sym() to convert a character string col name to
 # unquoted symbol, so it can be passed to transmute(). We also need to use the
 # NSE := operator instead of a conventional equals sign. We return a six col df
 # consisting only of the 6 rounded normalize t-scores. We then use
@@ -120,9 +120,9 @@ nzScore_perCase <- raw_score_cols_list %>%
 ntScore_perCase <- map_dfc(scale_suffix,
                            ~
                              nzScore_perCase %>%
-                             transmute(!!rlang::sym(str_c(
+                             transmute(!!sym(str_c(
                                scale_prefix, .x, "_nt"
-                             )) := round(!!rlang::sym(str_c(
+                             )) := round(!!sym(str_c(
                                .x, "_nz"
                              )) * 10) + 50)) %>%
   mutate(across(
