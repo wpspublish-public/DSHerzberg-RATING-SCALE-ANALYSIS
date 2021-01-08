@@ -56,7 +56,11 @@ assign(
 Load packages for file path specification (`here`), data wrangling (`tidyverse`),  psychometric data simulation and analysis (`psych`), and normalization of raw score distributions (`bestNormalize`).
 ```{r norms-load, echo = 1:4, eval = F}
 ```
-We write _robust_ templates that can be adapted to different projects with minimal copying-and-pasting of text. We facilitate this by providing object name placeholders, as vectors, for file paths, file and variable names (and their component sub-strings), score ranges, and other snippets of code that are re-used throughout the template. Note that in this example, we are reading an input file, consisting of simulated rating scale data, from a remote URL.
+We write _robust_ templates that can be adapted to different projects with minimal copying-and-pasting of text. We facilitate this by initializing _tokens_ as vectors. For example, `item_prefix <- "cp"` defines a vector that holds a prefix used in the names of all columns that contain item reponses. We can complete the names of these columns by concatenating the token `item_prefix` with a vector holding a numerical series (e.g., `"001, 002, 003"`). 
+
+Tokens function as placeholders or stand-ins for values that are used repeatedly in the template. When tokens appear in the code, their values are combined with static text elements to create column names, file names, file paths, form names, score ranges, or any other data characteristic that varies from project to project. For example, the code block below includes tokens for reading a specific input file from a specific remote URL. 
+
+In a robust template, the _project-specific_ elements (e.g., remote file paths, scale name prefixes, etc.) are segregated at the front of the script, where they can be entered efficiently as tokens. The remainder of the script consists only of _project-general_ code (e.g., application of normalizing models, generation of raw-to-T lookup tables, etc.); in other words, any functions or operations that will be implemented in the same way for all projects.
 ```{r norms-load, echo = 5:16, eval = F}
 ```
 In a robust template, we create object names by concatenating placeholder vectors and explicit strings. Instead of the assignment operator `<--`, we use `base::assign()` to initialize these concatenated names. `assign()` takes two arguments, the desired name (concatenated with `stringr::str_c()`), and the code snippet that defines the object to be named.
@@ -155,7 +159,7 @@ get(str_c("data", age_range_name, form_name, "nt", sep = "_")) %>%
                  xlab = "TOT_nt")
 ```
 ###### COMMENTED SNIPPETS
-The `bestNormalize` package provides tools for selectng a normalization model and applying that model to a raw score distribution. For the latter step, the `bestNormalize()` function requires as input the raw score distribution formatted as a numerical vector.
+The `bestNormalize` package provides tools for determining the optimal normalization model and applying that model to a raw score distribution. For the latter step, the `bestNormalize()` function requires as input the raw score distribution formatted as a numerical vector.
 
 As in previous steps, we use `assign()` to name objects with concatenated strings. To create the numerical vector required by `bestNormalize()`, we `select()` the column containing the raw total scores for (`TOT_raw`). Best practice suggests that we use a total or composite score for this purpose, because by definition it captures more of the sample variance than subscale scores that consist of fewer items. `select()` requires unquoted column names as input, which we fulfill by wrapping the concatenated column name (the quoted string returned by `str_c()`) in the unquoting function `!!sym()`.
 ```{r norms-model, echo = 1:8, eval = F}
