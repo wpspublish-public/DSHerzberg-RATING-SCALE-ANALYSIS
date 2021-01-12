@@ -18,10 +18,6 @@ all_raw_range <- 10:200
 TOT_raw_lower_bound <- 50
 subscale_raw_upper_bound <- 40
 
-# base::assign() can be used to name objects which require names that are
-# concatenations of strings and character vectors. The first argument is the
-# desired name as a string. Recode item responses to numeric (still within
-# assign()).
 assign(
   str_c("data", age_range_name, form_name, sep = "_"),
   suppressMessages(read_csv(url(
@@ -40,14 +36,6 @@ assign(
 
 # DETERMINE BEST NORMALIZATION MODEL --------------------------------------
 
-# (NOTE: THIS SECTION SHOULD BE TOGGLED OFF AFTER SELECTION OF NORMALIZATION
-# MODEL)
-
-# Here we extract a single column as an argument for the bestNormalize()
-# function. To get the col into the right format, we use select() to isolate the
-# col (which is now a single col data frame), purrr::as_vector() to convert the
-# df into a named numeric vector, and purrr::set_names() to get rid of the the
-# name on the vector
 assign(str_c("data", age_range_name, form_name, "TOT", sep = "_"),
        suppressMessages(read_csv(url(
          str_c(urlRemote_path, github_path, input_name)
