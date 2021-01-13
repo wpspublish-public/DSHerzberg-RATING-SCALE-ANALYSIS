@@ -45,23 +45,10 @@ assign(str_c("data", age_range_name, form_name, "TOT", sep = "_"),
          set_names(NULL)
 )
 
-# # # create a bestNormalize object to lock down the normalizing function that
-# will be used on repeated runs of the norms. This should be done on TOT score
-# or analogous score. We use set.seed() to control R's random number generator,
-# ensuring that the same normalization model is selected every time we run the
-# script.
 set.seed(12345)
 TOT_nz_obj <- bestNormalize(data_child_parent_TOT)
-
-# # print transformation (to show normalizing function in console)
 TOT_nz_obj$chosen_transform
-
-# # Extract transformation type. class() gets the class atributes of a list
-# element. bestNormalize puts the name of the normalizing function as a class
-# attribute of the chosen_transform element, it names the function that is
-# called to implement the normalization model when estimating normalized z-scores
-# for each case in the input data set.
-chosen_transform <- class(TOT_nz_obj$chosen_transform)[1]
+chosen_transform <- class(TOT_nz_obj$chosen_transform)
 
 # pull 6 raw score columns into a named list. In the pipeline within the map()
 # call, we start with the input data file. Because the name of that file is a

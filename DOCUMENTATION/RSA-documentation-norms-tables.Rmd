@@ -100,7 +100,7 @@ assign(str_c("data", age_range_name, form_name, "TOT", sep = "_"),
 set.seed(12345)
 TOT_nz_obj <- bestNormalize(data_child_parent_TOT)
 TOT_nz_obj$chosen_transform
-chosen_transform <- class(TOT_nz_obj$chosen_transform)[1]
+chosen_transform <- class(TOT_nz_obj$chosen_transform)
 
 raw_score_cols_list <-
   map(str_c(scale_prefix, scale_suffix),
@@ -169,10 +169,16 @@ get(str_c("data", age_range_name, form_name, "nt", sep = "_")) %>%
                  xlab = "TOT_nt")
 ```
 ###### COMMENTED SNIPPETS
-The `bestNormalize` package provides tools for determining the optimal normalization model and applying that model to a raw score distribution. For the latter step, the `bestNormalize()` function requires as input the raw score distribution formatted as a numerical vector.
+The `bestNormalize` package provides tools for determining an optimal normalization model and applying that model to a raw score distribution. For the latter step, the `bestNormalize()` function requires as input the raw score distribution formatted as a numerical vector.
 
 As in previous steps, we use `assign()` to name objects with concatenated strings. To create the numerical vector required by `bestNormalize()`, we `select()` the column containing the raw total scores for (`TOT_raw`). It is best to use a total or composite score for this purpose, because by definition a total score captures more of the sample variance than a subscale score that consists of fewer items. `select()` requires unquoted column names as input, which we provide by wrapping the concatenated column name (the quoted string returned by `str_c()`) in the unquoting function `!!sym()`.
 
 After the `select()` line, the data object is a single-column data frame that holds the `TOT_raw` scores from the input data set. We use two functions from `purrr` to return the requisite vector formatting: `as_vector()`, which returns a named vector, and `set_names(NULL)`, which strips out the name. The raw score distribution vector `data_child_parent_TOT` is now ready for processing with `bestNormalize()`.
 ```{r norms-model, echo = 1:8, eval = F}
+```
+To ensure that `bestNormalize()` chooses the same normalizing function every time the script is run, we call `base::set.seed()` to lock down the output of R's random number generator. Calling `bestNormalize(data_parent_child_TOT)` returns a list, with the element `TOT_nz_obj$chosen_transform` holding the name of the selected normalizing function as a class attribute. To use that function in downstream code, we extract its name with `base::class()`, which returns the class attribute(s) of a list element.
+```{r norms-model, echo = 10:13, eval = F}
+```
+Next we apply the chosen normalization function to all of the raw score distributions in the input file, including total and subscale scores. As a reminder, the normalization functions require raw score distributions to be formatted not as data frame columns but as numerical vectors.
+```{r norms-model, echo = 15:19, eval = F}
 ```
