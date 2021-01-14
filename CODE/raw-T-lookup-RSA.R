@@ -50,12 +50,7 @@ TOT_nz_obj <- bestNormalize(data_child_parent_TOT)
 TOT_nz_obj$chosen_transform
 chosen_transform <- class(TOT_nz_obj$chosen_transform)
 
-# pull 6 raw score columns into a named list. In the pipeline within the map()
-# call, we start with the input data file. Because the name of that file is a
-# concatenated string (to facilitate robust code), we have to wrap the string in
-# get(), which returns the object (the input data file) named by the
-# concatenated string.
-raw_score_cols_list <-
+raw_score_vecs_list <-
   map(str_c(scale_prefix, scale_suffix),
       ~ get(str_c("data", age_range_name, form_name, sep = "_")) %>%
         pull(!!sym(str_c(.x, "_raw")))) %>% 
@@ -73,9 +68,9 @@ raw_score_cols_list <-
 # element from a list, and wrapping pluck in tibble() gets it into the desired
 # data frame structure. Piping that list through dplyr::bind_cols() binds the 6
 # dfs into a single df, set_names() names the 6 cols within the single df.
-nzScore_perCase <- raw_score_cols_list %>% 
+nzScore_perCase <- raw_score_vecs_list %>% 
   map(~ get(chosen_transform)(.x)) %>% 
-  map(~ tibble(pluck(.x, "x.t"), .name_repair = "universal")) %>% 
+  map(~ tibble(pluck(.x, "x.t"))) %>% 
   bind_cols() %>%
   set_names(str_c(scale_suffix, "_nz")) 
 

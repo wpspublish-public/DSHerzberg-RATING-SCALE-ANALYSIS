@@ -102,16 +102,15 @@ TOT_nz_obj <- bestNormalize(data_child_parent_TOT)
 TOT_nz_obj$chosen_transform
 chosen_transform <- class(TOT_nz_obj$chosen_transform)
 
-raw_score_cols_list <-
+raw_score_vecs_list <-
   map(str_c(scale_prefix, scale_suffix),
       ~ get(str_c("data", age_range_name, form_name, sep = "_")) %>%
         pull(!!sym(str_c(.x, "_raw")))) %>% 
   set_names(str_c(scale_prefix, scale_suffix, "_raw"))
 
-
-nzScore_perCase <- raw_score_cols_list %>% 
+nzScore_perCase <- raw_score_vecs_list %>% 
   map(~ get(chosen_transform)(.x)) %>% 
-  map(~ tibble(pluck(.x, "x.t"), .name_repair = "universal")) %>% 
+  map(~ tibble(pluck(.x, "x.t"))) %>% 
   bind_cols() %>%
   set_names(str_c(scale_suffix, "_nz")) 
 
@@ -179,6 +178,19 @@ After the `select()` line, the data object is a single-column data frame that ho
 To ensure that `bestNormalize()` chooses the same normalizing function every time the script is run, we call `base::set.seed()` to lock down the output of R's random number generator. Calling `bestNormalize(data_parent_child_TOT)` returns a list, with the element `TOT_nz_obj$chosen_transform` holding the name of the selected normalizing function as a class attribute. To use that function in downstream code, we extract its name with `base::class()`, which returns the class attribute(s) of a list element.
 ```{r norms-model, echo = 10:13, eval = F}
 ```
-Next we apply the chosen normalization function to all of the raw score distributions in the input file, including total and subscale scores. As a reminder, the normalization functions require raw score distributions to be formatted not as data frame columns but as numerical vectors.
+Next we apply the chosen normalization function iteratively to all of the raw score distributions in the input file, including total and subscale scores. As a reminder, the normalization functions require raw score distributions to be formatted as numerical vectors (rather than data frame columns).
+
+The next snippet extracts those vectors from the input file and places them in a list `raw_score_vecs_list`. The core function is `dplyr::pull()`, which extracts a column from a data frame and returns it as a vector. In this example, we have six raw score columns to extract, so we use `purrr::map()` to iterate over a vector that holds the six concatenated substrings that identify the target columns `str_c(scale_prefix, scale_suffix)`.
+
+Because the name of the input file is a concatenated string `str_c("data", age_range_name, form_name, sep = "_")`, we wrap the string in `base::get()` which returns the input data frame named by the string. This data object is piped into `pull()` which requires an unquoted column name as its argument. `map()` supplies this argument by iterating over the input vector `str_c(scale_prefix, scale_suffix)`. The string elements of this vector are supplied iteratively to the call of `pull()` via the token `.x`, which `str_c()` combines with the explicit string `"_raw"` to yield a target column name. Because it is a quoted string, we need to unquote by wrapping it in `!!sym()`.
+
+After `map()` finishes iterating, the data object is a list holding six numerical vectors (the raw score distributions). We use `set_names()` to name these elements for downstream processing.
 ```{r norms-model, echo = 15:19, eval = F}
+```
+Now we use two sequential `map()` calls to apply the chosen normalizing function to each raw score distribution, yielding a normalized z-score for each case (row). In the next snippet, we initiate the pipeline with the list of vectors to be processed `raw_score_vecs_list`. The first `map()` call iterates over this list and applies the normalizing function. We use `get()` to call the function named by `chosen_transform` and supply the `.x` token as its argument, enabling `map()` to apply the function one vector at a time. After this `map()` call finishes iterating, the data object is a list containing six `bestNormalize` normalization objects, each one itself a list named for the raw score distribution (e.g., `CPS1_raw`) whose normalized output it contains.
+
+These normalization objects contain an element `x.t.`, which holds the distribution of normalized z-scores per case. To extract these elements, we call `purrr::pluck()`, and supply as the first argument the `.x` token, which represents the currently-iterated normalization object, and as the second argument `"x.t."`, which names the desired element. `pluck()` returns the z-score distribution as a numerical vector. We format the vector as a single-column data frame by wrapping the `pluck()` call in `tibble::tibble()`. Note the difference between `pull()`, which extracts a column from a data frame, and `pluck()`, which extracts an element from a list.
+
+The data object is now a list of six single-column data frames, which we bind into a single data frame with `dplyr::bind_cols`. We complete the operation by applying desired column names with `set_names()`. The resulting output is a six-column data frame containing the distributions of normalized z-scores corresponding to the six raw score distributions.
+```{r norms-model, echo = 21:25, eval = F}
 ```
