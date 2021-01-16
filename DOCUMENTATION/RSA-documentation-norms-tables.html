@@ -483,22 +483,19 @@ nzScore_perCase &lt;- raw_score_vecs_list %&gt;%
   bind_cols() %&gt;%
   set_names(str_c(scale_suffix, &quot;_nz&quot;)) 
 
-ntScore_perCase &lt;- map_dfc(scale_suffix,
-                           ~
-                             nzScore_perCase %&gt;%
-                             transmute(!!sym(str_c(
-                               scale_prefix, .x, &quot;_nt&quot;
-                             )) := round(!!sym(str_c(
-                               .x, &quot;_nz&quot;
-                             )) * 10) + 50)) %&gt;%
-  mutate(across(
-    everything(),
-    ~
-      case_when(. &lt; 40 ~ 40,
-                . &gt; 80 ~ 80,
-                TRUE ~ .) %&gt;%
-      as.integer(.)
-  ))
+ntScore_perCase &lt;- nzScore_perCase %&gt;%
+  mutate(across(everything(),
+                ~
+                  round(. * 10) + 50),
+         across(
+           everything(),
+           ~
+             case_when(. &lt; 40 ~ 40,
+                       . &gt; 80 ~ 80,
+                       TRUE ~ .) %&gt;%
+             as.integer(.)
+         )) %&gt;%
+  rename_with( ~ str_c(scale_prefix, str_replace_all(., &quot;nz&quot;, &quot;nt&quot;)))
 
 assign(
   str_c(&quot;data&quot;, age_range_name, form_name, &quot;nt&quot;, sep = &quot;_&quot;),
@@ -564,13 +561,27 @@ chosen_transform &lt;- class(TOT_nz_obj$chosen_transform)</code></pre>
         pull(!!sym(str_c(.x, &quot;_raw&quot;)))) %&gt;% 
   set_names(str_c(scale_prefix, scale_suffix, &quot;_raw&quot;))</code></pre>
 <p>Now we use two sequential <code>map()</code> calls to apply the chosen normalizing function to each raw score distribution, yielding a normalized z-score for each case (row). In the next snippet, we initiate the pipeline with the list of vectors to be processed <code>raw_score_vecs_list</code>. The first <code>map()</code> call iterates over this list and applies the normalizing function. We use <code>get()</code> to call the function named by <code>chosen_transform</code> and supply the <code>.x</code> token as its argument, enabling <code>map()</code> to apply the function one vector at a time. After this <code>map()</code> call finishes iterating, the data object is a list containing six <code>bestNormalize</code> normalization objects, each one itself a list named for the raw score distribution (e.g., <code>CPS1_raw</code>) whose normalized output it contains.</p>
-<p>These normalization objects contain an element <code>x.t.</code>, which holds the distribution of normalized z-scores per case. To extract these elements, we call <code>purrr::pluck()</code>, and supply as the first argument the <code>.x</code> token, which represents the currently-iterated normalization object, and as the second argument <code>&quot;x.t.&quot;</code>, which names the desired element. <code>pluck()</code> returns the z-score distribution as a numerical vector. We format the vector as a single-column data frame by wrapping the <code>pluck()</code> call in <code>tibble::tibble()</code>. Note the difference between <code>pull()</code>, which extracts a column from a data frame, and <code>pluck()</code>, which extracts an element from a list.</p>
+<p>These normalization objects contain an element <code>x.t.</code>, which holds the distribution of normalized z-scores per case. To extract this element, we call <code>purrr::pluck()</code>, and supply as the first argument the <code>.x</code> token, which represents the currently-iterated normalization object, and as the second argument <code>&quot;x.t.&quot;</code>, which names the desired element. <code>pluck()</code> returns the z-score distribution as a numerical vector. We format the vector as a single-column data frame by wrapping the <code>pluck()</code> call in <code>tibble::tibble()</code>. Note the difference between <code>pull()</code>, which extracts a column from a data frame, and <code>pluck()</code>, which extracts an element from a list.</p>
 <p>The data object is now a list of six single-column data frames, which we bind into a single data frame with <code>dplyr::bind_cols</code>. We complete the operation by applying desired column names with <code>set_names()</code>. The resulting output is a six-column data frame containing the distributions of normalized z-scores corresponding to the six raw score distributions.</p>
 <pre class="r"><code>nzScore_perCase &lt;- raw_score_vecs_list %&gt;% 
   map(~ get(chosen_transform)(.x)) %&gt;% 
   map(~ tibble(pluck(.x, &quot;x.t&quot;))) %&gt;% 
   bind_cols() %&gt;%
   set_names(str_c(scale_suffix, &quot;_nz&quot;)) </code></pre>
+<p>The next step is to convert the z-scores to T-scores, and to truncate the T-score distribution as required by the project. The input here is <code>nzScore_perCase</code>, the data frame containing the z-score distributions.</p>
+<pre class="r"><code>ntScore_perCase &lt;- nzScore_perCase %&gt;%
+  mutate(across(everything(),
+                ~
+                  round(. * 10) + 50),
+         across(
+           everything(),
+           ~
+             case_when(. &lt; 40 ~ 40,
+                       . &gt; 80 ~ 80,
+                       TRUE ~ .) %&gt;%
+             as.integer(.)
+         )) %&gt;%
+  rename_with( ~ str_c(scale_prefix, str_replace_all(., &quot;nz&quot;, &quot;nt&quot;)))</code></pre>
 </div>
 </div>
 </div>

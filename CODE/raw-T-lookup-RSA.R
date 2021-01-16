@@ -56,18 +56,6 @@ raw_score_vecs_list <-
         pull(!!sym(str_c(.x, "_raw")))) %>% 
   set_names(str_c(scale_prefix, scale_suffix, "_raw"))
 
-
-# This next pipeline starts with the list of 6 raw score cols. First call of
-# map() iterates over the list of raw score cols, and applies the chosen
-# normalizing function to each raw score col iteratively. To call the
-# normalizing function, we use base::get(), which takes a string as input and
-# returns the function named by that string. The list, which now contains
-# normalization objects, is piped into a second map() call, which extracts
-# columns of normalized z-scores per case. These scores are held in the "x.t."
-# element of the normalization object for each scale. purrr::pluck() extracts an
-# element from a list, and wrapping pluck in tibble() gets it into the desired
-# data frame structure. Piping that list through dplyr::bind_cols() binds the 6
-# dfs into a single df, set_names() names the 6 cols within the single df.
 nzScore_perCase <- raw_score_vecs_list %>% 
   map(~ get(chosen_transform)(.x)) %>% 
   map(~ tibble(pluck(.x, "x.t"))) %>% 
@@ -87,22 +75,19 @@ nzScore_perCase <- raw_score_vecs_list %>%
 # mutate(across(everything())) to transform all six columns, applying a function
 # that first truncates the score distribution in each col to 40-80 range, and
 # then coerces all numbers to integer
-ntScore_perCase <- map_dfc(scale_suffix,
-                           ~
-                             nzScore_perCase %>%
-                             transmute(!!sym(str_c(
-                               scale_prefix, .x, "_nt"
-                             )) := round(!!sym(str_c(
-                               .x, "_nz"
-                             )) * 10) + 50)) %>%
-  mutate(across(
-    everything(),
-    ~
-      case_when(. < 40 ~ 40,
-                . > 80 ~ 80,
-                TRUE ~ .) %>%
-      as.integer(.)
-  ))
+ntScore_perCase <- nzScore_perCase %>%
+  mutate(across(everything(),
+                ~
+                  round(. * 10) + 50),
+         across(
+           everything(),
+           ~
+             case_when(. < 40 ~ 40,
+                       . > 80 ~ 80,
+                       TRUE ~ .) %>%
+             as.integer(.)
+         )) %>%
+  rename_with( ~ str_c(scale_prefix, str_replace_all(., "nz", "nt")))
 
 # Bind the normalized T-score columns to the table containing raw scores for
 # each case.
