@@ -483,19 +483,17 @@ nzScore_perCase &lt;- raw_score_vecs_list %&gt;%
   bind_cols() %&gt;%
   set_names(str_c(scale_suffix, &quot;_nz&quot;)) 
 
-ntScore_perCase &lt;- nzScore_perCase %&gt;%
+ntScore_perCase1 &lt;- nzScore_perCase %&gt;%
   mutate(across(everything(),
                 ~
-                  round(. * 10) + 50),
-         across(
-           everything(),
-           ~
-             case_when(. &lt; 40 ~ 40,
-                       . &gt; 80 ~ 80,
-                       TRUE ~ .) %&gt;%
-             as.integer(.)
-         )) %&gt;%
-  rename_with( ~ str_c(scale_prefix, str_replace_all(., &quot;nz&quot;, &quot;nt&quot;)))
+                  (round(. * 10) + 50) %&gt;%
+                  {
+                    case_when(. &lt; 40 ~ 40,
+                              . &gt; 80 ~ 80,
+                              TRUE ~ .)
+                  } %&gt;%
+                  as.integer)) %&gt;%
+  rename_with(~ str_c(scale_prefix, str_replace_all(., &quot;nz&quot;, &quot;nt&quot;)))
 
 assign(
   str_c(&quot;data&quot;, age_range_name, form_name, &quot;nt&quot;, sep = &quot;_&quot;),
@@ -569,19 +567,17 @@ chosen_transform &lt;- class(TOT_nz_obj$chosen_transform)</code></pre>
   bind_cols() %&gt;%
   set_names(str_c(scale_suffix, &quot;_nz&quot;)) </code></pre>
 <p>The next step is to convert the z-scores to T-scores, and to truncate the T-score distribution as required by the project. The input here is <code>nzScore_perCase</code>, the data frame containing the z-score distributions.</p>
-<pre class="r"><code>ntScore_perCase &lt;- nzScore_perCase %&gt;%
+<pre class="r"><code>ntScore_perCase1 &lt;- nzScore_perCase %&gt;%
   mutate(across(everything(),
                 ~
-                  round(. * 10) + 50),
-         across(
-           everything(),
-           ~
-             case_when(. &lt; 40 ~ 40,
-                       . &gt; 80 ~ 80,
-                       TRUE ~ .) %&gt;%
-             as.integer(.)
-         )) %&gt;%
-  rename_with( ~ str_c(scale_prefix, str_replace_all(., &quot;nz&quot;, &quot;nt&quot;)))</code></pre>
+                  (round(. * 10) + 50) %&gt;%
+                  {
+                    case_when(. &lt; 40 ~ 40,
+                              . &gt; 80 ~ 80,
+                              TRUE ~ .)
+                  } %&gt;%
+                  as.integer)) %&gt;%
+  rename_with(~ str_c(scale_prefix, str_replace_all(., &quot;nz&quot;, &quot;nt&quot;)))</code></pre>
 </div>
 </div>
 </div>

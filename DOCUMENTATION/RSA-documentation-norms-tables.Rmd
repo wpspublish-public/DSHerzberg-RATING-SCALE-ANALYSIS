@@ -114,19 +114,17 @@ nzScore_perCase <- raw_score_vecs_list %>%
   bind_cols() %>%
   set_names(str_c(scale_suffix, "_nz")) 
 
-ntScore_perCase <- nzScore_perCase %>%
+ntScore_perCase1 <- nzScore_perCase %>%
   mutate(across(everything(),
                 ~
-                  round(. * 10) + 50),
-         across(
-           everything(),
-           ~
-             case_when(. < 40 ~ 40,
-                       . > 80 ~ 80,
-                       TRUE ~ .) %>%
-             as.integer(.)
-         )) %>%
-  rename_with( ~ str_c(scale_prefix, str_replace_all(., "nz", "nt")))
+                  (round(. * 10) + 50) %>%
+                  {
+                    case_when(. < 40 ~ 40,
+                              . > 80 ~ 80,
+                              TRUE ~ .)
+                  } %>%
+                  as.integer)) %>%
+  rename_with(~ str_c(scale_prefix, str_replace_all(., "nz", "nt")))
 
 assign(
   str_c("data", age_range_name, form_name, "nt", sep = "_"),
@@ -192,5 +190,5 @@ The data object is now a list of six single-column data frames, which we bind in
 ```{r norms-model, echo = 21:25, eval = F}
 ```
 The next step is to convert the z-scores to T-scores, and to truncate the T-score distribution as required by the project. The input here is `nzScore_perCase`, the data frame containing the z-score distributions.
-```{r norms-model, echo = 27:39, eval = F}
+```{r norms-model, echo = 27:37, eval = F}
 ```

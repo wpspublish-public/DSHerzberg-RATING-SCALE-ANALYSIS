@@ -75,19 +75,25 @@ nzScore_perCase <- raw_score_vecs_list %>%
 # mutate(across(everything())) to transform all six columns, applying a function
 # that first truncates the score distribution in each col to 40-80 range, and
 # then coerces all numbers to integer
-ntScore_perCase <- nzScore_perCase %>%
+
+# Note that case_when() step is enclosed in curly braces. this is to address how
+# the pipe operator deals with the . shorthand. case_when actually subsets the .
+# (data object) by segmenting it with predicates. When this function is
+# evaluated within a pipeline, the pipe operator injects . as both the first and
+# second argument for case_when(), when case_when() expects subsetted . as the
+# second argument. This throws an error. Wrapping case_when() in curly braces
+# prevents the injection of . to replace subsetted .
+ntScore_perCase1 <- nzScore_perCase %>%
   mutate(across(everything(),
                 ~
-                  round(. * 10) + 50),
-         across(
-           everything(),
-           ~
-             case_when(. < 40 ~ 40,
-                       . > 80 ~ 80,
-                       TRUE ~ .) %>%
-             as.integer(.)
-         )) %>%
-  rename_with( ~ str_c(scale_prefix, str_replace_all(., "nz", "nt")))
+                  (round(. * 10) + 50) %>%
+                  {
+                    case_when(. < 40 ~ 40,
+                              . > 80 ~ 80,
+                              TRUE ~ .)
+                  } %>%
+                  as.integer)) %>%
+  rename_with(~ str_c(scale_prefix, str_replace_all(., "nz", "nt")))
 
 # Bind the normalized T-score columns to the table containing raw scores for
 # each case.
