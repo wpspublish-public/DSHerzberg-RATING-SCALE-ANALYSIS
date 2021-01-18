@@ -190,5 +190,9 @@ The data object is now a list of six single-column data frames, which we bind in
 ```{r norms-model, echo = 21:25, eval = F}
 ```
 The next step is to convert the z-scores to T-scores, and to truncate the T-score distribution as required by the project. The input here is `nzScore_perCase`, the data frame containing the z-score distributions.
+
+We use `mutate()` to carry out the these transformations. Because `nzScore_perCase` consists only of the six z-score columns, we can use `across(everything())` to apply a series of functions to all columns. In the snippet below, we convert the z-scores to T-scores with `(round(. * 10) + 50)`, truncate the resulting T-score distribution with `case_when()`, and format all values `as.integer()`. We supply desired concatenated column names with `dplyr::rename_with()`.
+
+Note that the`case_when()` call is enclosed in curly braces `{}`. This approach enables control over how `.` (the token representing the data object) is evaluated within a pipeline containing functions (such as `case_when()`) that subset the data object. `case_when()` subsets the data object with predicates. For example, in the code below, it executes a different transformation when `. < 40` returns `TRUE` than when `. > 80` returns `TRUE`. When `case_when()` is used within a pipeline, however, the pipe operator `%>%` injects the intact data object as an argument to `case_when()`, replacing the subsetted data that `case_when()` expects. This throws an error. Wrapping the `case_when()` call in curly braces prevents the pipe operator from passing `.` to `case_when()`, allowing the latter function to subset `.` in its usual fashion.
 ```{r norms-model, echo = 27:37, eval = F}
 ```

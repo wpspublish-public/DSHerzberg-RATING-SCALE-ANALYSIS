@@ -62,19 +62,6 @@ nzScore_perCase <- raw_score_vecs_list %>%
   bind_cols() %>%
   set_names(str_c(scale_suffix, "_nz")) 
 
-# we now apply an arithmetic transformation to convert each normalized Z score
-# (over the 6 scales) into a normalized t-score. Here we map over scale_suffix,
-# because we need to refer to the scale identifiers, and we use map_dfc() to
-# return a data frame. Within the mapping function, we pipe the six col df
-# containing the normalized z-scores (nzScore_perCase) into dplyr::transmute(),
-# which is similar to mutate except that it drops the input cols from the
-# output. We use !!sym() to convert a character string col name to
-# unquoted symbol, so it can be passed to transmute(). We also need to use the
-# NSE := operator instead of a conventional equals sign. We return a six col df
-# consisting only of the 6 rounded normalize t-scores. We then use
-# mutate(across(everything())) to transform all six columns, applying a function
-# that first truncates the score distribution in each col to 40-80 range, and
-# then coerces all numbers to integer
 
 # Note that case_when() step is enclosed in curly braces. this is to address how
 # the pipe operator deals with the . shorthand. case_when actually subsets the .
