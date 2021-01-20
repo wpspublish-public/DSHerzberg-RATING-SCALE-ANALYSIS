@@ -392,6 +392,8 @@ form_name &lt;- &quot;parent&quot;
 all_raw_range &lt;- 10:200
 TOT_raw_lower_bound &lt;- 50
 subscale_raw_upper_bound &lt;- 40
+t_score_lower_bound &lt;- 40
+t_score_upper_bound &lt;- 80
 
 assign(
   str_c(&quot;data&quot;, age_range_name, form_name, sep = &quot;_&quot;),
@@ -431,7 +433,10 @@ scale_suffix &lt;- c(&quot;S1&quot;, &quot;S2&quot;, &quot;S3&quot;, &quot;S4&qu
 age_range_name &lt;- &quot;child&quot;
 form_name &lt;- &quot;parent&quot;
 all_raw_range &lt;- 10:200
-TOT_raw_lower_bound &lt;- 50</code></pre>
+TOT_raw_lower_bound &lt;- 50
+subscale_raw_upper_bound &lt;- 40
+t_score_lower_bound &lt;- 40
+t_score_upper_bound &lt;- 80</code></pre>
 <p>Many analytic procedures require the specification of an entire set of project-specific elements, such as the entire set of item names, or form names. We can use string functions to combine tokens and explicit text as needed, both to create the names of the elements within the set, and to create the accompanying token names. For instance, we can assemble a vector containing all of the item names by concatenating the token <code>item_prefix</code> with a numerical series (e.g., <code>c(&quot;001&quot;, &quot;002&quot;, &quot;003&quot;)</code>).</p>
 <p>Often, the best token name for the resulting set of elements is itself a concatenated string. To use a concantenated string as the name of an object in R, we cannot rely on the conventional assignment operator <code>&lt;-</code>. Instead, we use <code>base::assign()</code> to initialize these concatenated names. <code>assign()</code> takes two arguments, the desired token name (concatenated with <code>stringr::str_c()</code>), and the code snippet that defines the object(s) to be named.</p>
 <p>As an example, <code>str_c(&quot;data&quot;, age_range_name, form_name, sep = &quot;_&quot;)</code> returns the name <code>data_child_parent</code>, combining the file type description (<code>&quot;data&quot;</code>, provided as an explicit string) with the age-range (<code>age_range_name</code>) and rater (<code>form_name</code>) vectors. The combination of these latter two vectors identifies the form whose data is contained in the input file</p>
@@ -483,17 +488,19 @@ nzScore_perCase &lt;- raw_score_vecs_list %&gt;%
   bind_cols() %&gt;%
   set_names(str_c(scale_suffix, &quot;_nz&quot;)) 
 
-ntScore_perCase1 &lt;- nzScore_perCase %&gt;%
+ntScore_perCase &lt;- nzScore_perCase %&gt;%
   mutate(across(everything(),
                 ~
                   (round(. * 10) + 50) %&gt;%
                   {
-                    case_when(. &lt; 40 ~ 40,
-                              . &gt; 80 ~ 80,
-                              TRUE ~ .)
+                    case_when(
+                      . &lt; t_score_lower_bound ~ t_score_lower_bound,
+                      . &gt; t_score_upper_bound ~ t_score_upper_bound,
+                      TRUE ~ .
+                    )
                   } %&gt;%
                   as.integer)) %&gt;%
-  rename_with(~ str_c(scale_prefix, str_replace_all(., &quot;nz&quot;, &quot;nt&quot;)))
+  rename_with( ~ str_c(scale_prefix, str_replace_all(., &quot;nz&quot;, &quot;nt&quot;)))
 
 assign(
   str_c(&quot;data&quot;, age_range_name, form_name, &quot;nt&quot;, sep = &quot;_&quot;),
@@ -566,20 +573,22 @@ chosen_transform &lt;- class(TOT_nz_obj$chosen_transform)</code></pre>
   map(~ tibble(pluck(.x, &quot;x.t&quot;))) %&gt;% 
   bind_cols() %&gt;%
   set_names(str_c(scale_suffix, &quot;_nz&quot;)) </code></pre>
-<p>The next step is to convert the z-scores to T-scores, and to truncate the T-score distribution as required by the project. The input here is <code>nzScore_perCase</code>, the data frame containing the z-score distributions.</p>
+<p>The next step is to convert the z-scores to T-scores, and to truncate the T-score distribution according to the project parameters (represented in the tokens <code>t_score_lower_bound</code> and <code>t_score_upper_bound</code>. The input here is <code>nzScore_perCase</code>, the data frame containing the z-score distributions.</p>
 <p>We use <code>mutate()</code> to carry out the these transformations. Because <code>nzScore_perCase</code> consists only of the six z-score columns, we can use <code>across(everything())</code> to apply a series of functions to all columns. In the snippet below, we convert the z-scores to T-scores with <code>(round(. * 10) + 50)</code>, truncate the resulting T-score distribution with <code>case_when()</code>, and format all values <code>as.integer()</code>. We supply desired concatenated column names with <code>dplyr::rename_with()</code>.</p>
-<p>Note that the<code>case_when()</code> call is enclosed in curly braces <code>{}</code>. This approach enables control over how <code>.</code> (the token representing the data object) is evaluated within a pipeline containing functions (such as <code>case_when()</code>) that subset the data object. <code>case_when()</code> subsets the data object with predicates. For example, in the code below, it executes a different transformation when <code>. &lt; 40</code> returns <code>TRUE</code> than when <code>. &gt; 80</code> returns <code>TRUE</code>. When <code>case_when()</code> is used within a pipeline, however, the pipe operator <code>%&gt;%</code> injects the intact data object as an argument to <code>case_when()</code>, replacing the subsetted data that <code>case_when()</code> expects. This throws an error. Wrapping the <code>case_when()</code> call in curly braces prevents the pipe operator from passing <code>.</code> to <code>case_when()</code>, allowing the latter function to subset <code>.</code> in its usual fashion.</p>
-<pre class="r"><code>ntScore_perCase1 &lt;- nzScore_perCase %&gt;%
+<p>Note that the<code>case_when()</code> call is enclosed in curly braces <code>{}</code>. This approach enables control over how <code>.</code> (the token representing the data object) is evaluated within a pipeline containing functions that subset <code>.</code>. In the code below, <code>case_when()</code> subsets the data object with predicates, executing a different transformation when <code>. &lt; t_score_lower_bound</code> returns <code>TRUE</code> than when <code>. &gt; t_score_upper_bound</code> returns <code>TRUE</code>. This behavior can cause problems at certain positions within a pipeline. In these instances, the pipe operator <code>%&gt;%</code> injects the intact data object as an argument to <code>case_when()</code>, replacing the predicate-segmented data that <code>case_when()</code> expects. This throws an error. Wrapping the <code>case_when()</code> call in curly braces prevents this substitution, thereby allowing <code>case_when()</code> to subset <code>.</code> in its usual fashion.</p>
+<pre class="r"><code>ntScore_perCase &lt;- nzScore_perCase %&gt;%
   mutate(across(everything(),
                 ~
                   (round(. * 10) + 50) %&gt;%
                   {
-                    case_when(. &lt; 40 ~ 40,
-                              . &gt; 80 ~ 80,
-                              TRUE ~ .)
+                    case_when(
+                      . &lt; t_score_lower_bound ~ t_score_lower_bound,
+                      . &gt; t_score_upper_bound ~ t_score_upper_bound,
+                      TRUE ~ .
+                    )
                   } %&gt;%
                   as.integer)) %&gt;%
-  rename_with(~ str_c(scale_prefix, str_replace_all(., &quot;nz&quot;, &quot;nt&quot;)))</code></pre>
+  rename_with( ~ str_c(scale_prefix, str_replace_all(., &quot;nz&quot;, &quot;nt&quot;)))</code></pre>
 </div>
 </div>
 </div>

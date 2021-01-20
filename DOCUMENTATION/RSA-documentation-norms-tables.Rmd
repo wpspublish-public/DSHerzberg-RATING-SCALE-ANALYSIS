@@ -36,6 +36,8 @@ form_name <- "parent"
 all_raw_range <- 10:200
 TOT_raw_lower_bound <- 50
 subscale_raw_upper_bound <- 40
+t_score_lower_bound <- 40
+t_score_upper_bound <- 80
 
 assign(
   str_c("data", age_range_name, form_name, sep = "_"),
@@ -67,19 +69,19 @@ These tokenized elements include names of variables, files, test forms, raters, 
 In contrast, the _project-general_ aspects of an R script are those functions and operations whose specification is identical for all projects (e.g., creating a table of descriptive statistics requires calling the same set of functions, regardless of whether the input data are from the autism rating scale or the ADHD rating scale). In a robust template, tokens representing project-specific elements are defined at the head of the script. The remainder of the script, therefore, consists only of project-general code.
 
 In R, we initialize tokens as vectors. In the next code snippet, for example, `item_prefix <- "cp"` defines a vector that holds a prefix used in the names of all columns containing item responses. The snippet also includes tokens for reading a certain input file from a certain remote URL, among other project-specific elements.
-```{r norms-load, echo = 5:16, eval = F}
+```{r norms-load, echo = 5:19, eval = F}
 ```
 Many analytic procedures require the specification of an entire set of project-specific elements, such as the entire set of item names, or form names. We can use string functions to combine tokens and explicit text as needed, both to create the names of the elements within the set, and to create the accompanying token names. For instance, we can assemble a vector containing all of the item names by concatenating the token `item_prefix` with a numerical series (e.g., `c("001", "002", "003")`). 
 
 Often, the best token name for the resulting set of elements is itself a concatenated string. To use a concantenated string as the name of an object in R, we cannot rely on the conventional assignment operator `<-`. Instead, we use `base::assign()` to initialize these concatenated names. `assign()` takes two arguments, the desired token name (concatenated with `stringr::str_c()`), and the code snippet that defines the object(s) to be named.
 
 As an example, `str_c("data", age_range_name, form_name, sep = "_")` returns the name `data_child_parent`, combining the file type description (`"data"`, provided as an explicit string) with the age-range (`age_range_name`) and rater (`form_name`) vectors. The combination of these latter two vectors identifies the form whose data is contained in the input file
-```{r norms-load, echo = 19:20, eval = F}
+```{r norms-load, echo = 21:22, eval = F}
 ```
 The next snippet contains the second argument of `assign()`, which defines the data object to be named with the concatenated string. Here, an object is created by reading the input data file with `readr::read_csv()`, and recoding the item responses with `dplyr::mutate()`. Note how the input file path is a concatenation of three previously defined tokens `str_c(urlRemote_path, github_path, input_name)`.
 
 Within `mutate()`, we use `across()` to identify and process a subset of columns. `across()` takes two arguments: the column subset, and a function to be applied to those columns. In this example, we subset the item response columns with the `tidyselect` helper `contains()`, providing as its argument a concatentated string that appears _only_ in the names of the item response columns. We use `case_when()` to conditionally recode the cell values (`.x`) of these columns, converting the input strings to numbers (e.g., `"never" ~ 1`).
-```{r norms-load, echo = 21:31, eval = F}
+```{r norms-load, echo = 23:33, eval = F}
 ```
 
 <br>
@@ -114,17 +116,19 @@ nzScore_perCase <- raw_score_vecs_list %>%
   bind_cols() %>%
   set_names(str_c(scale_suffix, "_nz")) 
 
-ntScore_perCase1 <- nzScore_perCase %>%
+ntScore_perCase <- nzScore_perCase %>%
   mutate(across(everything(),
                 ~
                   (round(. * 10) + 50) %>%
                   {
-                    case_when(. < 40 ~ 40,
-                              . > 80 ~ 80,
-                              TRUE ~ .)
+                    case_when(
+                      . < t_score_lower_bound ~ t_score_lower_bound,
+                      . > t_score_upper_bound ~ t_score_upper_bound,
+                      TRUE ~ .
+                    )
                   } %>%
                   as.integer)) %>%
-  rename_with(~ str_c(scale_prefix, str_replace_all(., "nz", "nt")))
+  rename_with( ~ str_c(scale_prefix, str_replace_all(., "nz", "nt")))
 
 assign(
   str_c("data", age_range_name, form_name, "nt", sep = "_"),
@@ -189,10 +193,10 @@ These normalization objects contain an element `x.t.`, which holds the distribut
 The data object is now a list of six single-column data frames, which we bind into a single data frame with `dplyr::bind_cols`. We complete the operation by applying desired column names with `set_names()`. The resulting output is a six-column data frame containing the distributions of normalized z-scores corresponding to the six raw score distributions.
 ```{r norms-model, echo = 21:25, eval = F}
 ```
-The next step is to convert the z-scores to T-scores, and to truncate the T-score distribution as required by the project. The input here is `nzScore_perCase`, the data frame containing the z-score distributions.
+The next step is to convert the z-scores to T-scores, and to truncate the T-score distribution according to the project parameters (represented in the tokens `t_score_lower_bound` and `t_score_upper_bound`. The input here is `nzScore_perCase`, the data frame containing the z-score distributions.
 
 We use `mutate()` to carry out the these transformations. Because `nzScore_perCase` consists only of the six z-score columns, we can use `across(everything())` to apply a series of functions to all columns. In the snippet below, we convert the z-scores to T-scores with `(round(. * 10) + 50)`, truncate the resulting T-score distribution with `case_when()`, and format all values `as.integer()`. We supply desired concatenated column names with `dplyr::rename_with()`.
 
-Note that the`case_when()` call is enclosed in curly braces `{}`. This approach enables control over how `.` (the token representing the data object) is evaluated within a pipeline containing functions (such as `case_when()`) that subset the data object. `case_when()` subsets the data object with predicates. For example, in the code below, it executes a different transformation when `. < 40` returns `TRUE` than when `. > 80` returns `TRUE`. When `case_when()` is used within a pipeline, however, the pipe operator `%>%` injects the intact data object as an argument to `case_when()`, replacing the subsetted data that `case_when()` expects. This throws an error. Wrapping the `case_when()` call in curly braces prevents the pipe operator from passing `.` to `case_when()`, allowing the latter function to subset `.` in its usual fashion.
-```{r norms-model, echo = 27:37, eval = F}
+Note that the`case_when()` call is enclosed in curly braces `{}`. This approach enables control over how `.` (the token representing the data object) is evaluated within a pipeline containing functions that subset `.`. In the code below, `case_when()` subsets the data object with predicates, executing a different transformation when `. < t_score_lower_bound` returns `TRUE` than when `. > t_score_upper_bound` returns `TRUE`. This behavior can cause problems at certain positions within a pipeline. In these instances, the pipe operator `%>%` injects the intact data object as an argument to `case_when()`, replacing the predicate-segmented data that `case_when()` expects. This throws an error. Wrapping the `case_when()` call in curly braces prevents this substitution, thereby allowing `case_when()` to subset `.` in its usual fashion.
+```{r norms-model, echo = 27:39, eval = F}
 ```

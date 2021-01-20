@@ -17,6 +17,8 @@ form_name <- "parent"
 all_raw_range <- 10:200
 TOT_raw_lower_bound <- 50
 subscale_raw_upper_bound <- 40
+t_score_lower_bound <- 40
+t_score_upper_bound <- 80
 
 assign(
   str_c("data", age_range_name, form_name, sep = "_"),
@@ -62,25 +64,19 @@ nzScore_perCase <- raw_score_vecs_list %>%
   bind_cols() %>%
   set_names(str_c(scale_suffix, "_nz")) 
 
-
-# Note that case_when() step is enclosed in curly braces. this is to address how
-# the pipe operator deals with the . shorthand. case_when actually subsets the .
-# (data object) by segmenting it with predicates. When this function is
-# evaluated within a pipeline, the pipe operator injects . as both the first and
-# second argument for case_when(), when case_when() expects subsetted . as the
-# second argument. This throws an error. Wrapping case_when() in curly braces
-# prevents the injection of . to replace subsetted .
-ntScore_perCase1 <- nzScore_perCase %>%
+ntScore_perCase <- nzScore_perCase %>%
   mutate(across(everything(),
                 ~
                   (round(. * 10) + 50) %>%
                   {
-                    case_when(. < 40 ~ 40,
-                              . > 80 ~ 80,
-                              TRUE ~ .)
+                    case_when(
+                      . < t_score_lower_bound ~ t_score_lower_bound,
+                      . > t_score_upper_bound ~ t_score_upper_bound,
+                      TRUE ~ .
+                    )
                   } %>%
                   as.integer)) %>%
-  rename_with(~ str_c(scale_prefix, str_replace_all(., "nz", "nt")))
+  rename_with( ~ str_c(scale_prefix, str_replace_all(., "nz", "nt")))
 
 # Bind the normalized T-score columns to the table containing raw scores for
 # each case.
