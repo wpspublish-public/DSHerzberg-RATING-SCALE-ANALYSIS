@@ -36,7 +36,7 @@ assign(
     ))
 )
 
-# DETERMINE BEST NORMALIZATION MODEL --------------------------------------
+# DETERMINE BEST NORMALIZATION MODEL, CALC NORMALIZED T-SCORES PER CASE  ------------------------
 
 assign(str_c("data", age_range_name, form_name, "TOT", sep = "_"),
        suppressMessages(read_csv(url(
@@ -78,8 +78,6 @@ ntScore_perCase <- nzScore_perCase %>%
                   as.integer)) %>%
   rename_with( ~ str_c(scale_prefix, str_replace_all(., "nz", "nt")))
 
-# Bind the normalized T-score columns to the table containing raw scores for
-# each case.
 assign(
   str_c("data", age_range_name, form_name, "nt", sep = "_"),
   get(str_c("data", age_range_name, form_name, sep = "_")) %>% bind_cols(ntScore_perCase) %>%
@@ -95,7 +93,6 @@ assign(
     )
 )
 
-# write T-scores per case table to .csv
 write_csv(get(str_c(
   "data", age_range_name, form_name, "nt", sep = "_"
 )),
@@ -109,10 +106,6 @@ here(str_c(
 )),
 na = '')
 
-
-# Quick visual check of normality with MASS::truehist() plot. Use
-# purrr::as_vector() to convert df col to numeric vector, which truehist() needs
-# as input.
 get(str_c("data", age_range_name, form_name, "nt", sep = "_")) %>%
   select(contains("TOT_nt")) %>%
   as_vector() %>%
@@ -130,10 +123,10 @@ get(str_c("data", age_range_name, form_name, "nt", sep = "_")) %>%
 #
 # map() iterates over scale_suffix, the char vec containing the six strings that
 # identify (differentiate) the six scale names. The names themselves are
-# concatenated with a static prefic. the .x argument of map(), and a static
+# concatenated with a static prefix. the .x argument of map(), and a static
 # score type suffix (e.g., "_raw"). !!sym() is used to unquote the names (which
 # are strings) so they can be arguments in dplyr functions.
-all_lookup <- map(
+all_lookup_basic <- map(
   scale_suffix,
   ~ get(str_c(
     "data", age_range_name, form_name, "nt", sep = "_"
@@ -147,7 +140,7 @@ all_lookup <- map(
     # possible values of raw, and not all possible values of raw are represented
     # in the stand sample. Thus current data object jumps possible raw values
     # (e.g, raw = 62 and raw = 65 might be adjacent rows in this table)
-    summarise(!!sym(str_c(
+    summarize(!!sym(str_c(
       scale_prefix, .x, "_nt"
     )) := min(!!sym(
       str_c(scale_prefix, .x, "_nt")
@@ -208,7 +201,7 @@ across(
 ))
 
 # write combined raw-to-T lookup table to .csv
-write_csv(all_lookup,
+write_csv(all_lookup_basic,
 here(str_c(
   "OUTPUT-FILES/TABLES/",
   str_c("raw-T-lookup",
@@ -221,7 +214,7 @@ na = '')
 
 # GENERATE RAW-TO-T LOOKUP TABLES -----------------------------------------
 
-all_lookup_print <- all_lookup %>% 
+all_lookup_print <- all_lookup_basic %>% 
   # pivot_longer() collapses wide table into three-column tall table. First
   # argument (-raw) specifies that raw score column will exclude from pivot, and
   # its rows will be expanded as needed to accomdate pivot of remaining cols,

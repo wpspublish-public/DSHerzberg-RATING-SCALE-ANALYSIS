@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 This code template derives normalized T-scores from an input data file with multiple raw scores, including subscales and composite scores. Because the optimal normalization model may vary with different raw score distributions, the template processes only a single input file (i.e., data from a single rating-scale form, identified by a combination of age-range (e.g., "child") and rater (e.g., "parent"). For projects with multiple forms that require separate raw-to-T lookup tables, the recommended approach is to implement the template separately for each input file.
 
-Output includes raw-to-T lookup tables in both generalized and print formats, as well as tables of demographic counts and raw score descriptive statistics. 
+Output includes raw-to-T lookup tables in both basic and print formats, as well as tables of demographic counts and raw score descriptive statistics. 
 
 <br>
 
@@ -193,10 +193,129 @@ These normalization objects contain an element `x.t.`, which holds the distribut
 The data object is now a list of six single-column data frames, which we bind into a single data frame with `dplyr::bind_cols`. We complete the operation by applying desired column names with `set_names()`. The resulting output is a six-column data frame containing the distributions of normalized z-scores corresponding to the six raw score distributions.
 ```{r norms-model, echo = 21:25, eval = F}
 ```
-The next step is to convert the z-scores to T-scores, and to truncate the T-score distribution according to the project parameters (represented in the tokens `t_score_lower_bound` and `t_score_upper_bound`. The input here is `nzScore_perCase`, the data frame containing the z-score distributions.
+The next step is to convert the z-scores to T-scores, and to truncate the T-score distribution according to the project parameters (represented in the tokens `t_score_lower_bound` and `t_score_upper_bound`). The input here is `nzScore_perCase`, the data frame containing the z-score distributions.
 
 We use `mutate()` to carry out the these transformations. Because `nzScore_perCase` consists only of the six z-score columns, we can use `across(everything())` to apply a series of functions to all columns. In the snippet below, we convert the z-scores to T-scores with `(round(. * 10) + 50)`, truncate the resulting T-score distribution with `case_when()`, and format all values `as.integer()`. We supply desired concatenated column names with `dplyr::rename_with()`.
 
-Note that the`case_when()` call is enclosed in curly braces `{}`. This approach enables control over how `.` (the token representing the data object) is evaluated within a pipeline containing functions that subset `.`. In the code below, `case_when()` subsets the data object with predicates, executing a different transformation when `. < t_score_lower_bound` returns `TRUE` than when `. > t_score_upper_bound` returns `TRUE`. This behavior can cause problems at certain positions within a pipeline. In these instances, the pipe operator `%>%` injects the intact data object as an argument to `case_when()`, replacing the predicate-segmented data that `case_when()` expects. This throws an error. Wrapping the `case_when()` call in curly braces prevents this substitution, thereby allowing `case_when()` to subset `.` in its usual fashion.
+Note that the`case_when()` call is enclosed in curly braces `{}`. This approach enables control over how `.` (the token representing the data object) is evaluated within a pipeline containing functions that subset `.`. In the code below, `case_when()` subsets the data object with predicates, executing a different transformation when `. < t_score_lower_bound` returns `TRUE` than when `. > t_score_upper_bound` returns `TRUE`. This behavior can cause problems at certain positions within a pipeline. In these instances, the pipe operator `%>%` injects the intact data object as an argument to `case_when()`, replacing the predicate-segmented data that `case_when()` expects. This throws an error. Wrapping the `case_when()` call in curly braces prevents this substitution, thereby allowing `case_when()` to subset `.` and operate in its usual fashion.
 ```{r norms-model, echo = 27:39, eval = F}
+```
+Now we can assemble a table that contains, for each person, the scale-wise raw scores and normalized T-scores. As in previous steps, we use `assign()` to name objects with concatenated strings, and `get()` to initiate the pipeline with a data object named with a concatenated string. In this case, we bind the table named by `str_c("data", age_range_name, form_name, sep = "_")`, which contains the raw score columns, to `ntscore_perCase`, which contains the T-score columns, by calling `dplyr::bind_cols()`, which joins two data frames side-by-side, without indexing them on a shared variable. We then add two new columns with `mutate()`, choose columns to keep, in the desired sequence, with `select()`, and `write_csv()` the output table of T-scores per case to .csv.
+```{r norms-model, echo = 41:67, eval = F}
+```
+As an optional procedure, the script includes a snippet to plot a histogram of the distribution of normalized T-scores for the total score (e.g., `TOT_nt`). This allows a visual check on normality.
+
+The input to the pipeline is the data frame containing normalized T-scores per case, which we access with `get(str_c("data", age_range_name, form_name, "nt", sep = "_"))`. We then `select()` only the column containing the distribution of `TOT_nt`, and use `as.vector()` to transform it from a data frame column into a numeric vector, as required for input to the plotting function.
+
+We use `MASS::truehist()` to generate the plot, passing as arguments bin width `h`, `prob = FALSE` so that the y-axis scale is person counts, as opposed to relative frequency density, and a label `xlab` for the x-axis scale showing that it depicts values of `TOT_nt`.
+```{r norms-model, echo = 69:75, eval = F}
+```
+
+<br>
+
+#### 3. Generate raw-to-T lookup tables
+
+The lookup relationship between raw and T-scores is _many-to-one_, meaning that each value of raw maps onto one and only one value of T, but each value of T _may_ map onto more than one value of raw.
+
+The next code section produces two raw to T-score lookup tables.
+
+* __Basic format__: The left-most column contains all possible values of raw, across all scales, sorted ascending. Rightward columns contain corresponding T-scores for each scale.
+* __Print format__: The left-most column contains all possible values of T (reflecting any truncation of the T-score distribution), sorted descending. Rightward columns contain corresponding raw scores for each scale. Reflecting the many-to-one lookup relationship, some of the rightward cells contain single raw scores, while others contain a range of raw scores.
+
+###### EXECUTABLE CODE
+```{r norms-lookup, eval = FALSE}
+all_lookup_basic <- map(
+  scale_suffix,
+  ~ get(str_c(
+    "data", age_range_name, form_name, "nt", sep = "_"
+  )) %>%
+    group_by(!!sym(str_c(
+      scale_prefix, .x, "_raw"
+    ))) %>%
+    summarize(!!sym(str_c(
+      scale_prefix, .x, "_nt"
+    )) := min(!!sym(
+      str_c(scale_prefix, .x, "_nt")
+    ))) %>%
+    complete(!!sym(str_c(
+      scale_prefix, .x, "_raw"
+    )) := all_raw_range) %>%
+    fill(!!sym(str_c(
+      scale_prefix, .x, "_nt"
+    ))) %>%
+    fill(!!sym(str_c(
+      scale_prefix, .x, "_nt"
+    )),
+    .direction = "up") %>%
+    rename(raw = !!sym(str_c(
+      scale_prefix, .x, "_raw"
+    ))) 
+) %>%
+  reduce(left_join,
+         by = 'raw') %>% 
+mutate(across(
+  contains(scale_suffix[-length(scale_suffix)]),
+  ~ case_when(raw > subscale_raw_upper_bound ~ NA_integer_,
+              TRUE ~ .x)
+),
+across(
+  contains(scale_suffix[length(scale_suffix)]),
+  ~ case_when(raw < TOT_raw_lower_bound ~ NA_integer_,
+              TRUE ~ .x)
+))
+
+write_csv(all_lookup_basic,
+here(str_c(
+  "OUTPUT-FILES/TABLES/",
+  str_c("raw-T-lookup",
+        age_range_name,
+        form_name,
+        sep = "-"),
+  ".csv"
+)),
+na = '')
+
+all_lookup_print <- all_lookup_basic %>% 
+pivot_longer(contains("nt"), names_to = "scale", values_to = "NT") %>% 
+  arrange(scale) %>% 
+  group_by(scale) %>%
+  complete(NT = 40:80) %>% 
+  ungroup() %>%
+  group_by(scale, NT) %>%
+  filter(n() == 1 | n() > 1 & row_number()  %in% c(1, n())) %>%
+  summarize(raw = str_c(raw, collapse = '--')) %>%
+  mutate(across(raw, ~ case_when(is.na(.x) ~ '-', TRUE ~ .x))) %>%
+  arrange(scale, desc(NT)) %>% 
+  pivot_wider(names_from = scale,
+              values_from = raw) %>% 
+  arrange(desc(NT)) %>% 
+  rename_with(~ str_replace_all(., "_nt", "_raw")) %>%
+  rename(T_score = NT) %>% 
+  filter(!is.na(T_score))
+
+write_csv(all_lookup_print,
+          here(str_c(
+            "OUTPUT-FILES/TABLES/",
+            str_c("raw-T-lookup-print",
+                  age_range_name,
+                  form_name,
+                  sep = "-"),
+            ".csv"
+          )),
+          na = '')
+```
+###### COMMENTED SNIPPETS
+To create a basic-format lookup table for all scales, we start by creating individual two-column looking tables, one for each scale. We can use an interative process powered by `map()` and return a list containing the required two-column data frames.
+
+We pass the `scale_suffix` vector as the first argument to `map()`, as this vector holds the six scale identifiers. The second argument for `map()` is a pipeline of functions, set off with the formua shorthand `~`, to be applied iteratively to the elements of `scale_suffix`. We initiate the pipeline with the data frame containing raw scores and normalized T-scores per case, which we access with `get(str_c("data", age_range_name, form_name, "nt", sep = "_"))`.
+```{r norms-lookup, echo = 1:5, eval = F}
+```
+Recall that the structure of the basic format lookup table features all possible raw score values in the left-most column. We use `group_by()` and `summarize()` to begin assembling this column, passing concatenated score names as arguments to both of these functions. 
+
+As an example, `str_c(scale_prefix, .x, "_raw")` returns a single score name, the one corresponding to the currently-iterated element (`.x`) of `scale_suffix`, the input vector to `map()`. `str_c()` inserts this element between `scale_prefix` (a single-element token) and `"_raw"` (static text), and returns the resulting concatenated string (e.g., `"CPS1_raw"`). In order to use a string as a column name within a `dplyr` function, we must unquote it by wrapping `str_c()` with `!!sym()`.
+
+In the code below, the call of `group_by()` groups the data by raw score. At this point, the data object includes all rows in the original input file, meaning the raw score column has many duplicate values. To create a lookup table, we need the raw score column to contain all possible raw scores, with no duplicates.  
+
+To remove the duplicate raw score rows, we can `summarize()` the data object by T-score, passing the name of the required T-score column as a concatenated string, as in the example elaborated above. We take advantage of the many-to-one relationship of raw-to-T, which means that each raw score corresponds to one and only T-score. We can use the summary function `min()` to return the only the rows that contains the minimum T-score associated with each raw score, which by definition is also the _only_ T-score associated with raw score. After applying `summarize()` the data object contains only a single row for each raw score that appears in the data, with its corresponding T-score contained in the same row. Note that within `summarize()`, we need to use the special NSE operator `:=`, instead of a conventional equals sign, when specifying the summary variable.
+```{r norms-lookup, echo = 6:13, eval = F}
 ```
