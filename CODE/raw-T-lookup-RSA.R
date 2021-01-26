@@ -128,25 +128,18 @@ all_lookup_basic <- map(
       scale_prefix, .x, "_nt"
     )) := min(!!sym(
       str_c(scale_prefix, .x, "_nt")
-      # complete() expands the table vertically, filling in missing values of raw
-      # within the range given. This leaves NA cells for T for those rows that
-      # didn't have raw values in the input object.
     ))) %>%
     complete(!!sym(str_c(
       scale_prefix, .x, "_raw"
     )) := all_raw_range) %>%
     # fill() replaces NA in T going down the table, with values from the last
-    # preceding (lagging) cell that was not NA.
-    fill(!!sym(str_c(
-      scale_prefix, .x, "_nt"
-    ))) %>%
-    # A second call of fill() is needed to handle inputs where the first cell(s) of
-    # T are NA. 2nd fill call() is uses direction up to fill those first NA cells
-    # with the value from the first subsequent (leading) cell that is not NA.
+    # preceding (lagging) cell that was not NA. Specifying direction "downup"
+    # ensures that fill() sweeps through the target column in both direction,
+    # thus catching all NAs
     fill(!!sym(str_c(
       scale_prefix, .x, "_nt"
     )),
-    .direction = "up") %>%
+    .direction = "downup") %>%
     # Recall that the data object at this point is a list of 2-col dfs. We need
     # to drop the subscale identifier from the "raw" col, because this col will
     # be used as the index to join the separate dfs into a single lookup table.

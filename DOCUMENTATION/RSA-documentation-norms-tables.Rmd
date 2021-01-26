@@ -242,11 +242,8 @@ all_lookup_basic <- map(
     )) := all_raw_range) %>%
     fill(!!sym(str_c(
       scale_prefix, .x, "_nt"
-    ))) %>%
-    fill(!!sym(str_c(
-      scale_prefix, .x, "_nt"
     )),
-    .direction = "up") %>%
+    .direction = "downup") %>%
     rename(raw = !!sym(str_c(
       scale_prefix, .x, "_raw"
     ))) 
@@ -324,5 +321,39 @@ After applying `summarize()` the data object contains a single row for _each raw
 ```{r norms-lookup, echo = 6:13, eval = F}
 ```
 In the next snippet, we use `tidyr::complete()` to add rows for possible raw score values that are not present in the input data file. The total range of possible raw score values is available in `all_raw_range`, a token defined earlier. As an argument to `complete()`, we pass an equation whose LHS is the concatenated string naming the raw score column as the variable to be expanded with new values/rows. We use the `:=` operator and the RHS of `all_raw_range`, which enumerates the raw score values _missing_ from the input data file, allowing `complete()` to add rows for them.
-```{r norms-lookup, echo = 14:16, eval = F}
+
+`complete()` returns a data frame in which all possible raw score values are present in the raw score column, but the T-score column has many cells with `NA`. In the final lookup table, each possible raw score needs to be paired with a T-score. We can use `tidyr::fill()` to replace each `NA` with an appropriate T-score.
+
+The arguments to `fill()` are the concatenated string naming the column to be filled in (e.g., the T-score column), and the `.direction` in which `fill()` sweeps through the column. Here we specify `"downup"`, meaning the `fill()` first works down the column, and then back up, in each case replacing `NA` with the nearest, previous actually occurring value.
+
+To clarify, this would mean that in the following example:
+
+```
+raw   T
+
+24    50
+25    NA
+26    NA
+27    NA
+28    NA
+29    55
+```
+
+`fill()` would return:
+
+```
+raw   T
+
+24    50
+25    50
+26    50
+27    50
+28    50
+29    55
+```
+
+This _seems_ concerning at first glance, because we assume that, for example, `53` would be a more accurate T-score than `50` to pair with a raw score of `27`. But in  practice, because we are almost always working with large samples, gaps this large between adjacent actually occurring raw scores are exceedingly rare, especially near the midpoint of the raw score distribution. More commonly, we encounter gaps of 1-2 raw score points, where the use of `fill()` to replace `NA` does not produce meaningful distortion in the underlying raw-to-T lookup relationship.
+
+
+```{r norms-lookup, echo = 14:24, eval = F}
 ```

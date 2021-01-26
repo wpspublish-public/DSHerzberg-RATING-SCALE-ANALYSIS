@@ -658,11 +658,8 @@ na = &#39;&#39;)</code></pre>
     )) := all_raw_range) %&gt;%
     fill(!!sym(str_c(
       scale_prefix, .x, &quot;_nt&quot;
-    ))) %&gt;%
-    fill(!!sym(str_c(
-      scale_prefix, .x, &quot;_nt&quot;
     )),
-    .direction = &quot;up&quot;) %&gt;%
+    .direction = &quot;downup&quot;) %&gt;%
     rename(raw = !!sym(str_c(
       scale_prefix, .x, &quot;_raw&quot;
     ))) 
@@ -744,9 +741,38 @@ write_csv(all_lookup_print,
       str_c(scale_prefix, .x, &quot;_nt&quot;)
     ))) %&gt;%</code></pre>
 <p>In the next snippet, we use <code>tidyr::complete()</code> to add rows for possible raw score values that are not present in the input data file. The total range of possible raw score values is available in <code>all_raw_range</code>, a token defined earlier. As an argument to <code>complete()</code>, we pass an equation whose LHS is the concatenated string naming the raw score column as the variable to be expanded with new values/rows. We use the <code>:=</code> operator and the RHS of <code>all_raw_range</code>, which enumerates the raw score values <em>missing</em> from the input data file, allowing <code>complete()</code> to add rows for them.</p>
+<p><code>complete()</code> returns a data frame in which all possible raw score values are present in the raw score column, but the T-score column has many cells with <code>NA</code>. In the final lookup table, each possible raw score needs to be paired with a T-score. We can use <code>tidyr::fill()</code> to replace each <code>NA</code> with an appropriate T-score.</p>
+<p>The arguments to <code>fill()</code> are the concatenated string naming the column to be filled in (e.g., the T-score column), and the <code>.direction</code> in which <code>fill()</code> sweeps through the column. Here we specify <code>&quot;downup&quot;</code>, meaning the <code>fill()</code> first works down the column, and then back up, in each case replacing <code>NA</code> with the nearest, previous actually occurring value.</p>
+<p>To clarify, this would mean that in the following example:</p>
+<pre><code>raw   T
+
+24    50
+25    NA
+26    NA
+27    NA
+28    NA
+29    55</code></pre>
+<p><code>fill()</code> would return:</p>
+<pre><code>raw   T
+
+24    50
+25    50
+26    50
+27    50
+28    50
+29    55</code></pre>
+<p>This <em>seems</em> concerning at first glance, because we assume that, for example, <code>53</code> would be a more accurate T-score than <code>50</code> to pair with a raw score of <code>27</code>. But in practice, because we are almost always working with large samples, gaps this large between adjacent actually occurring raw scores are exceedingly rare, especially near the midpoint of the raw score distribution. More commonly, we encounter gaps of 1-2 raw score points, where the use of <code>fill()</code> to replace <code>NA</code> does not produce meaningful distortion in the underlying raw-to-T lookup relationship.</p>
 <pre class="r"><code>    complete(!!sym(str_c(
       scale_prefix, .x, &quot;_raw&quot;
-    )) := all_raw_range) %&gt;%</code></pre>
+    )) := all_raw_range) %&gt;%
+    fill(!!sym(str_c(
+      scale_prefix, .x, &quot;_nt&quot;
+    )),
+    .direction = &quot;downup&quot;) %&gt;%
+    rename(raw = !!sym(str_c(
+      scale_prefix, .x, &quot;_raw&quot;
+    ))) 
+) %&gt;%</code></pre>
 </div>
 </div>
 </div>
