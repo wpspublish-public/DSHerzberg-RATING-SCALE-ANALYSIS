@@ -4,5 +4,8 @@ temp1 <- data_child_parent_nt %>%
   arrange(CPS1_raw) %>% 
   summarize(CPS1_nt = min(CPS1_nt)) %>% 
   complete(CPS1_raw =  all_raw_range) %>% 
-  fill(CPS1_nt, .direction = "downup")
+  fill(CPS1_nt, .direction = "downup") %>%
+  rename(raw = CPS1_raw
+  )
+
 

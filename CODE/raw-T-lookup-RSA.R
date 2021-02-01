@@ -132,40 +132,16 @@ all_lookup_basic <- map(
     complete(!!sym(str_c(
       scale_prefix, .x, "_raw"
     )) := all_raw_range) %>%
-    # fill() replaces NA in T going down the table, with values from the last
-    # preceding (lagging) cell that was not NA. Specifying direction "downup"
-    # ensures that fill() sweeps through the target column in both direction,
-    # thus catching all NAs
     fill(!!sym(str_c(
       scale_prefix, .x, "_nt"
     )),
     .direction = "downup") %>%
-    # Recall that the data object at this point is a list of 2-col dfs. We need
-    # to drop the subscale identifier from the "raw" col, because this col will
-    # be used as the index to join the separate dfs into a single lookup table.
     rename(raw = !!sym(str_c(
       scale_prefix, .x, "_raw"
     ))) 
 ) %>%
-  # purrr::reduce() is used to reduce the six element list to a single df.
-  # reduce() applies left_join() iteratively over the input list, such that it
-  # joins the first two 2-col dfs by "raw", returning a 3-col df, which it then
-  # joins to the next list element (2-col df), returning a 4-col df, and so on,
-  # until the final returned object is a 7-col df, with the "raw" col on the far
-  # left, and the remaining 6 cols are the t-score lookup cols for each scale.
   reduce(left_join,
          by = 'raw') %>% 
-  # The combined look up table has rows that represent impossible raw scores for
-  # the subscales (too high) and total score (too low). The next call of
-  # mutate() recodes the t-score lookup cols to NA for impossible raw scores. It
-  # accomplishes this with two separate calls of across(), isolating first the
-  # subscale cols for conditional recoding with case_when(), and then the TOT_nt
-  # col for same. We can extract elements of the vector of scale suffixes with
-  # the [] subsetting brackets. Because by design, the suffix for TOT is the
-  # last element in this vector, we can isolate it with length(scale_suffix),
-  # which returns the numerical value of the last position in the vector. To
-  # retain all BUT the last element, we simple prepend the expression with a
-  # minus (-) sign.
 mutate(across(
   contains(scale_suffix[-length(scale_suffix)]),
   ~ case_when(raw > subscale_raw_upper_bound ~ NA_integer_,
@@ -177,7 +153,6 @@ across(
               TRUE ~ .x)
 ))
 
-# write combined raw-to-T lookup table to .csv
 write_csv(all_lookup_basic,
 here(str_c(
   "OUTPUT-FILES/TABLES/",

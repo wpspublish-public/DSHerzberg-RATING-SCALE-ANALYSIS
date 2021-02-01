@@ -740,7 +740,7 @@ write_csv(all_lookup_print,
     )) := min(!!sym(
       str_c(scale_prefix, .x, &quot;_nt&quot;)
     ))) %&gt;%</code></pre>
-<p>In the next snippet, we use <code>tidyr::complete()</code> to add rows for possible raw score values that are not present in the input data file. The total range of possible raw score values is available in <code>all_raw_range</code>, a token defined earlier. As an argument to <code>complete()</code>, we pass an equation whose LHS is the concatenated string naming the raw score column as the variable to be expanded with new values/rows. We use the <code>:=</code> operator and the RHS of <code>all_raw_range</code>, which enumerates the raw score values <em>missing</em> from the input data file, allowing <code>complete()</code> to add rows for them.</p>
+<p>In the next snippet, we use <code>tidyr::complete()</code> to add rows for possible raw score values that are not present in the input data file. The total range of possible raw score values is available in the token <code>all_raw_range</code>. As an argument to <code>complete()</code>, we pass an equation whose LHS is the concatenated string naming the raw score column as the variable to be expanded with new values/rows. We use the <code>:=</code> operator and the RHS of <code>all_raw_range</code>, which enumerates the raw score values <em>missing</em> from the input data file, allowing <code>complete()</code> to add rows for them.</p>
 <p><code>complete()</code> returns a data frame in which all possible raw score values are present in the raw score column, but the T-score column has many cells with <code>NA</code>. In the final lookup table, each possible raw score needs to be paired with a T-score. We can use <code>tidyr::fill()</code> to replace each <code>NA</code> with an appropriate T-score.</p>
 <p>The arguments to <code>fill()</code> are the concatenated string naming the column to be filled in (e.g., the T-score column), and the <code>.direction</code> in which <code>fill()</code> sweeps through the column. Here we specify <code>&quot;downup&quot;</code>, meaning the <code>fill()</code> first works down the column, and then back up, in each case replacing <code>NA</code> with the nearest, previous actually occurring value.</p>
 <p>To clarify, this would mean that in the following example:</p>
@@ -761,7 +761,8 @@ write_csv(all_lookup_print,
 27    50
 28    50
 29    55</code></pre>
-<p>This <em>seems</em> concerning at first glance, because we assume that, for example, <code>53</code> would be a more accurate T-score than <code>50</code> to pair with a raw score of <code>27</code>. But in practice, because we are almost always working with large samples, gaps this large between adjacent actually occurring raw scores are exceedingly rare, especially near the midpoint of the raw score distribution. More commonly, we encounter gaps of 1-2 raw score points, where the use of <code>fill()</code> to replace <code>NA</code> does not produce meaningful distortion in the underlying raw-to-T lookup relationship.</p>
+<p>This <em>seems</em> concerning at first glance, because we assume that, for example, <code>53</code> would be a more accurate T-score than <code>50</code> to pair with a raw score of <code>27</code>. But in practice, because we are almost always working with large samples, gaps this large between adjacent, actually occurring raw scores are exceedingly rare, especially near the midpoint of the raw score distribution. More commonly, we encounter gaps of 1-2 raw score points, where the use of <code>fill()</code> to replace <code>NA</code> does not produce meaningful distortion in the underlying raw-to-T lookup relationship.</p>
+<p>At this point in the script, we are still within the iteration cyle of <code>map()</code>, and the data object is a list of data frames, each with two columns, raw- and T-score (each named for their associated scale). We use <code>rename()</code> to drop the scale identifier from raw-score column name. This returns a column named <code>&quot;raw&quot;</code>, which will be used as an index to join the two-column data frames into a single lookup table for the final output.</p>
 <pre class="r"><code>    complete(!!sym(str_c(
       scale_prefix, .x, &quot;_raw&quot;
     )) := all_raw_range) %&gt;%
@@ -773,6 +774,32 @@ write_csv(all_lookup_print,
       scale_prefix, .x, &quot;_raw&quot;
     ))) 
 ) %&gt;%</code></pre>
+<p>The <code>map()</code> cycle is now closed, and the next step is to process the resulting list into the required final output. We use <code>purrr::reduce()</code> to collapse the list of two-column data frames into a single lookup table. Here, <code>reduce()</code> applies <code>dplyr::left_join()</code> iteratively over the input list, joining the first pair of two-column data frames by <code>&quot;raw&quot;</code>, thereby returning a three-column data frame, which it then joins to the next list element (i.e., the next two-column data frame), returning a four-column data frame, and so on. The final returned object is a seven-column data frame, with the <code>&quot;raw&quot;</code> column on the far left. The six columns to the right of <code>&quot;raw&quot;</code> are the T-score lookup coumns for each scale.</p>
+<p>At this point, the consolidated lookup table contains rows that represent impossible raw scores for the subscales (too high) and total score (too low). The next call of <code>mutate()</code> recodes the T-score lookup columns to <code>NA</code> for impossible raw scores. It accomplishes this with two separate calls of <code>across()</code>, isolating first the subscale columns and then the <code>TOT</code> column for conditional recoding with <code>case_when()</code>. Within <code>case_when()</code>, we identify the range of impossible raw scores to be recoded with predicates containing the tokens <code>subscale_raw_upper_bound</code> and <code>TOT_raw_lower_bound</code>.</p>
+<p>Within each call of <code>across()</code>, we identify the columns to be recoded with the tidyselect helper <code>contains()</code>, extracting scale name suffixes from the token <code>scale_suffix</code> with single subsetting brackets <code>[]</code>. In the <code>scale_suffix</code> vector, <code>TOT</code>, is the last element, so we can identify it with <code>length(scale_suffix)</code>, which returns an integer representing the last position in the vector. To retain all elements <em>except</em> the last (i.e., the subscale suffixes), we simply prepend <code>length()</code> with a minus <code>-</code> sign.</p>
+<pre class="r"><code>  reduce(left_join,
+         by = &#39;raw&#39;) %&gt;% 
+mutate(across(
+  contains(scale_suffix[-length(scale_suffix)]),
+  ~ case_when(raw &gt; subscale_raw_upper_bound ~ NA_integer_,
+              TRUE ~ .x)
+),
+across(
+  contains(scale_suffix[length(scale_suffix)]),
+  ~ case_when(raw &lt; TOT_raw_lower_bound ~ NA_integer_,
+              TRUE ~ .x)
+))
+
+write_csv(all_lookup_basic,
+here(str_c(
+  &quot;OUTPUT-FILES/TABLES/&quot;,
+  str_c(&quot;raw-T-lookup&quot;,
+        age_range_name,
+        form_name,
+        sep = &quot;-&quot;),
+  &quot;.csv&quot;
+)),
+na = &#39;&#39;)</code></pre>
 </div>
 </div>
 </div>
