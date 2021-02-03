@@ -114,7 +114,7 @@ get(str_c("data", age_range_name, form_name, "nt", sep = "_")) %>%
                  prob = FALSE,
                  xlab = "TOT_nt")
 
-# GENERATE RAW-TO-T LOOKUP TABLES -----------------------------------------
+# GENERATE BASIC FORMAT RAW-TO-T LOOKUP TABLE -----------------------------------------
 
 all_lookup_basic <- map(
   scale_suffix,
@@ -164,7 +164,7 @@ here(str_c(
 )),
 na = '')
 
-# GENERATE RAW-TO-T LOOKUP TABLES -----------------------------------------
+# GENERATE PRINT FORMAT RAW-TO-T LOOKUP TABLE -----------------------------------------
 
 all_lookup_print <- all_lookup_basic %>% 
   # pivot_longer() collapses wide table into three-column tall table. First
