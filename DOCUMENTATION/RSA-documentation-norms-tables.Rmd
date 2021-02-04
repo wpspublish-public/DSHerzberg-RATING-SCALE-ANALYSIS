@@ -350,7 +350,6 @@ pivot_longer(contains("nt"), names_to = "scale", values_to = "NT") %>%
   arrange(scale) %>% 
   group_by(scale) %>%
   complete(NT = 40:80) %>% 
-  ungroup() %>%
   group_by(scale, NT) %>%
   filter(n() == 1 | n() > 1 & row_number()  %in% c(1, n())) %>%
   summarize(raw = str_c(raw, collapse = '--')) %>%
@@ -375,9 +374,9 @@ write_csv(all_lookup_print,
           na = '')
 ```
 ###### COMMENTED SNIPPETS
-The print-format lookup table `all_lookup_print` is a transformed version of the basic format table `all_lookup_basic`, which serves as the input data object for the next section of code. We use `tidyr::pivot_longer()` to transform `all_lookup_basic` to a long, multilevel format, in which the set of raw-to-T relationships for the six scales is nested within each value of raw score. The first argument to `pivot_longer()`, which we specify with `contains("nt")`, names the columns to be pivoted to long format (i.e., the six columns in `all_lookup_basic` that contain the T-scores for each scale). The second argument, `names_to = "scale"`, names the column whose rows, in long format, will hold the _names_ (from `all_lookup_basic`) of the pivoted columns. The third argument, `values_to = "NT"`, names the column whose rows, in long format, will hold the _cell values_ contained in the pivoted columns.
+The print-format lookup table `all_lookup_print` is a transformed version of the basic format table `all_lookup_basic`, which serves as the input data object for the next section of code. We use `tidyr::pivot_longer()` to transform `all_lookup_basic` to a long, multilevel format, in which a set of six associated T-scores (one for each scale) is nested within each value of raw score. The first argument to `pivot_longer()`, which we specify with `contains("nt")`, names the columns to be pivoted to long format (i.e., the six columns in `all_lookup_basic` that contain the T-scores for each scale). The second argument, `names_to = "scale"`, names the column whose rows, in long format, will hold the _names_ (from `all_lookup_basic`) of the pivoted columns. The third argument, `values_to = "NT"`, names the column whose rows, in long format, will hold the _cell values_ contained in the pivoted columns. (Note: the `NT` acronym refers to "normalized T-scores.)
 
-Here we are excluding the `raw` column from the pivot, meaning that in the long table, `raw` remains in the left-most column and becomes a Level 2 variable (in nomenclature of multilevel modeling). The rows of `raw` are expanded such that each raw score value has six rows, one for each of the scale-wise T-score values. The new columns, `scale` and `NT`, are now Level 1 variables, because they are nested within the Level 2 variable `raw`. We then use `arrange()` to sort the data by `scale`.
+Here we are excluding the `raw` column from the pivot, meaning that in the long table, `raw` remains in the left-most column and becomes a Level 2 variable (in nomenclature of multilevel modeling). The rows of `raw` are expanded such that each raw score value has six rows, one for each of the six associated T-score values. The new columns, `scale` and `NT`, are now Level 1 variables, because they are nested within the Level 2 variable `raw`. We then use `arrange()` to sort the data by `scale`.
 
 To visualize the transformation, here are a few rows and columns from the input object `all_lookup_basic`:
 ```
@@ -408,4 +407,52 @@ Applying `pivot_longer()` and `arrange()` transforms `all_lookup_basic` from a w
 ```
 
 ```{r norms-lookup-print, echo = 1:3, eval = F}
+```
+Recall that in the print-format lookup table, the left-most column contains all possible values of T. To ensure that the `NT` column in the current data object meets this requirement, we call `tidyr::complete()`, which fills in missing values of a variable, adding a new row for each filled-in value. As an argument to `complete()`,
+we pass `NT = 40:80`, which adds rows for any values in the range of `40` to `80` that are missing from the `NT` column. To ensure that values are filled in consecutively within each scale, we must `group_by(scale)` before calling `complete()`. 
+```{r norms-lookup-print, echo = 4:5, eval = F}
+```
+As noted earlier, the lookup relationship between T and raw scores is one-to-many, meaning that each value of T may map onto multiple values of raw. This mapping is represented explicitly in the current data object, where many rows may exist for a single T-score value, one for each associated value of raw. Below are the first ten rows of the current data object, showing the one-to-many mapping of `NT = 40` to its eight associated raw scores: 
+
+```
+  scale      NT   raw
+
+  CPS1_nt    40    10
+  CPS1_nt    40    11
+  CPS1_nt    40    12
+  CPS1_nt    40    13
+  CPS1_nt    40    14
+  CPS1_nt    40    15
+  CPS1_nt    40    16
+  CPS1_nt    40    17
+  CPS1_nt    41    NA
+  CPS1_nt    42    18
+```
+In the final output for the print-format lookup table, we need to represent the raw-score values in a one-to-many mapping as a range of raw scores (e.g., in the rows shown above, as `10-17` to capture the mapping for `NT = 40`). To execute this transformation, we first re-group the data object hierarchically (`group_by(scale, NT)`), so that ranges of `NT` can be assembled for each `scale`.
+
+Examining again the set of rows above, we see that in addition to the many-to-one mapping for `NT = 40`, there is a one-to-one mappping for `NT = 42` (to `raw = 18`). In the next code snippet, we use `dplyr::filter()` to collapse the table vertically and retain rows according to the following rules:
+
+* __One-to-one__ T-to-raw mappings: retain that _single_ row.
+* __One-to-many__ T-to-raw mappings: retain the _first_ and _last_ rows of the series, which are, respectively, the lower and upper bounds of the required raw-score ranges.
+
+The complex predicate passed to `filter()` makes use of `dplyr::n()`, which returns the number of rows in groups defined by `group_by()`. The one-to-one rows are captured by the expression `n() == 1`. To get the first and last rows of the one-to-many mappings, we use the expression `n() > 1 & row_number()  %in% c(1, n()))`. The LHS side of this expression (`n() > 1`) captures all rows of groups with more than one row. The RHS of this expression (`row_number()  %in% c(1, n()`) uses `row_number()` to isolate the first and last rows of multi-row groups. The expression captures only those rows where `row_number() == 1` or `row_number == n()` (i.e, the row number is equal to the total number of rows in the group, which is also the row number of the _last_ row of the group). Rather than specify these latter two sub-predicates separately, we can combine them by using `%in%` to specify that `row_number()` is equal to _either_ of the two elements of the vector `c(1, n())`.
+
+After applying the `filter()` step, the first 10 rows of the data object appear as follows:
+
+```
+  scale      NT   raw
+
+  CPS1_nt    40    10
+  CPS1_nt    40    17
+  CPS1_nt    41    NA
+  CPS1_nt    42    18
+  CPS1_nt    43    NA
+  CPS1_nt    44    NA
+  CPS1_nt    45    NA
+  CPS1_nt    46    19
+  CPS1_nt    47    NA
+  CPS1_nt    48    NA
+```
+Note that the group of rows for `NT = 40`, which previously included eight rows, now consists of only two: those containing the values of `raw` for the lower and upper bounds of the required raw score range `10-17`. All other rows in the example are single rows for one-to-one T-to-raw mappings.
+```{r norms-lookup-print, echo = 6:10, eval = F}
 ```
