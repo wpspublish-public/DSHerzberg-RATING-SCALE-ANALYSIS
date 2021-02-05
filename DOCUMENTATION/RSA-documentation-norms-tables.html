@@ -638,6 +638,7 @@ na = &#39;&#39;)</code></pre>
 <li><strong>Basic format</strong>: The left-most column contains all possible values of raw, across all scales, sorted ascending. Rightward columns contain corresponding T-scores for each scale.</li>
 <li><strong>Print format</strong>: The left-most column contains all possible values of T (reflecting any truncation of the T-score distribution), sorted descending. Rightward columns contain corresponding raw scores for each scale. Reflecting the many-to-one lookup relationship, some of the rightward cells contain single raw scores, while others contain a range of raw scores.</li>
 </ul>
+<p>Note that in the basic-format table, the process of looking up T-scores begins with finding a raw score in the left-most column, whereas in the print-format table, it begins with finding a raw score in one of the rightward columns</p>
 <p><br></p>
 <div id="basic-format-lookup-table" class="section level5">
 <h5><strong>BASIC FORMAT LOOKUP TABLE</strong></h5>
@@ -793,7 +794,6 @@ pivot_longer(contains(&quot;nt&quot;), names_to = &quot;scale&quot;, values_to =
   arrange(scale, desc(NT)) %&gt;% 
   pivot_wider(names_from = scale,
               values_from = raw) %&gt;% 
-  arrange(desc(NT)) %&gt;% 
   rename_with(~ str_replace_all(., &quot;_nt&quot;, &quot;_raw&quot;)) %&gt;%
   rename(T_score = NT) %&gt;% 
   filter(!is.na(T_score))
@@ -811,7 +811,7 @@ write_csv(all_lookup_print,
 </div>
 <div id="commented-snippets-3" class="section level6">
 <h6>COMMENTED SNIPPETS</h6>
-<p>The print-format lookup table <code>all_lookup_print</code> is a transformed version of the basic format table <code>all_lookup_basic</code>, which serves as the input data object for the next section of code. We use <code>tidyr::pivot_longer()</code> to transform <code>all_lookup_basic</code> to a long, multilevel format, in which a set of six associated T-scores (one for each scale) is nested within each value of raw score. The first argument to <code>pivot_longer()</code>, which we specify with <code>contains(&quot;nt&quot;)</code>, names the columns to be pivoted to long format (i.e., the six columns in <code>all_lookup_basic</code> that contain the T-scores for each scale). The second argument, <code>names_to = &quot;scale&quot;</code>, names the column whose rows, in long format, will hold the <em>names</em> (from <code>all_lookup_basic</code>) of the pivoted columns. The third argument, <code>values_to = &quot;NT&quot;</code>, names the column whose rows, in long format, will hold the <em>cell values</em> contained in the pivoted columns. (Note: the <code>NT</code> acronym refers to &quot;normalized T-scores.)</p>
+<p>The print-format lookup table <code>all_lookup_print</code> is a transformed version of the basic format table <code>all_lookup_basic</code>, which serves as the input data object for the next section of code. We use <code>tidyr::pivot_longer()</code> to transform <code>all_lookup_basic</code> to a long, multilevel format, in which a set of six associated T-scores (one for each scale) is nested within each value of raw score. The first argument to <code>pivot_longer()</code>, which we specify with <code>contains(&quot;nt&quot;)</code>, names the columns to be pivoted to long format (i.e., the six columns in <code>all_lookup_basic</code> that contain the T-scores for each scale). The second argument, <code>names_to = &quot;scale&quot;</code>, names the column whose rows, in long format, will hold the <em>names</em> (from <code>all_lookup_basic</code>) of the pivoted columns. The third argument, <code>values_to = &quot;NT&quot;</code>, names the column whose rows, in long format, will hold the <em>cell values</em> contained in the pivoted columns. (Note: the <code>NT</code> acronym refers to “normalized T-scores”. Although <code>T</code> might seem a more natural column name, it’s not good practice to use <code>T</code> for this purpose, because <code>T</code> can function as a shortand for <code>TRUE</code>, which is a reserved word in R.)</p>
 <p>Here we are excluding the <code>raw</code> column from the pivot, meaning that in the long table, <code>raw</code> remains in the left-most column and becomes a Level 2 variable (in nomenclature of multilevel modeling). The rows of <code>raw</code> are expanded such that each raw score value has six rows, one for each of the six associated T-score values. The new columns, <code>scale</code> and <code>NT</code>, are now Level 1 variables, because they are nested within the Level 2 variable <code>raw</code>. We then use <code>arrange()</code> to sort the data by <code>scale</code>.</p>
 <p>To visualize the transformation, here are a few rows and columns from the input object <code>all_lookup_basic</code>:</p>
 <pre><code>   raw CPS1_nt CPS2_nt CPS3_nt
@@ -854,13 +854,14 @@ pivot_longer(contains(&quot;nt&quot;), names_to = &quot;scale&quot;, values_to =
   CPS1_nt    40    17
   CPS1_nt    41    NA
   CPS1_nt    42    18</code></pre>
-<p>In the final output for the print-format lookup table, we need to represent the raw-score values in a one-to-many mapping as a range of raw scores (e.g., in the rows shown above, as <code>10-17</code> to capture the mapping for <code>NT = 40</code>). To execute this transformation, we first re-group the data object hierarchically (<code>group_by(scale, NT)</code>), so that ranges of <code>NT</code> can be assembled for each <code>scale</code>.</p>
+<p>In the final output for the print-format lookup table, we need to represent the raw-score values in a one-to-many mapping as a range of raw scores (e.g., as <code>10-17</code> to capture the mapping for <code>NT = 40</code> in the rows shown above). To execute this transformation, we first re-group the data object hierarchically (<code>group_by(scale, NT)</code>), so that ranges of <code>NT</code> can be assembled for each <code>scale</code>.</p>
 <p>Examining again the set of rows above, we see that in addition to the many-to-one mapping for <code>NT = 40</code>, there is a one-to-one mappping for <code>NT = 42</code> (to <code>raw = 18</code>). In the next code snippet, we use <code>dplyr::filter()</code> to collapse the table vertically and retain rows according to the following rules:</p>
 <ul>
 <li><strong>One-to-one</strong> T-to-raw mappings: retain that <em>single</em> row.</li>
 <li><strong>One-to-many</strong> T-to-raw mappings: retain the <em>first</em> and <em>last</em> rows of the series, which are, respectively, the lower and upper bounds of the required raw-score ranges.</li>
 </ul>
-<p>The complex predicate passed to <code>filter()</code> makes use of <code>dplyr::n()</code>, which returns the number of rows in groups defined by <code>group_by()</code>. The one-to-one rows are captured by the expression <code>n() == 1</code>. To get the first and last rows of the one-to-many mappings, we use the expression <code>n() &gt; 1 &amp; row_number()  %in% c(1, n()))</code>. The LHS side of this expression (<code>n() &gt; 1</code>) captures all rows of groups with more than one row. The RHS of this expression (<code>row_number()  %in% c(1, n()</code>) uses <code>row_number()</code> to isolate the first and last rows of multi-row groups. The expression captures only those rows where <code>row_number() == 1</code> or <code>row_number == n()</code> (i.e, the row number is equal to the total number of rows in the group, which is also the row number of the <em>last</em> row of the group). Rather than specify these latter two sub-predicates separately, we can combine them by using <code>%in%</code> to specify that <code>row_number()</code> is equal to <em>either</em> of the two elements of the vector <code>c(1, n())</code>.</p>
+<p>The complex predicate passed to <code>filter()</code> makes use of <code>dplyr::n()</code>, which returns the number of rows in groups defined by <code>group_by()</code>. The one-to-one rows are captured by the expression <code>n() == 1</code>.</p>
+<p>To get the first and last rows of the one-to-many mappings, we use the expression <code>n() &gt; 1 &amp; row_number() %in% c(1, n()))</code>. The LHS side of this expression (<code>n() &gt; 1</code>) captures all rows of groups with more than one row. The RHS of this expression (<code>row_number()  %in% c(1, n()</code>) uses <code>row_number()</code> to isolate the first and last rows of multi-row groups. The expression captures only those rows where <code>row_number() == 1</code> or <code>row_number == n()</code> (i.e, the row number is equal to the total number of rows in the group, which is also the row number of the <em>last</em> row of the group). Rather than specify these latter two sub-predicates separately, we can combine them by using <code>%in%</code> to specify that <code>row_number()</code> is equal to <em>either</em> of the two elements of the vector <code>c(1, n())</code>.</p>
 <p>After applying the <code>filter()</code> step, the first 10 rows of the data object appear as follows:</p>
 <pre><code>  scale      NT   raw
 
@@ -875,13 +876,47 @@ pivot_longer(contains(&quot;nt&quot;), names_to = &quot;scale&quot;, values_to =
   CPS1_nt    47    NA
   CPS1_nt    48    NA</code></pre>
 <p>Note that the group of rows for <code>NT = 40</code>, which previously included eight rows, now consists of only two: those containing the values of <code>raw</code> for the lower and upper bounds of the required raw score range <code>10-17</code>. All other rows in the example are single rows for one-to-one T-to-raw mappings.</p>
+<p>Because the data object is grouped by <code>NT</code>, we can call <code>dplyr::summarize()</code> to further collapse the table so there is a single row for each possible value of <code>NT</code>. <code>summarize()</code> operates within groups, and is used to aggregate the values of a variable, returning a new column (in this case <code>raw</code>) containing a single summary value for each group. To avoid confusion, keep in mind that the “new” <code>raw</code> column summarizes values in the “old” raw column, which is dropped from the returned data object.</p>
+<p>As an argument to <code>summarize()</code>, we pass the expression <code>raw = str_c(raw, collapse = &#39;--&#39;)</code>, which returns the required values for both types of T-to-raw mappings. Note that the RHS is wrapped in <code>str_c</code>, meaning that numbers will be represented as strings in the new <code>raw</code> column. One-to-one mappings are represented in the current object as single rows, so the summarizing expression simply returns the “old” value of <code>raw</code> in that row. One-to-many mappings are now represented by two-row groups, with the rows containing the lower and upper bounds of the required raw-score ranges. For these two-row groups, <code>str_c()</code> joins the two “old” values of raw, collapsing them into a single string with the separator <code>--</code>. Here we use two dashes, as opposed to a single dash, to avoid formatting errors when the output is saved to .csv.</p>
+<p>Because the mapping of T-to-raw is one-to-many, there are inevitably possible values of T that are not mapped onto any raw score value. In the rows shown above, the first eight values of raw <code>10-17</code> map onto <code>NT = 40</code>. The next value of raw <code>18</code> maps onto <code>NT = 42</code>, leaving <code>NT = 41</code> “unmapped” (i.e., <code>raw</code> is <code>NA</code> for <code>NT = 41</code>). To format the <code>raw</code> column properly for final output, we use <code>mutate(across(case_when()))</code> to recode <code>NA</code> to <code>-</code> in the <code>raw</code> column. We then use arrange to sort the table by <code>scale</code>, and descending by <code>NT</code>.</p>
 <pre class="r"><code>  group_by(scale, NT) %&gt;%
   filter(n() == 1 | n() &gt; 1 &amp; row_number()  %in% c(1, n())) %&gt;%
   summarize(raw = str_c(raw, collapse = &#39;--&#39;)) %&gt;%
   mutate(across(raw, ~ case_when(is.na(.x) ~ &#39;-&#39;, TRUE ~ .x))) %&gt;%
   arrange(scale, desc(NT)) %&gt;% </code></pre>
+<p>Recall that the original data input to this process was the wide-format <code>all_lookup_basic</code> data frame. We pivoted this input to long format to so that we could transform it by applying <code>dplyr</code> functions on a row-wise basis. As a result, the current data object is a long-format, three-column table whose cell values are formatted as required for the print-format lookup table. The <code>NT</code> column contains all possible values of T-score in descending order (nested within <code>scale</code>), thus conforming with the requirements for the left-most column of the print-format table.</p>
+<p>To prepare the final output, we call <code>pivot_wider()</code> to return the table to wide format. We include two of the three existing columns in arguments to <code>pivot_wider</code>: <code>names_from = scale</code>, to specify that names for the new columns in the wide table are to be drawn from the existing <code>scale</code> column; and <code>values_from = raw</code>, to indicate that cell values for the new columns are to be drawn from the existing <code>raw</code> column. <code>pivot_wider()</code> thus returns a wide table in which the existing <code>NT</code> becomes the left-most column, the existing <code>scale</code> and <code>raw</code> columns are dropped, and the new rightward columns are named for the scales and contain the raw-score lookup values corresponding to each T-score. Here is the head of the resulting table:</p>
+<pre><code>    NT    CPS1_nt CPS2_nt CPS3_nt CPS4_nt CPS5_nt CPTOT_nt
+
+    80    29--40  29--40  31--40  29--40  29--40  123--200
+    79    -       -       28--30  -       -       121--122
+    78    -       -       -       -       28      -       
+    77    28      -       -       28      -       120     
+    76    -       28      -       -       -       -       
+    75    -       -       27      -       27      -       </code></pre>
+<p>We can repair inaccurate column names with <code>rename_with()</code> which enables the application of <code>stringr</code> functions to a batch of column names (here replacing <code>&quot;_nt&quot;</code> with <code>&quot;_raw&quot;</code>, because the rightward columns contain raw scores). We use <code>filter(!is.na(T_score))</code> to drop extraneous rows that are missing T-scores. Finally, we <code>write_csv()</code> the finished output to .csv.</p>
+<pre class="r"><code>  pivot_wider(names_from = scale,
+              values_from = raw) %&gt;% 
+  rename_with(~ str_replace_all(., &quot;_nt&quot;, &quot;_raw&quot;)) %&gt;%
+  rename(T_score = NT) %&gt;% 
+  filter(!is.na(T_score))
+
+write_csv(all_lookup_print,
+          here(str_c(
+            &quot;OUTPUT-FILES/TABLES/&quot;,
+            str_c(&quot;raw-T-lookup-print&quot;,
+                  age_range_name,
+                  form_name,
+                  sep = &quot;-&quot;),
+            &quot;.csv&quot;
+          )),
+          na = &#39;&#39;)</code></pre>
+<p><br></p>
 </div>
 </div>
+</div>
+<div id="prepare-raw-score-descriptive-and-demographic-summary-tables" class="section level4">
+<h4>4. Prepare raw score descriptive and demographic summary tables</h4>
 </div>
 </div>
 

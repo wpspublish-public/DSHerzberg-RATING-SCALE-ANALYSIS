@@ -166,35 +166,22 @@ na = '')
 
 # GENERATE PRINT FORMAT RAW-TO-T LOOKUP TABLE -----------------------------------------
 
-all_lookup_print <- all_lookup_basic %>% 
+all_lookup_print1 <- all_lookup_basic %>% 
 pivot_longer(contains("nt"), names_to = "scale", values_to = "NT") %>% 
   arrange(scale) %>% 
   group_by(scale) %>%
   complete(NT = 40:80) %>% 
   group_by(scale, NT) %>%
   filter(n() == 1 | n() > 1 & row_number()  %in% c(1, n())) %>%
-  # SummariZe creates a table with one row per group (one row per
-  # possible value of T). For the 1-row groups, str_c simply passes the
-  # value of raw as a string; for the multi-row groups, str_c joins the min
-  # and max values of raw with the '--' separator.
   summarize(raw = str_c(raw, collapse = '--')) %>%
-  # recode missing values of raw to '-'
   mutate(across(raw, ~ case_when(is.na(.x) ~ '-', TRUE ~ .x))) %>%
-  # sort on two cols
   arrange(scale, desc(NT)) %>% 
-  # spread table back to wide, all values of T (one row for each), scale
-  # columns filled with values of rawscore
   pivot_wider(names_from = scale,
               values_from = raw) %>% 
-  # sort descending on T
-  arrange(desc(NT)) %>% 
-  # rename with desired final column names
   rename_with(~ str_replace_all(., "_nt", "_raw")) %>%
   rename(T_score = NT) %>% 
-  # drop row where T == NA
   filter(!is.na(T_score))
 
-# write print format lookup table to .csv
 write_csv(all_lookup_print,
           here(str_c(
             "OUTPUT-FILES/TABLES/",
