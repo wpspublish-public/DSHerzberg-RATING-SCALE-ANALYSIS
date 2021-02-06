@@ -166,7 +166,7 @@ na = '')
 
 # GENERATE PRINT FORMAT RAW-TO-T LOOKUP TABLE -----------------------------------------
 
-all_lookup_print1 <- all_lookup_basic %>% 
+all_lookup_print <- all_lookup_basic %>% 
 pivot_longer(contains("nt"), names_to = "scale", values_to = "NT") %>% 
   arrange(scale) %>% 
   group_by(scale) %>%
@@ -193,21 +193,20 @@ write_csv(all_lookup_print,
           )),
           na = '')
 
-# raw score descriptives for all scales (using psych::describe)
+# RAW SCORE DESCRIPTIVES AND DEMOGRAPHIC COUNTS -----------------------------------------
+
 assign(
   str_c("raw_score_desc", age_range_name, form_name, sep = "_"),
-  data_child_parent %>%
-    select(contains('raw')) %>%
-    describe(fast = T) %>%
-    rownames_to_column() %>%
-    rename(scale = rowname) %>%
+  get(str_c("data", age_range_name, form_name, sep = "_")) %>%
+    select(contains("raw")) %>%
+    describe(fast = TRUE) %>%
+    rownames_to_column(var = "scale") %>%
     select(scale, n, mean, sd) %>%
     mutate(across(c(mean, sd), ~ (round(
       ., 2
     ))))
 )
 
-# write raw score descriptives table to .csv
 write_csv(get(str_c(
   "raw_score_desc", age_range_name, form_name, sep = "_"
 )),
@@ -221,8 +220,6 @@ here(str_c(
 )),
 na = '')
 
-# table of demographic counts (make vector code robust wherever possible)
-
 var_order <- c("age_range", "gender", "educ", "ethnic", "region")
 
 cat_order <- c(
@@ -230,7 +227,7 @@ cat_order <- c(
   str_sort(unique(get(str_c("data", age_range_name, form_name, sep = "_"))$age_range)),
   # gender
   str_sort(unique(get(str_c("data", age_range_name, form_name, sep = "_"))$gender), 
-           decreasing = T),
+           decreasing = TRUE),
   # educ
   "no_HS", "HS_grad", "some_college", "BA_plus" , 
   # ethnic
@@ -251,7 +248,7 @@ assign(
       variable,
       ~
         case_when(lag(.x) == .x ~ NA_character_,
-                  T ~ .x)
+                  TRUE ~ .x)
     ))
 )
 

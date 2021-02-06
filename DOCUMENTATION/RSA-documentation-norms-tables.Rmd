@@ -456,13 +456,13 @@ After applying the `filter()` step, the first 10 rows of the data object appear 
   CPS1_nt    47    NA
   CPS1_nt    48    NA
 ```
-Note that the group of rows for `NT = 40`, which previously included eight rows, now consists of only two: those containing the values of `raw` for the lower and upper bounds of the required raw score range `10-17`. All other rows in the example are single rows for one-to-one T-to-raw mappings.
+Note that the group of rows for `NT = 40`, which previously included eight rows, now consists of only two: those containing the values of `raw` for the lower and upper bounds of the required raw score range `10-17`. All other rows in the example are single rows, representing one-to-one T-to-raw mappings.
 
 Because the data object is grouped by `NT`, we can call `dplyr::summarize()` to further collapse the table so there is a single row for each possible value of `NT`. `summarize()` operates within groups, and is used to aggregate the values of a variable, returning a new column (in this case `raw`) containing a single summary value for each group. To avoid confusion, keep in mind that the "new" `raw` column summarizes values in the "old" raw column, which is dropped from the returned data object.
 
-As an argument to `summarize()`, we pass the expression `raw = str_c(raw, collapse = '--')`, which returns the required values for both types of T-to-raw mappings. Note that the RHS is wrapped in `str_c`, meaning that numbers will be represented as strings in the new `raw` column. One-to-one mappings are represented in the current object as single rows, so the summarizing expression simply returns the "old" value of `raw` in that row. One-to-many mappings are now represented by two-row groups, with the rows containing the lower and upper bounds of the required raw-score ranges. For these two-row groups, `str_c()` joins the two "old" values of raw, collapsing them into a single string with the separator `--`. Here we use two dashes, as opposed to a single dash, to avoid formatting errors when the output is saved to .csv.
+As an argument to `summarize()`, we pass the expression `raw = str_c(raw, collapse = '--')`, which returns the required values for both types of T-to-raw mappings. Note that the RHS is wrapped in `str_c`, meaning that numbers will be formattted as strings in the new `raw` column. One-to-one mappings are represented in the current object as single rows, so the summarizing expression simply returns the "old" value of `raw` in that row. One-to-many mappings are now represented by two-row groups, with the rows containing the lower and upper bounds of the required raw-score ranges. For these two-row groups, `str_c()` joins the two "old" values of raw, collapsing them into a single string with the separator `--`. Here we use two dashes, as opposed to a single dash, to prevent the score ranges from being mistakenly read as dates when the saved output is opened in MS Excel.
 
-Because the mapping of T-to-raw is one-to-many, there are inevitably possible values of T that are not mapped onto any raw score value. In the rows shown above, the first eight values of raw `10-17` map onto `NT = 40`. The next value of raw `18` maps onto `NT = 42`, leaving `NT = 41` "unmapped" (i.e., `raw` is `NA` for `NT = 41`). To format the `raw` column properly for final output, we use `mutate(across(case_when()))` to recode `NA` to `-` in the `raw` column. We then use arrange to sort the table by `scale`, and descending by `NT`.
+Because the mapping of T-to-raw is one-to-many, there may be values of T in the `NT` column that are not mapped onto any raw score value. In the rows shown above, the first eight values of raw `10-17` map onto `NT = 40`. The next value of raw `18` maps onto `NT = 42`, leaving `NT = 41` "unmapped" (i.e., `raw = NA` for `NT = 41`). To format the `raw` column properly for final output, we use `mutate(across(case_when()))` to recode `NA` to `-` in the `raw` column. We then use arrange to sort the table by `scale`, and descending by `NT`.
 ```{r norms-lookup-print, echo = 6:10, eval = F}
 ```
 Recall that the original data input to this process was the wide-format `all_lookup_basic` data frame. We pivoted this input to long format to so that we could transform it by applying `dplyr` functions on a row-wise basis. As a result, the current data object is a long-format, three-column table whose cell values are formatted as required for the print-format lookup table. The `NT` column contains all possible values of T-score in descending order (nested within `scale`), thus conforming with the requirements for the left-most column of the print-format table.
@@ -479,7 +479,7 @@ To prepare the final output, we call `pivot_wider()` to return the table to wide
     76    -       28      -       -       -       -       
     75    -       -       27      -       27      -       
 ```
-We can repair inaccurate column names with `rename_with()` which enables the application of `stringr` functions to a batch of column names (here replacing `"_nt"` with `"_raw"`, because the rightward columns contain raw scores). We use `filter(!is.na(T_score))` to drop extraneous rows that are missing T-scores. Finally, we `write_csv()` the finished output to .csv.
+We can repair inaccurate column names with `rename_with()` which enables the application of `stringr` functions to a batch of column names (here replacing `"_nt"` with `"_raw"`, because the rightward columns now contain raw scores, not T scores). We use `filter(!is.na(T_score))` to drop extraneous rows that are missing T scores. Finally, we `write_csv()` the finished output to .csv.
 ```{r norms-lookup-print, echo = 11:26, eval = F}
 ```
 
@@ -487,3 +487,158 @@ We can repair inaccurate column names with `rename_with()` which enables the app
 
 #### 4. Prepare raw score descriptive and demographic summary tables
 
+It is often useful to obtain descriptive output on the final normative sample, after it has been cleaned and de-sampled to meet project requirements.
+
+###### EXECUTABLE CODE
+```{r norms-desc-demos, eval = FALSE}
+assign(
+  str_c("raw_score_desc", age_range_name, form_name, sep = "_"),
+  get(str_c("data", age_range_name, form_name, sep = "_")) %>%
+    select(contains("raw")) %>%
+    describe(fast = TRUE) %>%
+    rownames_to_column(var = "scale") %>%
+    select(scale, n, mean, sd) %>%
+    mutate(across(c(mean, sd), ~ (round(
+      ., 2
+    ))))
+)
+
+write_csv(get(str_c(
+  "raw_score_desc", age_range_name, form_name, sep = "_"
+)),
+here(str_c(
+  "OUTPUT-FILES/TABLES/",
+  str_c("raw-score-desc",
+        age_range_name,
+        form_name,
+        sep = "-"),
+  ".csv"
+)),
+na = '')
+
+var_order <- c("age_range", "gender", "educ", "ethnic", "region")
+
+cat_order <- c(
+  str_sort(unique(get(str_c("data", age_range_name, form_name, sep = "_"))$age_range)),
+  str_sort(unique(get(str_c("data", age_range_name, form_name, sep = "_"))$gender), 
+           decreasing = TRUE),
+  "no_HS", "HS_grad", "some_college", "BA_plus" , 
+  "hispanic", "asian", "black", "white", "other",
+  "northeast", "midwest", "south", "west")
+
+assign(
+  str_c("demo_counts", age_range_name, form_name, sep = "_"),
+  get(str_c("data", age_range_name, form_name, sep = "_")) %>%
+    select(all_of(var_order)) %>%
+    pivot_longer(everything(), names_to = "variable", values_to = "category") %>%
+    group_by(variable, category) %>%
+    count(variable, category) %>%
+    arrange(match(variable, var_order), match(category, cat_order)) %>%
+    ungroup() %>%
+    mutate(across(
+      variable,
+      ~
+        case_when(lag(.x) == .x ~ NA_character_,
+                  TRUE ~ .x)
+    ))
+)
+
+write_csv(get(str_c(
+  "demo_counts", age_range_name, form_name, sep = "_"
+)),
+here(str_c(
+  "OUTPUT-FILES/TABLES/",
+  str_c("demo-counts",
+        age_range_name,
+        form_name,
+        sep = "-"),
+  ".csv"
+)),
+na = '')
+```
+###### COMMENTED SNIPPETS
+As in previous steps, we use `assign()` to name objects with concatenated strings. The raw score descriptives table is based on the original input file, which we call as before with `get(str_c("data", age_range_name, form_name, sep = "_"))`. We use `select(contains("raw"))` to return only the raw score columns for further processing.
+```{r norms-desc-demos, echo = 1:4, eval = F}
+```
+We obtain descriptive statistics on these columns using `psych::describe()`. 
+The argument `fast = TRUE` limits the output to the most frequently reported measures (e.g., `n`, `mean`, `sd`, `min`, `max`, `range`, `se`). These measures become column names for the summary data object, which now has a row for each score being analyzed, as in:
+```
+          vars    n  mean   sd min max range   se
+CPS1_raw     1 1000 10.27 2.84   1  19    18 0.09
+CPS2_raw     2 1000 10.19 2.92   2  20    18 0.09
+CPS3_raw     3 1000 10.08 2.79   2  21    19 0.09
+CPS4_raw     4 1000 10.30 2.79   2  21    19 0.09
+CPS5_raw     5 1000 10.21 2.77   1  19    18 0.09
+CPTOT_raw    6 1000 51.05 8.82  18  73    55 0.28
+```
+Because `describe()` converts the column names of the input object into row names, we use `tibble::rownames_to_column()` to move these row names into a column named `scale`.
+```{r norms-desc-demos, echo = 5:6, eval = F}
+```
+For the final output, we `select(scale, n, mean, sd)` only the four required columns, and `round()` `mean` and `sd` to `2` digits with `mutate()`. Within this function, we select columns to be modified with `across()`, and pass those columns to `round()` with the `.` placeholder. We `write_csv()` the finished descriptives table to .csv.
+```{r norms-desc-demos, echo = 7:15, eval = F}
+```
+To format the table of demographic counts, we define two tokens, `var_order` and `cat_order` that specify the sorting sequence for the demographic variables `c("age_range", "gender", "educ", "ethnic", "region")` and their associated subcategories. The `cat_order` token contains all subcategories for all variables in a single vector. For readability, the code to specify this long vector places the subcategories for each distinct variable on a new line.
+
+For `cat_order`, we can use tokens to create more robust definitions of the `age_range` and `gender` subcategories. These tokenized specifications take advantage of naturally occurring numerical or alphabetical sequences in the subcategory names.
+
+For example, in the final output table, we want the subcategory rows for the `gender` variable to be sorted in reverse alphabetical order (i.e., `male`, `female`). To extract these category names as vector elements, we start with `get(str_c("data", age_range_name, form_name, sep = "_"))$gender)`, which calls the original input data file and uses the `$` operator to subset only the `gender` column. We wrap this expression in `base::unique()`, which extracts only a single instance each of the strings `"female"` and `"male"` (from a column containing _many_ instances of each). We then wrap the two strings in `stringr::str_sort()`, which enables sorting a vector in reverse alphabetical order with the argument `decreasing = TRUE`.
+
+By contrast, the required subcategory sequence for `educ` (for example) does not conform to an alphabetical sort. We therefore must specify the sequence explicitly (e.g., `"no_HS", "HS_grad", "some_college", "BA_plus"`).
+```{r norms-desc-demos, echo = 26:34, eval = F}
+```
+To create the demographic table, we begin with previously described methods for calling the original input data with `get()`, and naming the output object with `assign()`. We use `select(all_of())` to keep only the columns named by the token `var_order`. We call `pivot_longer()` these columns to long format, creating a table with two columns: `variable` and `category`, where each row is a pairing of a demographic variable and one of its subcategories. Because we are tallying demographic counts across five variables (`c("age_range", "gender", "educ", "ethnic", "region")`), each case (row) in the input file has five rows in the transformed long object, corresponding to the five subcategory assignments for that case. As an example, here is a single row in the wide-format input file:
+
+```
+ age_range   gender   educ      ethnic   region   
+
+ 5 to 8 yo   female   BA_plus   white    northeast
+ ```
+ Transforming that row to long format yields:
+ 
+ ```
+ variable    category 
+
+ age_range   5 to 8 yo
+ gender      female   
+ educ        BA_plus  
+ ethnic      white    
+ region      northeast
+ ```
+```{r norms-desc-demos, echo = 36:40, eval = F}
+```
+The next step is to `group_by(variable, category)` so that the number of instances of each subcategory can be summarized with `count(variable, category)`. Calling the latter function collapses the long table so that there is a single row for each variable-subcategory pair. It creates a new column `n` that provides the number of cases falling into each variable-subcategory bucket, as in:
+
+```
+ variable    category         n
+
+ age_range   5 to 8 yo      492
+ age_range   9 to 12 yo     508
+ educ        BA_plus        311
+ educ        HS_grad        247
+ educ        no_HS          133
+ educ        some_college   309
+ ...
+```
+
+```{r norms-desc-demos, echo = 41:42, eval = F}
+```
+The current object has all rows required for final output, but they are not yet in the preferred sort order. We apply that sequencing with `arrange()`, using `match()` to specify that we want `variable` and `category` to be sorted by the orders provided in the tokens `var_order` and `cat_order`, respectively.
+
+Note that in the example above, `variable` contains a value in every row. To make the output more readable, we want to drop duplicate values from that column, as in: 
+
+```
+ variable    category         n
+
+ age_range   5 to 8 yo      492
+             9 to 12 yo     508
+ educ        BA_plus        311
+             HS_grad        247
+             no_HS          133
+             some_college   309
+ ...
+```
+We accomplish this by first removing the existing group structure with `dplyr::ungroup()`. We then recode only the variable column with `mutate(across(variable))`. Within `mutate()`, we call `case_when()` to recode `variable` to `NA_character_` when the predicate `lag(.x) == .x` returns `TRUE`. That is, when the value of `variable` is equal to its value _in the previous row_, the function replaces the current value with `NA`. This leaves the first occurrence of each `variable` name intact and yields the more-readable table format. Note that within `case_when()`, `.x` is a token for `variable`.
+
+This template concludes by writing the finished table of demographic counts to .csv.
+```{r norms-desc-demos, echo = 43:55, eval = F}
+```
