@@ -24,8 +24,8 @@ suppressMessages(suppressWarnings(library(tidyverse)))
 suppressMessages(library(psych))
 suppressMessages(library(bestNormalize))
 
-urlRemote_path  <- "https://raw.githubusercontent.com/"
-github_path <- "DSHerzberg/RATING-SCALE-ANALYSIS/master/INPUT-FILES/"
+urlRemote_path  <- "https://raw.github.com/"
+github_path <- "wpspublish/DSHerzberg-RATING-SCALE-ANALYSIS/master/INPUT-FILES/"
 input_name <- "data-RS-sim-child-parent.csv"
 
 item_prefix <- "cp"

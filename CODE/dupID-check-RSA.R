@@ -1,8 +1,8 @@
 suppressMessages(library(here))
 suppressMessages(suppressWarnings(library(tidyverse)))
 
-urlRemote_path  <- "https://raw.githubusercontent.com/"
-github_path <- "DSHerzberg/RATING-SCALE-ANALYSIS/master/INPUT-FILES/"
+urlRemote_path  <- "https://raw.github.com/"
+github_path <- "wpspublish/DSHerzberg-RATING-SCALE-ANALYSIS/master/INPUT-FILES/"
 
 data_RS_sim_child_parent <- suppressMessages(read_csv(url(
   str_c(urlRemote_path, github_path, "data-RS-sim-child-parent.csv")
