@@ -1,7 +1,7 @@
 data,scale,n,mean,sd
-child_teacher,CTS1_raw,1000,10.25,2.79
-,CTS2_raw,1000,10.26,2.87
-,CTS3_raw,1000,10.31,2.83
-,CTS4_raw,1000,10.23,2.82
-,CTS5_raw,1000,10.29,2.77
-,CTTOT_raw,1000,51.35,8.47
+child_teacher,CTS1_raw,1000,20.25,2.79
+,CTS2_raw,1000,20.26,2.87
+,CTS3_raw,1000,20.31,2.83
+,CTS4_raw,1000,20.23,2.82
+,CTS5_raw,1000,20.29,2.77
+,CTTOT_raw,1000,101.35,8.47

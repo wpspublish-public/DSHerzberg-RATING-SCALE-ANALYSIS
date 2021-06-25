@@ -1,7 +1,7 @@
 data,scale,n,mean,sd
-teen_parent,TPS1_raw,1000,10.09,2.87
-,TPS2_raw,1000,10.34,2.98
-,TPS3_raw,1000,10.32,2.82
-,TPS4_raw,1000,10.3,2.78
-,TPS5_raw,1000,10.36,2.85
-,TPTOT_raw,1000,51.4,8.82
+teen_parent,TPS1_raw,1000,20.09,2.87
+,TPS2_raw,1000,20.34,2.98
+,TPS3_raw,1000,20.32,2.82
+,TPS4_raw,1000,20.3,2.78
+,TPS5_raw,1000,20.36,2.85
+,TPTOT_raw,1000,101.4,8.82
