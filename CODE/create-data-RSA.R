@@ -347,11 +347,14 @@ write_csv(data_input_bfi,
 # VARIABLES
 
 # use dplyr::sample_frac() to get a 60% sample. By grouping on all demo vars, we
-# roughly preserve demographic proportions in smaller sample.
+# roughly preserve demographic proportions in smaller sample. We then ungroup()
+# to preserve parallel structure with the full standardization sample, which is
+# ungrouped.
 set.seed(1234)
 sample_60perc <- data_RS_sim_child_parent %>% 
   group_by(age, gender, educ, ethnic, region) %>%
-  sample_frac(0.6)
+  sample_frac(0.6) %>% 
+  ungroup()
 
 # write .csv of 60% sample for use in other procedures
 write_csv(sample_60perc, here(
@@ -376,12 +379,8 @@ write_csv(sample_60perc, here(
 demos_full <- map(
   c("gender", "educ", "ethnic", "region"),
   ~
-    
-    # START HERE ####################
-    
-    
-    Child_512_Home_desamp %>%
-    group_by(Age, !!sym(.x)) %>%
+    data_RS_sim_child_parent %>%
+    group_by(age, !!sym(.x)) %>%
     summarize(n=n()) %>%
     pivot_wider(names_from = !!sym(.x), values_from = n)
 ) %>%
@@ -391,33 +390,34 @@ demos_full <- map(
   # is a single df with age column on the far left, and the columns of
   # categories of the four demo vars proceeding to the right, each holding the
   # person counts for each value of age.
-  reduce(left_join, by = "Age") %>%
-  # We ungroup to facilitate a table structure that is more readdable. The
+  reduce(left_join, by = "age") %>%
+  # We ungroup to facilitate a table structure that is more readable. The
   # mutate() call creates sample and n columns that are only filled in the top
-  # cell.
+  # cell. Note how we get the total sample size for the full standardization
+  # sample by calling base::nrow() on that data file.
   ungroup() %>%
   mutate(
     sample = case_when(row_number() == 1 ~ "full",
                        TRUE ~ NA_character_),
     n = case_when(
-      row_number() == 1 ~ nrow(Child_512_Home_desamp),
+      row_number() == 1 ~ nrow(data_RS_sim_child_parent),
       TRUE ~ NA_integer_
     )
   ) %>%
   # relocate provides the desired column sequence in the output table.
-  relocate(c(sample, n), .before = "Age")
+  relocate(c(sample, n), .before = "age")
 
 # documentation for code block below is analogous to that for previous (creation
 # of demos_full)
 demos_60_perc <- map(
-  c("Gender", "ParentHighestEducation", "Ethnicity", "Region"),
+  c("gender", "educ", "ethnic", "region"),
   ~
     sample_60perc %>%
-    group_by(Age, !!sym(.x)) %>%
+    group_by(age, !!sym(.x)) %>%
     summarize(n=n()) %>%
     pivot_wider(names_from = !!sym(.x), values_from = n)
 ) %>%
-  reduce(left_join, by = "Age") %>%
+  reduce(left_join, by = "age") %>%
   ungroup() %>%
   mutate(
     sample = case_when(row_number() == 1 ~ "60_perc",
@@ -427,7 +427,7 @@ demos_60_perc <- map(
       TRUE ~ NA_integer_
     )
   ) %>%
-  relocate(c(sample, n), .before = "Age")
+  relocate(c(sample, n), .before = "age")
 
 # Use bind_rows() to stack the tables from the full and 60_perc samples, and
 # mutate() the existing sample column to keep it readable, by having the sample
@@ -444,37 +444,19 @@ demos_comp <- bind_rows(demos_full,
 write_csv(
   demos_comp,
   here(
-    "OUTPUT-FILES/CHILD/COMP-60PERC-SAMPLE/Child-512-Home-demos-full-60perc-comp.csv"
+    "OUTPUT-FILES/TABLES/demos-full-60perc-comp-child-parent.csv"
   ),
   na = ""
 )
 
 # Comp raw-score descriptives between full sample and 60% sample
-T_per_case_full_sample <- read_csv(
-  here(
-    "OUTPUT-FILES/NORMS-OUTPUT-4080T/Child-512-Home-T-Scores-per-case-4080T.csv"
-  )
-)
-
-# The file to be read in here is the t-scores per case for the 60perc sample
-# that was written out above as "CHILD-512-Home-allData-desamp-60perc.csv". It
-# needs to be generated from this latter file using the long script for creating
-# raw-to-T lookup tables. A specialized version of this script, just for this
-# purpose, has been saved as
-# "Child-512-Home-Norms-Lookup-Tables-4080T-60perc-SPM2.R"
-T_per_case_60perc_sample <- read_csv(
-  here(
-    "OUTPUT-FILES/NORMS-OUTPUT-4080T/Child-512-Home-T-Scores-per-case-4080T-60perc.csv"
-  )
-)
-
-raw_score_desc_full_sample <- T_per_case_full_sample %>% 
+raw_score_desc_full_sample <- data_RS_sim_child_parent %>% 
   select(contains("raw")) %>%
   describe(fast = TRUE) %>%
   rownames_to_column(var = "scale") %>%
   select(scale, n, mean, sd)
 
-raw_score_desc_60perc_sample <- T_per_case_60perc_sample %>% 
+raw_score_desc_60perc_sample <- sample_60perc %>% 
   select(contains("raw")) %>%
   describe(fast = TRUE) %>%
   rownames_to_column(var = "scale") %>%
@@ -492,7 +474,7 @@ raw_score_desc_comp <- raw_score_desc_full_sample %>%
 
 # write .csv of raw score desc comp
 write_csv(raw_score_desc_comp, here(
-  "OUTPUT-FILES/CHILD/COMP-60PERC-SAMPLE/Child-512-Home-raw-desc-full-60perc-comp.csv"
+  "OUTPUT-FILES/TABLES/raw-desc-full-60perc-comp-child-parent.csv"
 ))
 
 
