@@ -118,6 +118,8 @@ write_csv(raw_score_desc_comp, here(
 Load packages for file path specification (`here`), data wrangling (`tidyverse`) and psychometric data simulation and analysis (`psych`). `base::set.seed()`. `read_csv()` the input data set into `sample_full`. 
 ```{r frac-samp-rsa, echo = 1:5, eval = F}
 ```
-Load packages for f
+In this demonstration, we draw a sub-sample `sample_60perc` with 60 percent of the cases in the full_sample. We use `base::set.seed()` to ensure uniform random number generation so the code draws the same sample every time it is run.
+
+
 ```{r frac-samp-rsa, echo = 7:12, eval = F}
 ```

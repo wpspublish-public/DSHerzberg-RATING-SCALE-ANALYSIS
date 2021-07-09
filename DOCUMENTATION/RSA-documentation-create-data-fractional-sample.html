@@ -282,7 +282,7 @@ suppressMessages(library(tidyverse))
 suppressMessages(library(psych))
 
 sample_full &lt;- read_csv(here(&quot;INPUT-FILES/data-RS-sim-child-parent.csv&quot;))</code></pre>
-<p>Load packages for f</p>
+<p>In this demonstration, we draw a sub-sample <code>sample_60perc</code> with 60 percent of the cases in the full_sample.</p>
 <pre class="r"><code>set.seed(1234)
 sample_60perc &lt;- sample_full %&gt;% 
   group_by(age, gender, educ, ethnic, region) %&gt;%
