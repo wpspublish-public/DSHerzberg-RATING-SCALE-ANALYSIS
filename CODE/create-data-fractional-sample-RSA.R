@@ -1,22 +1,14 @@
 suppressMessages(library(here))
 suppressMessages(library(tidyverse))
+suppressMessages(library(splitstackshape))
 suppressMessages(library(psych))
 
-sample_full <- read_csv(here("INPUT-FILES/data-RS-sim-child-parent.csv"))
+sample_full <- suppressMessages(read_csv(here("INPUT-FILES/data-RS-sim-child-parent.csv")))
 
-
-# METHOD TO CREATE A FRACTIONAL SAMPLE WITH SAME DISTRIBUTION OF DEMOGRAPHIC
-# VARIABLES
-
-# use dplyr::sample_frac() to get a 60% sample. By grouping on all demo vars, we
-# roughly preserve demographic proportions in smaller sample. We then ungroup()
-# to preserve parallel structure with the full standardization sample, which is
-# ungrouped.
 set.seed(1234)
-sample_60perc <- sample_full %>% 
-  group_by(age, gender, educ, ethnic, region) %>%
-  sample_frac(0.6) %>% 
-  ungroup()
+sample_60perc <- stratified(sample_full,
+                    c("age", "gender", "educ", "ethnic", "region"),
+                    size = .6)
 
 # write .csv of 60% sample for use in other procedures
 write_csv(sample_60perc, here(
