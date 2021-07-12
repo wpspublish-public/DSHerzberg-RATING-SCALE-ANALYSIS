@@ -290,10 +290,28 @@ sample_full &lt;- suppressMessages(read_csv(here(&quot;INPUT-FILES/data-RS-sim-c
 <li><code>c(&quot;age&quot;, &quot;gender&quot;, &quot;educ&quot;, &quot;ethnic&quot;, &quot;region&quot;)</code>: a vector of column names that provides the grouping structure. This allows <code>stratified()</code> to sample <em>within</em> demographic groups, thus replicating (approximately) the demographic proportions of the input data frame.</li>
 <li><code>size = .6</code>: specifies that the subsample will be a certain <em>proportion</em> of the cases in the input data frame. Because sampling takes place within a complex grouping structure, the number of cases returned will not exactly match the specified proportion.</li>
 </ul>
+<p>We <code>write_csv()</code> the subsample to <code>.csv</code> for use in other procedures.</p>
 <pre class="r"><code>set.seed(1234)
 sample_60perc &lt;- stratified(sample_full,
                     c(&quot;age&quot;, &quot;gender&quot;, &quot;educ&quot;, &quot;ethnic&quot;, &quot;region&quot;),
-                    size = .6)</code></pre>
+                    size = .6)
+
+write_csv(sample_60perc, here(
+  &quot;INPUT-FILES/data-RS-sim-child-parent-60perc.csv&quot;
+))</code></pre>
+<p>Next we generate a table that allows comparison of case counts across demographic categories, between the full sample and the subsample.</p>
+<p>Starting with the full sample, we use <code>map()</code> to return a list of four data frames, one for each of the four demographic variables. The names of these variables are held in a character vector (<code>c(&quot;gender&quot;, &quot;educ&quot;, &quot;ethnic&quot;, &quot;region&quot;)</code>) that is the first argument to <code>map()</code>.</p>
+<p>The second argument to <code>map()</code> is a function (set off by <code>~</code>), that is applied iteratively to the four elements of the input vector. The function extracts the case counts for each demographic variable from <code>full_sample</code>. The currently iterated demographic variable is represented in the function by the <code>.x</code> argument.</p>
+<p>To access the counts for a variable, we first <code>group_by</code> <code>age</code> and <code>.x</code>. The variable name passed as <code>.x</code> is a quoted string, but <code>tidyverse</code> functions generally require unquoted variable inputs. We thus need to unquote the <code>.x</code> value with the bang-bang operator <code>!!</code>, followed by <code>rlang::sym()</code>.</p>
+<p>We then call <code>summarize(n())</code> on the grouped sample, designating <code>n</code> as a summary column to hold the case counts for <code>.x</code>. At this point the piped object is a nested, long-format data frame, in which the categories of the demographic variable are represented in separate rows, repeated for each level of <code>age</code>. We call <code>pivot_wider()</code> to transform this object into a more conventional table format, in which the levels of <code>age</code> appear in the left-most column, and columns to the right hold case counts by age for each category of the demographic variable (<code>.x</code>).</p>
+<pre class="r"><code>demos_full &lt;- map(
+  c(&quot;gender&quot;, &quot;educ&quot;, &quot;ethnic&quot;, &quot;region&quot;),
+  ~
+    sample_full %&gt;%
+    group_by(age, !!sym(.x)) %&gt;%
+    summarize(n=n()) %&gt;%
+    pivot_wider(names_from = !!sym(.x), values_from = n)
+) %&gt;%</code></pre>
 </div>
 </div>
 

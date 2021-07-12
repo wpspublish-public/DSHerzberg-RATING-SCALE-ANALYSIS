@@ -10,26 +10,10 @@ sample_60perc <- stratified(sample_full,
                     c("age", "gender", "educ", "ethnic", "region"),
                     size = .6)
 
-# write .csv of 60% sample for use in other procedures
 write_csv(sample_60perc, here(
   "INPUT-FILES/data-RS-sim-child-parent-60perc.csv"
 ))
 
-# Comp demos between full sample and 60% sample
-# Prepare table of demographics counts for the full sample. We first call map()
-# to return a list of four dfs, with the case counts by age and category for
-# each of the four demographic variables. We map over a vector holding the names
-# of these four demo vars. The input to this mapping procedure is the full
-# standardization sample. We group this input by age and the .x argument to
-# map(), that is, the currently iterated demo var. We can then call summarize()
-# to get the case counts (n()) for each category of the demo var, within each
-# ageyear. At this point the summary table is in nested format, where the
-# categories of the demo vars are nested with in each value of age, resulting in
-# a long table. We call pivot_wider() to transform the table into a more
-# conventional demographic table format, in which there is one row for each age
-# year, each category of the demographic variable has its own column, and the
-# cells contain the person counts for each crossing of age X demographic
-# category.
 demos_full <- map(
   c("gender", "educ", "ethnic", "region"),
   ~

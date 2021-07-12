@@ -125,5 +125,19 @@ We pass three arguments to `stratified()`:
 * `sample_full`: the input data frame to be subsampled.
 * `c("age", "gender", "educ", "ethnic", "region")`: a vector of column names that provides the grouping structure. This allows `stratified()` to sample _within_ demographic groups, thus replicating (approximately) the demographic proportions of the input data frame.
 * `size = .6`: specifies that the subsample will be a certain _proportion_ of the cases in the input data frame. Because sampling takes place within a complex grouping structure, the number of cases returned will not exactly match the specified proportion.
-```{r frac-samp-rsa, echo = 7:12, eval = F}
+
+We `write_csv()` the subsample to `.csv` for use in other procedures.
+```{r frac-samp-rsa, echo = 7:15, eval = F}
+```
+Next we generate a table that allows comparison of case counts across demographic categories, between the full sample and the subsample.
+
+Starting with the full sample, we use `map()` to return a list of four data frames, one for each of the four demographic variables. The names of these variables are held in a character vector (`c("gender", "educ", "ethnic", "region")`) that is the first argument to `map()`.
+
+The second argument to `map()` is a function (set off by `~`), that is applied iteratively to the four elements of the input vector. The function extracts the case counts for each demographic variable from `full_sample`. The currently iterated demographic variable is represented in the function by the `.x` argument.
+
+To access the counts for a variable, we first `group_by` `age` and `.x`. The variable name passed as `.x` is a quoted string, but `tidyverse` functions generally require unquoted variable inputs. We thus need to unquote the `.x` value with the bang-bang operator `!!`, followed by `rlang::sym()`.
+
+We then call `summarize(n())` on the grouped sample, designating `n` as a summary column to hold the case counts for `.x`. At this point the piped object is a nested, long-format data frame, in which the categories of the demographic variable are represented in separate rows, repeated for each level of `age`. We call `pivot_wider()` to transform this object into a more conventional table format, in which the levels of `age` appear in the left-most column, and columns to the right hold case counts by age for each category of the demographic variable (`.x`).
+
+```{r frac-samp-rsa, echo = 17:24, eval = F}
 ```
