@@ -35,19 +35,17 @@ demos_full <- map(
   c("gender", "educ", "ethnic", "region"),
   ~
     sample_full %>%
-    group_by(age, !!sym(.x)) %>%
-    summarize(n=n()) %>%
+    group_by(age,!!sym(.x)) %>%
+    summarize(n = n()) %>%
     pivot_wider(names_from = !!sym(.x), values_from = n)
 ) %>%
- reduce(left_join, by = "age") %>%
+  reduce(left_join, by = "age") %>%
   ungroup() %>%
   mutate(
     sample = case_when(row_number() == 1 ~ "full",
                        TRUE ~ NA_character_),
-    n = case_when(
-      row_number() == 1 ~ nrow(sample_full),
-      TRUE ~ NA_integer_
-    )
+    n = case_when(row_number() == 1 ~ nrow(sample_full),
+                  TRUE ~ NA_integer_)
   ) %>%
   relocate(c(sample, n), .before = "age")
 
@@ -55,8 +53,8 @@ demos_60_perc <- map(
   c("gender", "educ", "ethnic", "region"),
   ~
     sample_60perc %>%
-    group_by(age, !!sym(.x)) %>%
-    summarize(n=n()) %>%
+    group_by(age,!!sym(.x)) %>%
+    summarize(n = n()) %>%
     pivot_wider(names_from = !!sym(.x), values_from = n)
 ) %>%
   reduce(left_join, by = "age") %>%
@@ -64,20 +62,13 @@ demos_60_perc <- map(
   mutate(
     sample = case_when(row_number() == 1 ~ "60_perc",
                        TRUE ~ NA_character_),
-    n = case_when(
-      row_number() == 1 ~ nrow(sample_60perc),
-      TRUE ~ NA_integer_
-    )
+    n = case_when(row_number() == 1 ~ nrow(sample_60perc),
+                  TRUE ~ NA_integer_)
   ) %>%
   relocate(c(sample, n), .before = "age")
 
 demos_comp <- bind_rows(demos_full,
-                        demos_60_perc) %>%
-  mutate(across(sample,
-                ~ case_when(
-                  lag(sample) == sample ~ NA_character_, 
-                  TRUE ~ .x
-                )))
+                        demos_60_perc)
 
 write_csv(
   demos_comp,
@@ -140,4 +131,17 @@ To access the counts for a variable, we first `group_by` `age` and `.x`. The var
 We then call `summarize(n())` on the grouped sample, designating `n` as a summary column to hold the case counts for `.x`. At this point the piped object is a nested, long-format data frame, in which the categories of the demographic variable are represented in separate rows, repeated for each level of `age`. We call `pivot_wider()` to transform this object into a more conventional table format, in which the levels of `age` appear in the left-most column, and columns to the right hold case counts by age for each category of the demographic variable (`.x`).
 
 ```{r frac-samp-rsa, echo = 17:24, eval = F}
+```
+At this point the piped object is a list of data frames, all of which have an `age` column in the left-most position. We can use `purrr:reduce()` to iteratively apply `left_join()`, thus joining the unique columns of each data frame to the shared `age` column. The result is a single data frame with the `age` column on the far left, and columns corresponding to the categories of the four demographic variables proceeding to the right. Each cell of these right-ward columns holds the case counts for the crossing between an age year and a demographic category (e.g., five-year-old males).
+
+Before modifying this new data frame, we `ungroup()`, removing the grouping structure so it does not interfere with downstream operations. We then call `mutate(case_when())` to create variables that facilitate comparison between two samples: `sample`, which identfies whether the current demographic table is for the full or fractional sample; and `n`, which gives the total sample size.
+
+The predicates within `case_when()` allow us to code the variable's value (e.g., `"full"` for `sample`) in only the first row of that column (`row_number() == 1`). This creates more readable output. We call `nrow()` to extract sample size, which is identical to the number of rows in the data frame under consideration. Finally, we use `relocate()` to obtain the column sequence required for output.
+```{r frac-samp-rsa, echo = 25:33, eval = F}
+```
+The procedure for creating the demographic table for the fractional sample is identical to that described above for the full sample. We use `bind_rows()` to stack the two tables to create a comparison table `demos_comp`.
+```{r frac-samp-rsa, echo = 53:54, eval = F}
+```
+We create an analogous comparison table for raw score descriptive statistics using `psych::describe()`. Again starting with `sample_full`, we `select()` the raw score columns using the tidyselect helper `contains("raw")`. We call `describe()` on these columns, passing the `fast = TRUE` argument to limit the output to the most frequently reported measures (e.g., `n`, `mean`, `sd`, `min`, `max`, `range`, `se`). Because describe() converts the column names of the input object into row names, we use `tibble::rownames_to_column()` to move these row names into a column named `scale`. We use `select(scale, n, mean, sd)` to keep only the columns required for final output.
+```{r frac-samp-rsa, echo = 64:68, eval = F}
 ```

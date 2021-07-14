@@ -18,41 +18,26 @@ demos_full <- map(
   c("gender", "educ", "ethnic", "region"),
   ~
     sample_full %>%
-    group_by(age, !!sym(.x)) %>%
-    summarize(n=n()) %>%
+    group_by(age,!!sym(.x)) %>%
+    summarize(n = n()) %>%
     pivot_wider(names_from = !!sym(.x), values_from = n)
 ) %>%
-  # At this point the data object is list of data frames, all of which have
-  # identical values in the age column. We can use purrr:reduce() to iteratively
-  # apply left_join(), joining the tables together by the age column. The result
-  # is a single df with age column on the far left, and the columns of
-  # categories of the four demo vars proceeding to the right, each holding the
-  # person counts for each value of age.
   reduce(left_join, by = "age") %>%
-  # We ungroup to facilitate a table structure that is more readable. The
-  # mutate() call creates sample and n columns that are only filled in the top
-  # cell. Note how we get the total sample size for the full standardization
-  # sample by calling base::nrow() on that data file.
   ungroup() %>%
   mutate(
     sample = case_when(row_number() == 1 ~ "full",
                        TRUE ~ NA_character_),
-    n = case_when(
-      row_number() == 1 ~ nrow(sample_full),
-      TRUE ~ NA_integer_
-    )
+    n = case_when(row_number() == 1 ~ nrow(sample_full),
+                  TRUE ~ NA_integer_)
   ) %>%
-  # relocate provides the desired column sequence in the output table.
   relocate(c(sample, n), .before = "age")
 
-# documentation for code block below is analogous to that for previous (creation
-# of demos_full)
 demos_60_perc <- map(
   c("gender", "educ", "ethnic", "region"),
   ~
     sample_60perc %>%
-    group_by(age, !!sym(.x)) %>%
-    summarize(n=n()) %>%
+    group_by(age,!!sym(.x)) %>%
+    summarize(n = n()) %>%
     pivot_wider(names_from = !!sym(.x), values_from = n)
 ) %>%
   reduce(left_join, by = "age") %>%
@@ -60,10 +45,8 @@ demos_60_perc <- map(
   mutate(
     sample = case_when(row_number() == 1 ~ "60_perc",
                        TRUE ~ NA_character_),
-    n = case_when(
-      row_number() == 1 ~ nrow(sample_60perc),
-      TRUE ~ NA_integer_
-    )
+    n = case_when(row_number() == 1 ~ nrow(sample_60perc),
+                  TRUE ~ NA_integer_)
   ) %>%
   relocate(c(sample, n), .before = "age")
 
@@ -71,14 +54,8 @@ demos_60_perc <- map(
 # mutate() the existing sample column to keep it readable, by having the sample
 # label only appear in the first row of the stacked table for each sample.
 demos_comp <- bind_rows(demos_full,
-                        demos_60_perc) %>%
-  mutate(across(sample,
-                ~ case_when(
-                  lag(sample) == sample ~ NA_character_, 
-                  TRUE ~ .x
-                )))
+                        demos_60_perc)
 
-# write .csv of demos comp
 write_csv(
   demos_comp,
   here(
@@ -87,8 +64,7 @@ write_csv(
   na = ""
 )
 
-# Comp raw-score descriptives between full sample and 60% sample
-raw_score_desc_full_sample <- sample_full %>% 
+raw_score_desc_full_sample <- sample_full %>%
   select(contains("raw")) %>%
   describe(fast = TRUE) %>%
   rownames_to_column(var = "scale") %>%

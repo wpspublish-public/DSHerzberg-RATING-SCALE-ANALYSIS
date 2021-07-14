@@ -196,19 +196,17 @@ demos_full &lt;- map(
   c(&quot;gender&quot;, &quot;educ&quot;, &quot;ethnic&quot;, &quot;region&quot;),
   ~
     sample_full %&gt;%
-    group_by(age, !!sym(.x)) %&gt;%
-    summarize(n=n()) %&gt;%
+    group_by(age,!!sym(.x)) %&gt;%
+    summarize(n = n()) %&gt;%
     pivot_wider(names_from = !!sym(.x), values_from = n)
 ) %&gt;%
- reduce(left_join, by = &quot;age&quot;) %&gt;%
+  reduce(left_join, by = &quot;age&quot;) %&gt;%
   ungroup() %&gt;%
   mutate(
     sample = case_when(row_number() == 1 ~ &quot;full&quot;,
                        TRUE ~ NA_character_),
-    n = case_when(
-      row_number() == 1 ~ nrow(sample_full),
-      TRUE ~ NA_integer_
-    )
+    n = case_when(row_number() == 1 ~ nrow(sample_full),
+                  TRUE ~ NA_integer_)
   ) %&gt;%
   relocate(c(sample, n), .before = &quot;age&quot;)
 
@@ -216,8 +214,8 @@ demos_60_perc &lt;- map(
   c(&quot;gender&quot;, &quot;educ&quot;, &quot;ethnic&quot;, &quot;region&quot;),
   ~
     sample_60perc %&gt;%
-    group_by(age, !!sym(.x)) %&gt;%
-    summarize(n=n()) %&gt;%
+    group_by(age,!!sym(.x)) %&gt;%
+    summarize(n = n()) %&gt;%
     pivot_wider(names_from = !!sym(.x), values_from = n)
 ) %&gt;%
   reduce(left_join, by = &quot;age&quot;) %&gt;%
@@ -225,20 +223,13 @@ demos_60_perc &lt;- map(
   mutate(
     sample = case_when(row_number() == 1 ~ &quot;60_perc&quot;,
                        TRUE ~ NA_character_),
-    n = case_when(
-      row_number() == 1 ~ nrow(sample_60perc),
-      TRUE ~ NA_integer_
-    )
+    n = case_when(row_number() == 1 ~ nrow(sample_60perc),
+                  TRUE ~ NA_integer_)
   ) %&gt;%
   relocate(c(sample, n), .before = &quot;age&quot;)
 
 demos_comp &lt;- bind_rows(demos_full,
-                        demos_60_perc) %&gt;%
-  mutate(across(sample,
-                ~ case_when(
-                  lag(sample) == sample ~ NA_character_, 
-                  TRUE ~ .x
-                )))
+                        demos_60_perc)
 
 write_csv(
   demos_comp,
@@ -308,10 +299,31 @@ write_csv(sample_60perc, here(
   c(&quot;gender&quot;, &quot;educ&quot;, &quot;ethnic&quot;, &quot;region&quot;),
   ~
     sample_full %&gt;%
-    group_by(age, !!sym(.x)) %&gt;%
-    summarize(n=n()) %&gt;%
+    group_by(age,!!sym(.x)) %&gt;%
+    summarize(n = n()) %&gt;%
     pivot_wider(names_from = !!sym(.x), values_from = n)
 ) %&gt;%</code></pre>
+<p>At this point the piped object is a list of data frames, all of which have an <code>age</code> column in the left-most position. We can use <code>purrr:reduce()</code> to iteratively apply <code>left_join()</code>, thus joining the unique columns of each data frame to the shared <code>age</code> column. The result is a single data frame with the <code>age</code> column on the far left, and columns corresponding to the categories of the four demographic variables proceeding to the right. Each cell of these right-ward columns holds the case counts for the crossing between an age year and a demographic category (e.g., five-year-old males).</p>
+<p>Before modifying this new data frame, we <code>ungroup()</code>, removing the grouping structure so it does not interfere with downstream operations. We then call <code>mutate(case_when())</code> to create variables that facilitate comparison between two samples: <code>sample</code>, which identfies whether the current demographic table is for the full or fractional sample; and <code>n</code>, which gives the total sample size.</p>
+<p>The predicates within <code>case_when()</code> allow us to code the variable’s value (e.g., <code>&quot;full&quot;</code> for <code>sample</code>) in only the first row of that column (<code>row_number() == 1</code>). This creates more readable output. We call <code>nrow()</code> to extract sample size, which is identical to the number of rows in the data frame under consideration. Finally, we use <code>relocate()</code> to obtain the column sequence required for output.</p>
+<pre class="r"><code>  reduce(left_join, by = &quot;age&quot;) %&gt;%
+  ungroup() %&gt;%
+  mutate(
+    sample = case_when(row_number() == 1 ~ &quot;full&quot;,
+                       TRUE ~ NA_character_),
+    n = case_when(row_number() == 1 ~ nrow(sample_full),
+                  TRUE ~ NA_integer_)
+  ) %&gt;%
+  relocate(c(sample, n), .before = &quot;age&quot;)</code></pre>
+<p>The procedure for creating the demographic table for the fractional sample is identical to that described above for the full sample. We use <code>bind_rows()</code> to stack the two tables to create a comparison table <code>demos_comp</code>.</p>
+<pre class="r"><code>demos_comp &lt;- bind_rows(demos_full,
+                        demos_60_perc)</code></pre>
+<p>We create an analogous comparison table for raw score descriptive statistics using <code>psych::describe()</code>. Again starting with <code>sample_full</code>, we <code>select()</code> the raw score columns using the tidyselect helper <code>contains(&quot;raw&quot;)</code>. We call <code>describe()</code> on these columns, passing the <code>fast = TRUE</code> argument to limit the output to the most frequently reported measures (e.g., <code>n</code>, <code>mean</code>, <code>sd</code>, <code>min</code>, <code>max</code>, <code>range</code>, <code>se</code>). Because describe() converts the column names of the input object into row names, we use <code>tibble::rownames_to_column()</code> to move these row names into a column named <code>scale</code>. We use <code>select(scale, n, mean, sd)</code> to keep only the columns required for final output.</p>
+<pre class="r"><code>raw_score_desc_full_sample &lt;- sample_full %&gt;% 
+  select(contains(&quot;raw&quot;)) %&gt;%
+  describe(fast = TRUE) %&gt;%
+  rownames_to_column(var = &quot;scale&quot;) %&gt;%
+  select(scale, n, mean, sd)</code></pre>
 </div>
 </div>
 
