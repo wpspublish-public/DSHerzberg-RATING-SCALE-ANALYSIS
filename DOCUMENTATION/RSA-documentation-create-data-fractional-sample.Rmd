@@ -7,7 +7,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-### Draw a fracitional subsample and compare descriptives to full sample
+### Draw a fractional subsample and compare descriptives to full sample
 
 #### Overview
 
@@ -106,10 +106,10 @@ write_csv(raw_score_desc_comp, here(
 ```
 
 #### Commented Snippets
-Load packages for file path specification (`here`), data wrangling (`tidyverse`), reshaping and stratfying data (`splitstackshape`), and psychometric data simulation and analysis (`psych`). `base::set.seed()`. `read_csv()` the input data set into `sample_full`. 
+We load packages for file path specification (`here`), data wrangling (`tidyverse`), reshaping and stratifying data (`splitstackshape`), and psychometric data simulation and analysis (`psych`). We `read_csv()` the input data set into `sample_full`. 
 ```{r frac-samp-rsa, echo = 1:6, eval = F}
 ```
-In this demonstration, we call `splitstackshape::stratified()` to draw a subsample `sample_60perc` with 60 percent of the cases in the full sample. We use `base::set.seed()` to ensure uniform random number generation, so `stratified()` draws the same subsample every time the script is run.
+In this demonstration, we call `splitstackshape::stratified()` to draw a demographically-equivalent subsample `sample_60perc` containing 60% of the cases in the full sample. We use `base::set.seed()` to ensure uniform random number generation, so `stratified()` draws the same subsample every time the script is run.
 
 We pass three arguments to `stratified()`:
 
@@ -132,16 +132,24 @@ We then call `summarize(n())` on the grouped sample, designating `n` as a summar
 
 ```{r frac-samp-rsa, echo = 17:24, eval = F}
 ```
-At this point the piped object is a list of data frames, all of which have an `age` column in the left-most position. We can use `purrr:reduce()` to iteratively apply `left_join()`, thus joining the unique columns of each data frame to the shared `age` column. The result is a single data frame with the `age` column on the far left, and columns corresponding to the categories of the four demographic variables proceeding to the right. Each cell of these right-ward columns holds the case counts for the crossing between an age year and a demographic category (e.g., five-year-old males).
+After `map()` finishes iterating, the piped object is a list of data frames, each with an identical `age` column in the left-most position. We call `purrr:reduce()` to iteratively apply `left_join()`, thus joining the unique columns of each data frame to the shared `age` column. The result is a single data frame with the `age` column on the far left, and columns corresponding to the categories of the four demographic variables proceeding to the right. Each cell of these right-ward columns holds the case counts for the crossing between an age year and a demographic category (e.g., five-year-old males).
 
-Before modifying this new data frame, we `ungroup()`, removing the grouping structure so it does not interfere with downstream operations. We then call `mutate(case_when())` to create variables that facilitate comparison between two samples: `sample`, which identfies whether the current demographic table is for the full or fractional sample; and `n`, which gives the total sample size.
+Before modifying this new data frame, we `ungroup()`, removing the grouping structure so it does not interfere with downstream operations. We then call `mutate(case_when())` to create variables that facilitate comparison between two samples: `sample`, which identifies whether the current demographic table is for the full or fractional sample; and `n`, which gives the total number of persons in a particular sample.
 
-The predicates within `case_when()` allow us to code the variable's value (e.g., `"full"` for `sample`) in only the first row of that column (`row_number() == 1`). This creates more readable output. We call `nrow()` to extract sample size, which is identical to the number of rows in the data frame under consideration. Finally, we use `relocate()` to obtain the column sequence required for output.
+The predicates within `case_when()` allow us to code the variable's value (e.g., `"full"` for `sample`) in only the first row of that column (`row_number() == 1`). This creates more readable output. We call `nrow()` to extract sample size, which is identical to the number of rows in the data frame under consideration. Finally, we use `relocate()` to obtain the desired column sequence.
 ```{r frac-samp-rsa, echo = 25:33, eval = F}
 ```
 The procedure for creating the demographic table for the fractional sample is identical to that described above for the full sample. We use `bind_rows()` to stack the two tables to create a comparison table `demos_comp`.
 ```{r frac-samp-rsa, echo = 53:54, eval = F}
 ```
-We create an analogous comparison table for raw score descriptive statistics using `psych::describe()`. Again starting with `sample_full`, we `select()` the raw score columns using the tidyselect helper `contains("raw")`. We call `describe()` on these columns, passing the `fast = TRUE` argument to limit the output to the most frequently reported measures (e.g., `n`, `mean`, `sd`, `min`, `max`, `range`, `se`). Because describe() converts the column names of the input object into row names, we use `tibble::rownames_to_column()` to move these row names into a column named `scale`. We use `select(scale, n, mean, sd)` to keep only the columns required for final output.
+We create an analogous comparison table for raw score descriptive statistics using `psych::describe()`. Again starting with `sample_full`, we `select()` the raw score columns using the tidyselect helper `contains("raw")`. We call `describe()` on these columns, passing the `fast = TRUE` argument to limit the output to the most frequently reported measures (e.g., `n`, `mean`, `sd`, `min`, `max`, `range`, `se`). Because `describe()` converts the column names of the input object into row names, we use `tibble::rownames_to_column()` to move these row names into a column named `scale`. We use `select(scale, n, mean, sd)` to keep only the columns required for final output.
 ```{r frac-samp-rsa, echo = 64:68, eval = F}
+```
+As before, we use `left_join()` to create a comparison table for the descriptive statistics (`raw_score_desc_comp`). In this instance, the two input tables to be joined have identical column names. We handle this with two arguments to `left_join()`:
+
+* `by = "scale"` aligns the input columns by scale names.
+* `suffix = c("_full", "_60perc")` appends the names of incoming columns informatively, so they are easily distinguished between the two samples.
+
+To complete the comparison table, we call `mutate()` twice: first to create an effect-size column (`ES`), and then to apply rounding to all numeric columns. We identify the latter columns with `across(where(is.numeric))`, in which `where()` is a tidyselect helper that takes a predicate function (e.g., `is.numeric()`) and collects all variables for which the function returns `TRUE`.
+```{r frac-samp-rsa, echo = 76:85, eval = F}
 ```
