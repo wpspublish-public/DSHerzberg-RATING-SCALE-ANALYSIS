@@ -50,9 +50,6 @@ demos_60_perc <- map(
   ) %>%
   relocate(c(sample, n), .before = "age")
 
-# Use bind_rows() to stack the tables from the full and 60_perc samples, and
-# mutate() the existing sample column to keep it readable, by having the sample
-# label only appear in the first row of the stacked table for each sample.
 demos_comp <- bind_rows(demos_full,
                         demos_60_perc)
 
@@ -86,7 +83,6 @@ raw_score_desc_comp <- raw_score_desc_full_sample %>%
                     sqrt(((n_full*(sd_full^2)) + (n_60perc*(sd_60perc^2))) / (n_full + n_60perc)))) %>% 
   mutate(across(where(is.numeric), ~ round(., 3)))
 
-# write .csv of raw score desc comp
 write_csv(raw_score_desc_comp, here(
   "OUTPUT-FILES/TABLES/raw-desc-full-60perc-comp-child-parent.csv"
 ))
