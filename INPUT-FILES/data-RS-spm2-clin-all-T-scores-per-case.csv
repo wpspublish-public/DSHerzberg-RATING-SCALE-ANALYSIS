@@ -1,0 +1,485 @@
+IDNumber,clin_status,clin_dx,AgeInMonths,Age,age_range,Gender,ParentHighestEducation,HighestEducation,Ethnicity,Region,SOC_NT,VIS_NT,HEA_NT,TOU_NT,TS_NT,BOD_NT,BAL_NT,PLA_NT,TOT_NT
+209009,clin,FASD,5,,03.5 to 6 mo,Male,High school graduate (including GED),,White,south,45,57,46,53,43,57,39,44,50
+209013,clin,FASD,4,,03.5 to 6 mo,Male,Bachelor's degree or higher,,White,south,42,30,36,31,43,36,39,39,30
+242029,clin,ID,8,,07 to 10.5 mo,Male,Some college or associate degree,,Black,south,66,50,42,48,40,58,36,45,44
+243068,clin,ID,5,,03.5 to 6 mo,Male,Bachelor's degree or higher,,White,south,48,64,62,64,63,62,58,55,65
+294001,clin,LBW,9,,07 to 10.5 mo,Female,High school graduate (including GED),,Black,midwest,44,50,47,64,61,48,52,50,54
+294002,clin,LBW,8,,07 to 10.5 mo,Male,Did not complete high school (no diploma),,Black,midwest,48,46,50,64,52,55,58,48,54
+294003,clin,LBW,9,,07 to 10.5 mo,Female,High school graduate (including GED),,Black,midwest,52,40,56,51,52,52,62,53,51
+294004,clin,LBW,7,,07 to 10.5 mo,Male,High school graduate (including GED),,Black,midwest,54,48,56,48,55,48,66,61,55
+294005,clin,LBW,6,,03.5 to 6 mo,Male,High school graduate (including GED),,Black,midwest,57,43,68,45,43,46,61,61,56
+306003,clin,LBW,8,,07 to 10.5 mo,Female,Bachelor's degree or higher,,White,west,41,44,42,48,52,48,46,61,42
+306009,clin,LBW,4,,03.5 to 6 mo,Male,Bachelor's degree or higher,,White,west,48,37,54,45,43,57,61,73,47
+141338,clin,ID,30,,21 to 31.5 mo,Male,Bachelor's degree or higher,,White,south,42,51,48,60,51,50,72,62,56
+242008,clin,MO,23,,21 to 31.5 mo,Male,Some college or associate degree,,MultiRacial,south,68,70,67,68,75,72,75,73,72
+242036,clin,SPD,19,,09.5 to 20 mo,Male,Bachelor's degree or higher,,White,south,55,47,63,47,59,58,51,58,55
+242042,clin,ID,19,,09.5 to 20 mo,Male,Bachelor's degree or higher,,White,south,59,57,60,60,67,61,74,74,66
+242048,clin,MO,11,,09.5 to 20 mo,Female,Bachelor's degree or higher,,White,south,64,44,40,41,43,50,45,75,42
+243006,clin,ID,21,,21 to 31.5 mo,Female,Bachelor's degree or higher,,White,south,56,41,48,54,58,54,75,75,57
+243046,clin,ID,19,,09.5 to 20 mo,Female,Bachelor's degree or higher,,Hispanic,south,39,31,37,37,40,38,35,40,32
+243065,clin,ID,29,,21 to 31.5 mo,Female,Bachelor's degree or higher,,White,south,68,64,63,75,47,70,75,52,72
+306002,clin,LBW,26,,21 to 31.5 mo,Male,Bachelor's degree or higher,,White,west,38,33,38,44,51,39,48,47,39
+335016,clin,HEA,29,,21 to 31.5 mo,Female,Bachelor's degree or higher,,White,south,45,48,56,44,47,34,38,47,44
+335017,clin,HEA,26,,21 to 31.5 mo,Female,High school graduate (including GED),,White,south,63,37,48,47,42,47,60,75,45
+335018,clin,HEA,19,,09.5 to 20 mo,Male,Bachelor's degree or higher,,White,south,33,44,49,54,56,41,45,40,47
+336001,clin,HEA,21,,21 to 31.5 mo,Female,High school graduate (including GED),,White,south,34,59,61,47,42,39,56,42,52
+339003,clin,SLP,29,,21 to 31.5 mo,Male,Some college or associate degree,,Black,south,65,57,63,63,75,43,63,75,65
+339004,clin,SLP,29,,21 to 31.5 mo,Male,Bachelor's degree or higher,,White,south,45,54,48,39,37,34,72,73,48
+339005,clin,SLP,29,,21 to 31.5 mo,Male,High school graduate (including GED),,White,south,58,72,51,63,75,47,75,75,71
+339006,clin,VIS,22,,21 to 31.5 mo,Male,High school graduate (including GED),,White,south,75,72,72,54,70,75,75,75,72
+339007,clin,LBW,27,,21 to 31.5 mo,Female,Did not complete high school (no diploma),,Hispanic,south,38,48,33,39,37,39,56,75,39
+339008,clin,LBW,24,,21 to 31.5 mo,Male,High school graduate (including GED),,Other,south,66,70,58,65,51,60,75,75,70
+339009,clin,LBW,29,,21 to 31.5 mo,Female,Did not complete high school (no diploma),,Hispanic,south,66,57,61,65,42,47,69,75,59
+339033,clin,SLP,24,,21 to 31.5 mo,Male,Bachelor's degree or higher,,White,south,48,57,58,68,55,60,66,75,64
+340001,clin,SPD,27,,21 to 31.5 mo,Male,Bachelor's degree or higher,,Asian,west,75,72,75,75,65,75,75,75,72
+340002,clin,SLP,30,,21 to 31.5 mo,Male,Some college or associate degree,,Hispanic,west,42,44,48,39,37,34,43,42,39
+340003,clin,ASD,30,,21 to 31.5 mo,Male,Some college or associate degree,,Other,west,58,44,51,54,75,60,72,73,62
+340004,clin,MO,28,,21 to 31.5 mo,Male,Bachelor's degree or higher,,Black,west,60,54,58,51,42,70,75,75,62
+340005,clin,SLP,21,,21 to 31.5 mo,Male,Some college or associate degree,,Hispanic,west,66,44,53,47,42,54,66,69,51
+340006,clin,SLP,29,,21 to 31.5 mo,Male,Bachelor's degree or higher,,Hispanic,west,75,72,67,51,37,60,69,75,66
+340007,clin,ID,23,,21 to 31.5 mo,Male,Bachelor's degree or higher,,White,west,58,51,33,47,37,60,66,75,49
+340008,clin,ID,29,,21 to 31.5 mo,Male,Bachelor's degree or higher,,White,west,42,41,33,47,37,62,52,75,44
+340009,clin,MO,28,,21 to 31.5 mo,Male,Some college or associate degree,,Asian,west,65,62,56,57,58,67,72,75,65
+340010,clin,MO,28,,21 to 31.5 mo,Female,Some college or associate degree,,Hispanic,west,75,48,56,57,75,47,72,75,62
+340011,clin,SPD,24,,21 to 31.5 mo,Male,Bachelor's degree or higher,,MultiRacial,west,68,57,56,47,51,60,69,75,58
+340012,clin,SLP,27,,21 to 31.5 mo,Male,High school graduate (including GED),,Hispanic,west,75,37,48,51,58,72,52,73,55
+340013,clin,OTH,15,,09.5 to 20 mo,Female,Some college or associate degree,,Hispanic,west,64,60,43,41,40,50,59,75,49
+340014,clin,SLP,30,,21 to 31.5 mo,Female,Bachelor's degree or higher,,MultiRacial,west,51,62,48,44,37,62,52,75,52
+340015,clin,SLP,25,,21 to 31.5 mo,Male,Bachelor's degree or higher,,Other,west,63,41,51,54,67,60,48,73,54
+340016,clin,ASD,30,,21 to 31.5 mo,Female,Some college or associate degree,,Hispanic,west,72,54,67,60,51,57,52,75,59
+340017,clin,MO,28,,21 to 31.5 mo,Male,Bachelor's degree or higher,,White,west,56,54,45,54,47,60,48,47,51
+413003,clin,SLP,25,,21 to 31.5 mo,Male,Bachelor's degree or higher,,White,south,56,33,38,39,42,60,38,42,39
+413010,clin,SLP,30,,21 to 31.5 mo,Male,Bachelor's degree or higher,,White,south,56,48,41,39,47,62,63,66,50
+413012,clin,SLP,30,,21 to 31.5 mo,Male,Bachelor's degree or higher,,AmericanIndAlaskanNat,south,72,48,48,51,47,39,56,62,47
+413013,clin,SLP,24,,21 to 31.5 mo,Male,Bachelor's degree or higher,,MultiRacial,south,63,62,65,51,47,54,60,42,59
+413014,clin,SLP,29,,21 to 31.5 mo,Male,Bachelor's degree or higher,,AmericanIndAlaskanNat,south,60,48,48,39,37,34,48,42,40
+138008,clin,ASD,,4,2 to 4 years,Male,Bachelor's degree or higher,,White,west,64,60,62,70,62,69,71,71,68
+138010,clin,ASD,,4,2 to 4 years,Male,Bachelor's degree or higher,,Other,west,68,54,57,66,46,62,64,65,60
+138012,clin,SPD,,4,2 to 4 years,Male,Bachelor's degree or higher,,White,west,61,50,60,63,67,52,59,66,60
+138017,clin,SPD,,3,2 to 4 years,Male,Bachelor's degree or higher,,Hispanic,west,58,58,65,63,70,62,66,56,66
+138018,clin,SPD,,5,5 years,Male,Bachelor's degree or higher,,MultiRacial,west,43,50,47,55,35,60,59,46,53
+209002,clin,SLP,,4,2 to 4 years,Female,Bachelor's degree or higher,,White,south,63,50,60,63,41,56,62,58,57
+209005,clin,SPD,,5,5 years,Male,Bachelor's degree or higher,,White,south,55,65,67,66,65,59,57,52,65
+209006,clin,SLP,,4,2 to 4 years,Male,Bachelor's degree or higher,,White,south,49,56,65,54,50,56,68,63,60
+209012,clin,ASD,,5,5 years,Male,Bachelor's degree or higher,,MultiRacial,south,65,61,65,57,62,62,65,70,63
+209015,clin,SPD,,4,2 to 4 years,Male,Some college or associate degree,,White,south,68,74,70,71,64,71,71,60,74
+242001,clin,DD,,4,2 to 4 years,Female,Bachelor's degree or higher,,White,south,55,44,49,56,50,41,68,66,51
+242011,clin,SLP,,4,2 to 4 years,Female,Bachelor's degree or higher,,Asian,south,58,50,51,56,36,47,49,43,48
+242013,clin,MO,,4,2 to 4 years,Male,Some college or associate degree,,Asian,south,47,61,49,65,56,61,66,63,61
+242019,clin,SLP,,4,2 to 4 years,Male,Bachelor's degree or higher,,White,south,64,52,68,60,58,61,53,65,62
+242022,clin,OTH,,3,2 to 4 years,Male,Some college or associate degree,,White,south,58,52,63,65,60,68,64,68,64
+242026,clin,SPD,,5,5 years,Female,Bachelor's degree or higher,,White,south,45,56,61,55,60,60,50,62,58
+242027,clin,ASD,,4,2 to 4 years,Male,Some college or associate degree,,Black,south,68,63,63,58,53,71,72,73,66
+242033,clin,MO,,3,2 to 4 years,Female,Some college or associate degree,,AmericanIndAlaskanNat,south,68,66,60,66,67,60,66,64,65
+242039,clin,ASD,,3,2 to 4 years,Male,Bachelor's degree or higher,,Hispanic,south,68,67,63,70,65,64,64,74,68
+242040,clin,ID,,3,2 to 4 years,Female,Bachelor's degree or higher,,Hispanic,south,66,52,51,66,67,56,62,66,60
+243003,clin,ID,,4,2 to 4 years,Male,Bachelor's degree or higher,,White,south,58,54,51,66,65,50,59,67,59
+243016,clin,DD,,3,2 to 4 years,Male,High school graduate (including GED),,MultiRacial,south,64,68,62,73,67,67,56,63,69
+243025,clin,SPD,,5,5 years,Male,Bachelor's degree or higher,,White,south,65,60,59,52,35,62,65,65,58
+243030,clin,SPD,,5,5 years,Female,Bachelor's degree or higher,,Hispanic,south,66,64,68,67,65,60,69,65,67
+243033,clin,ASD,,3,2 to 4 years,Male,Bachelor's degree or higher,,White,south,64,63,59,69,65,66,71,67,67
+243035,clin,ID,,5,5 years,Male,Some college or associate degree,,White,south,49,50,50,49,45,38,61,55,49
+243038,clin,MO,,4,2 to 4 years,Male,Bachelor's degree or higher,,White,south,29,37,34,51,41,33,68,54,44
+243043,clin,SPD,,4,2 to 4 years,Male,Bachelor's degree or higher,,Hispanic,south,58,60,62,56,60,66,44,64,61
+243044,clin,ID,,5,5 years,Female,Some college or associate degree,,White,south,56,61,62,44,40,63,62,61,59
+243051,clin,SPD,,3,2 to 4 years,Male,Bachelor's degree or higher,,White,south,68,54,62,65,74,64,59,58,66
+243056,clin,ID,,4,2 to 4 years,Male,Bachelor's degree or higher,,White,south,32,41,43,44,56,41,56,54,45
+267005,clin,ADHD,,5,5 years,Female,Bachelor's degree or higher,,White,northeast,51,54,56,44,45,46,57,52,50
+267006,clin,ASD,,4,2 to 4 years,Male,Bachelor's degree or higher,,White,northeast,51,47,63,56,56,41,69,71,57
+267008,clin,DD,,4,2 to 4 years,Male,Bachelor's degree or higher,,MultiRacial,northeast,61,63,59,44,46,33,38,49,50
+267010,clin,DD,,4,2 to 4 years,Male,Bachelor's degree or higher,,White,northeast,56,63,54,56,36,65,66,64,60
+269063,clin,MH,,3,2 to 4 years,Male,Some college or associate degree,,Hispanic,south,61,50,56,58,56,52,49,56,54
+280013,clin,SLP,,3,2 to 4 years,Male,Some college or associate degree,,Hispanic,west,61,58,54,63,50,71,53,61,62
+294006,clin,ADHD,,4,2 to 4 years,Female,High school graduate (including GED),,Black,midwest,58,44,57,54,56,50,53,46,52
+294007,clin,ADHD,,5,5 years,Male,High school graduate (including GED),,Black,midwest,59,50,65,49,48,52,61,62,55
+294016,clin,VIS,,4,2 to 4 years,Female,High school graduate (including GED),,Black,midwest,43,50,51,44,46,41,56,56,47
+306004,clin,VIS,,5,5 years,Male,Bachelor's degree or higher,,White,west,59,69,61,57,51,52,70,71,64
+306005,clin,ADHD,,4,2 to 4 years,Male,High school graduate (including GED),,White,west,75,61,57,69,50,75,66,74,68
+306006,clin,ADHD,,5,5 years,Male,Did not complete high school (no diploma),,Hispanic,west,69,47,53,52,45,67,59,63,58
+306008,clin,HEA,,4,2 to 4 years,Male,High school graduate (including GED),,White,west,43,44,57,35,46,33,53,46,44
+306010,clin,ADHD,,3,2 to 4 years,Female,High school graduate (including GED),,White,west,73,47,62,62,50,45,53,71,54
+335001,clin,HEA,,5,5 years,Female,Some college or associate degree,,Hispanic,south,49,36,59,38,54,38,38,46,45
+335002,clin,HEA,,3,2 to 4 years,Male,Some college or associate degree,,Black,south,56,44,43,48,36,38,44,52,40
+335003,clin,OTH,,2,2 to 4 years,Male,Bachelor's degree or higher,,White,south,47,56,57,60,50,52,62,60,57
+335004,clin,HEA,,3,2 to 4 years,Male,Some college or associate degree,,Hispanic,south,66,69,66,73,50,71,71,69,71
+335005,clin,HEA,,3,2 to 4 years,Male,Some college or associate degree,,MultiRacial,south,64,41,54,63,56,65,38,43,56
+336002,clin,HEA,,3,2 to 4 years,Male,Some college or associate degree,,White,south,43,32,43,35,36,38,44,43,34
+336003,clin,HEA,,4,2 to 4 years,Male,Some college or associate degree,,Hispanic,south,51,61,60,63,53,50,53,60,58
+336005,clin,HEA,,3,2 to 4 years,Female,Bachelor's degree or higher,,White,south,37,41,49,54,46,50,38,49,46
+336008,clin,HEA,,4,2 to 4 years,Female,Some college or associate degree,,White,south,60,58,57,54,53,52,53,58,55
+336010,clin,DD,,2,2 to 4 years,Female,High school graduate (including GED),,White,south,56,73,62,67,46,66,71,68,68
+336015,clin,HEA,,3,2 to 4 years,Female,Bachelor's degree or higher,,White,south,45,60,54,48,46,38,56,54,51
+337001,clin,MH,,3,2 to 4 years,Female,High school graduate (including GED),,White,northeast,68,63,62,66,46,68,59,73,64
+337002,clin,MH,,4,2 to 4 years,Male,High school graduate (including GED),,White,northeast,66,54,64,65,65,67,49,64,64
+337010,clin,DD,,5,5 years,Male,Some college or associate degree,,Black,northeast,62,56,58,49,35,49,50,66,50
+337011,clin,DD,,5,5 years,Male,High school graduate (including GED),,Black,northeast,56,58,53,44,48,52,59,66,53
+337012,clin,DD,,5,5 years,Female,Some college or associate degree,,Hispanic,northeast,53,52,62,44,35,49,57,62,52
+339001,clin,SLP,,4,2 to 4 years,Male,High school graduate (including GED),,Asian,south,68,54,57,44,50,66,66,71,58
+339002,clin,HEA,,3,2 to 4 years,Female,Some college or associate degree,,White,south,68,72,72,73,75,71,75,71,74
+339015,clin,SLP,,4,2 to 4 years,Female,Did not complete high school (no diploma),,Hispanic,south,29,71,65,60,46,54,75,71,66
+339016,clin,SLP,,2,2 to 4 years,Male,Some college or associate degree,,White,south,34,32,54,69,73,60,56,68,62
+339017,clin,SLP,,5,5 years,Female,High school graduate (including GED),,White,south,65,65,36,61,45,67,62,63,60
+339018,clin,SLP,,5,5 years,Male,Bachelor's degree or higher,,Black,south,58,69,65,57,54,67,54,70,64
+339019,clin,SLP,,4,2 to 4 years,Male,Some college or associate degree,,White,south,37,54,57,48,36,54,72,70,56
+339020,clin,SLP,,3,2 to 4 years,Male,High school graduate (including GED),,White,south,32,70,59,60,50,60,69,74,63
+339021,clin,SLP,,3,2 to 4 years,Male,Did not complete high school (no diploma),,Black,south,69,50,51,70,50,71,68,69,65
+339022,clin,SLP,,4,2 to 4 years,Male,Bachelor's degree or higher,,White,south,64,60,71,54,36,58,49,71,61
+342009,clin,VIS,,3,2 to 4 years,Male,Bachelor's degree or higher,,Hispanic,west,68,64,73,66,65,62,75,74,72
+342010,clin,HEA,,3,2 to 4 years,Male,Some college or associate degree,,Black,west,53,44,57,35,50,33,59,43,46
+342011,clin,HEA,,3,2 to 4 years,Male,Did not complete high school (no diploma),,Hispanic,west,72,67,73,60,36,75,75,73,72
+344002,clin,ASD,,4,2 to 4 years,Female,Bachelor's degree or higher,,White,northeast,49,61,60,56,53,54,66,68,60
+344003,clin,SPD,,5,5 years,Male,Bachelor's degree or higher,,White,northeast,34,36,36,38,35,52,50,46,40
+344004,clin,SPD,,3,2 to 4 years,Female,Bachelor's degree or higher,,White,northeast,49,41,34,40,46,52,38,34,41
+344006,clin,SLP,,3,2 to 4 years,Male,Bachelor's degree or higher,,White,northeast,63,60,60,62,56,71,73,68,66
+375002,clin,ASD,,4,2 to 4 years,Male,Bachelor's degree or higher,,White,south,69,37,56,51,41,38,44,61,44
+375003,clin,SLP,,4,2 to 4 years,Male,Bachelor's degree or higher,,White,south,47,37,39,48,46,38,44,43,39
+375008,clin,SLP,,4,2 to 4 years,Female,Some college or associate degree,,White,south,63,47,43,44,50,45,62,54,47
+376002,clin,ASD,,5,5 years,Male,Bachelor's degree or higher,,White,south,67,61,69,67,65,66,65,68,67
+376013,clin,ASD,,5,5 years,Female,Bachelor's degree or higher,,White,south,66,61,67,66,58,59,54,68,60
+412001,clin,SLP,,3,2 to 4 years,Male,Bachelor's degree or higher,,White,northeast,34,41,34,54,46,33,38,39,39
+412002,clin,DD,,3,2 to 4 years,Male,High school graduate (including GED),,Black,south,60,41,66,58,58,47,38,64,55
+412003,clin,OTH,,3,2 to 4 years,Female,High school graduate (including GED),,White,south,41,32,34,35,36,33,38,34,30
+412004,clin,OTH,,3,2 to 4 years,Male,High school graduate (including GED),,Black,south,53,50,46,54,75,47,49,52,57
+412005,clin,ADHD,,4,2 to 4 years,Female,Some college or associate degree,,Black,south,68,52,51,51,36,41,53,49,47
+412006,clin,DD,,5,5 years,Male,Bachelor's degree or higher,,White,south,62,60,63,52,48,60,50,41,57
+412007,clin,ASD,,4,2 to 4 years,Male,Some college or associate degree,,White,south,51,70,63,62,58,71,72,63,69
+412008,clin,DD,,4,2 to 4 years,Female,Some college or associate degree,,White,south,51,69,67,69,75,62,75,58,72
+412009,clin,DD,,3,2 to 4 years,Male,High school graduate (including GED),,Hispanic,south,37,47,39,40,50,41,38,49,41
+412010,clin,DD,,3,2 to 4 years,Male,Some college or associate degree,,White,south,51,61,49,63,56,54,38,60,56
+412011,clin,MO,,4,2 to 4 years,Male,Some college or associate degree,,White,south,68,66,64,62,56,62,73,74,66
+412012,clin,DD,,3,2 to 4 years,Male,Some college or associate degree,,White,south,43,52,46,48,53,58,44,46,51
+412013,clin,OTH,,4,2 to 4 years,Male,Bachelor's degree or higher,,Hispanic,south,58,56,43,56,62,67,44,49,58
+412014,clin,FASD,,4,2 to 4 years,Male,Bachelor's degree or higher,,Black,south,49,44,39,51,53,56,49,56,48
+412015,clin,DD,,5,5 years,Female,High school graduate (including GED),,Hispanic,south,58,54,56,44,40,46,62,63,52
+412016,clin,SLP,,3,2 to 4 years,Male,Bachelor's degree or higher,,White,northeast,39,37,34,48,46,33,38,39,36
+413004,clin,SLP,,3,2 to 4 years,Female,Bachelor's degree or higher,,White,south,41,41,54,54,64,38,38,39,49
+413006,clin,SLP,,4,2 to 4 years,Male,Bachelor's degree or higher,,White,south,56,44,51,56,53,62,49,49,54
+413007,clin,SLP,,3,2 to 4 years,Female,Some college or associate degree,,White,south,64,54,57,56,60,56,59,68,58
+413009,clin,SLP,,3,2 to 4 years,Female,Bachelor's degree or higher,,Hispanic,south,43,52,54,56,60,47,53,46,54
+413011,clin,SLP,,4,2 to 4 years,Male,Some college or associate degree,,Hispanic,south,34,54,49,40,46,45,38,39,45
+413015,clin,SLP,,4,2 to 4 years,Male,Bachelor's degree or higher,,White,south,47,37,43,44,41,41,44,43,39
+413016,clin,SLP,,5,5 years,Male,Bachelor's degree or higher,,White,south,53,47,58,61,62,56,50,57,56
+413017,clin,SLP,,3,2 to 4 years,Female,Bachelor's degree or higher,,Hispanic,south,39,44,39,44,50,33,38,43,39
+254001,clin,SLP,,5,5 to 8 years,Male,Bachelor's degree or higher,,White,midwest,53,69,69,53,64,61,68,72,66
+242004,clin,ASD,,8,5 to 8 years,Male,High school graduate (including GED),,Asian,south,69,71,73,50,55,59,61,64,66
+242009,clin,ID,,5,5 to 8 years,Male,Bachelor's degree or higher,,White,south,61,55,62,61,58,64,69,72,64
+242006,clin,MO,,7,5 to 8 years,Male,Some college or associate degree,,Hispanic,south,75,74,64,65,49,51,70,75,65
+242010,clin,MO,,9,9 to 12 years,Male,High school graduate (including GED),,White,south,75,71,72,69,58,69,70,70,72
+242007,clin,MO,,9,9 to 12 years,Male,Some college or associate degree,,White,south,63,66,61,59,36,51,69,75,60
+242023,clin,MO,,6,5 to 8 years,Male,Some college or associate degree,,White,south,53,71,64,75,55,63,70,64,69
+242020,clin,ADHD,,7,5 to 8 years,Female,High school graduate (including GED),,White,south,55,63,62,65,55,66,63,67,64
+242021,clin,MO,,5,5 to 8 years,Female,High school graduate (including GED),,White,south,57,55,61,67,58,59,63,58,62
+242015,clin,ASD,,12,9 to 12 years,Female,Some college or associate degree,,Hispanic,south,66,61,65,63,49,64,68,72,64
+242028,clin,ASD,,11,9 to 12 years,Male,Some college or associate degree,,Black,south,75,66,67,59,49,57,69,73,64
+242032,clin,MO,,9,9 to 12 years,Male,Bachelor's degree or higher,,Black,south,44,69,57,61,60,59,53,68,62
+242025,clin,ASD,,6,5 to 8 years,Male,Some college or associate degree,,White,south,57,55,62,56,60,68,75,64,65
+242005,clin,ASD,,7,5 to 8 years,Male,Bachelor's degree or higher,,White,south,60,63,62,67,65,70,74,72,70
+223001,clin,ADHD,,11,9 to 12 years,Male,Some college or associate degree,,Hispanic,west,55,61,51,59,49,61,53,66,57
+223002,clin,ASD,,8,5 to 8 years,Male,Some college or associate degree,,Hispanic,west,74,71,75,69,62,61,63,73,72
+223003,clin,ASD,,9,9 to 12 years,Female,High school graduate (including GED),,Hispanic,west,75,75,75,71,62,61,66,75,74
+223007,clin,LD,,9,9 to 12 years,Female,High school graduate (including GED),,Hispanic,west,59,45,40,50,43,38,41,38,41
+242038,clin,ID,,10,9 to 12 years,Female,Some college or associate degree,,Hispanic,south,50,55,58,75,64,45,68,74,64
+223012,clin,SLP,,9,9 to 12 years,Female,High school graduate (including GED),,Hispanic,west,42,45,40,53,43,45,41,38,43
+223004,clin,ID,,9,9 to 12 years,Female,High school graduate (including GED),,Black,west,48,52,47,59,49,55,56,75,53
+223005,clin,ID,,5,5 to 8 years,Female,High school graduate (including GED),,Hispanic,west,68,64,54,63,49,57,59,75,59
+223009,clin,LD,,10,9 to 12 years,Female,High school graduate (including GED),,Hispanic,west,39,49,40,50,52,48,41,48,47
+223008,clin,LD,,10,9 to 12 years,Male,High school graduate (including GED),,Hispanic,west,34,49,40,37,43,51,49,38,43
+223013,clin,SLP,,10,9 to 12 years,Female,High school graduate (including GED),,Hispanic,west,34,49,40,37,36,38,41,38,37
+223006,clin,ID,,6,5 to 8 years,Female,High school graduate (including GED),,Hispanic,west,63,66,51,63,46,63,56,75,60
+223014,clin,SLP,,9,9 to 12 years,Male,High school graduate (including GED),,Hispanic,west,42,52,40,61,46,48,53,38,50
+223010,clin,MO,,7,5 to 8 years,Male,High school graduate (including GED),,Hispanic,west,51,61,47,56,49,66,61,74,59
+223011,clin,MO,,8,5 to 8 years,Male,High school graduate (including GED),,Hispanic,west,53,60,47,61,49,57,66,73,59
+242002,clin,ID,,8,5 to 8 years,Female,Some college or associate degree,,Black,south,66,66,66,71,43,68,69,70,67
+242017,clin,ADHD,,9,9 to 12 years,Male,Some college or associate degree,,Hispanic,south,57,60,57,53,55,57,61,62,58
+242018,clin,ASD,,10,9 to 12 years,Male,Some college or associate degree,,Hispanic,south,69,61,67,66,75,68,65,64,70
+209003,clin,ASD,,7,5 to 8 years,Male,Bachelor's degree or higher,,White,south,71,75,74,75,75,68,75,75,75
+242041,clin,ASD,,8,5 to 8 years,Male,Some college or associate degree,,Black,south,69,66,72,59,57,59,61,68,65
+243002,clin,MH,,7,5 to 8 years,Male,Bachelor's degree or higher,,White,south,53,60,64,50,55,48,63,63,59
+209004,clin,SPD,,11,9 to 12 years,Male,Bachelor's degree or higher,,White,south,53,61,64,70,75,45,65,38,66
+243012,clin,DD,,11,9 to 12 years,Male,Bachelor's degree or higher,,White,south,59,52,47,66,52,64,75,74,64
+243004,clin,LD,,10,9 to 12 years,Male,Bachelor's degree or higher,,White,south,66,64,64,68,57,57,70,74,65
+243008,clin,ASD,,6,5 to 8 years,Male,Bachelor's degree or higher,,White,south,66,71,73,68,75,75,75,73,75
+242043,clin,LD,,6,5 to 8 years,Male,Some college or associate degree,,White,south,68,71,67,75,57,73,68,73,73
+243017,clin,ASD,,6,5 to 8 years,Male,Bachelor's degree or higher,,Hispanic,south,60,68,70,68,52,71,59,60,68
+243005,clin,DD,,5,5 to 8 years,Female,High school graduate (including GED),,White,south,60,66,64,71,64,64,75,75,71
+243028,clin,ADHD,,10,9 to 12 years,Male,Some college or associate degree,,White,south,60,55,62,67,60,61,61,66,63
+243026,clin,OTH,,7,5 to 8 years,Male,Bachelor's degree or higher,,White,south,57,63,47,47,43,55,61,72,54
+243023,clin,ID,,8,5 to 8 years,Male,Bachelor's degree or higher,,White,south,46,61,54,63,55,64,65,67,62
+243039,clin,MO,,5,5 to 8 years,Male,Bachelor's degree or higher,,White,south,57,60,54,59,55,69,63,62,62
+209007,clin,ADHD,,7,5 to 8 years,Male,Some college or associate degree,,White,south,69,69,54,63,67,69,75,66,69
+243024,clin,MO,,11,9 to 12 years,Male,Some college or associate degree,,White,south,59,75,67,59,64,53,75,73,70
+209008,clin,ASD,,8,5 to 8 years,Male,Some college or associate degree,,Black,south,71,60,66,69,67,70,68,72,69
+243041,clin,ASD,,10,9 to 12 years,Male,Some college or associate degree,,White,south,65,60,62,43,72,61,49,62,62
+243007,clin,SPD,,7,5 to 8 years,Male,Bachelor's degree or higher,,White,south,59,68,62,66,65,69,73,69,69
+243031,clin,ASD,,5,5 to 8 years,Male,Bachelor's degree or higher,,MultiRacial,south,61,66,65,63,58,70,63,63,66
+243027,clin,ADHD,,11,9 to 12 years,Female,Some college or associate degree,,White,south,59,63,47,63,46,68,68,72,62
+243015,clin,ADHD,,11,9 to 12 years,Male,Bachelor's degree or higher,,White,south,51,52,47,47,43,48,41,56,45
+243032,clin,ASD,,8,5 to 8 years,Female,Bachelor's degree or higher,,White,south,68,71,60,59,49,69,70,75,65
+243042,clin,ASD,,11,9 to 12 years,Male,Bachelor's degree or higher,,White,south,65,60,54,65,62,45,56,58,59
+243050,clin,MO,,6,5 to 8 years,Male,Some college or associate degree,,White,south,61,68,66,75,60,70,75,73,73
+243009,clin,MO,,7,5 to 8 years,Male,Bachelor's degree or higher,,White,south,60,68,72,75,58,75,75,72,75
+243021,clin,ID,,5,5 to 8 years,Male,Some college or associate degree,,Hispanic,south,66,38,40,59,69,66,68,50,62
+243019,clin,ASD,,9,9 to 12 years,Male,Bachelor's degree or higher,,Hispanic,south,57,58,58,43,65,57,63,55,60
+243010,clin,MO,,11,9 to 12 years,Male,Some college or associate degree,,Black,south,57,75,70,71,65,71,69,75,74
+209010,clin,SLP,,5,5 to 8 years,Female,Some college or associate degree,,White,south,61,66,68,67,68,68,73,62,72
+243018,clin,ASD,,9,9 to 12 years,Female,Bachelor's degree or higher,,White,south,69,52,57,53,58,72,59,53,62
+141307,clin,ADHD,,11,9 to 12 years,Male,Bachelor's degree or higher,,White,south,71,63,60,56,60,68,65,67,64
+209014,clin,ASD,,10,9 to 12 years,Male,Some college or associate degree,,Black,south,65,64,65,67,75,68,66,67,70
+209016,clin,ADHD,,7,5 to 8 years,Female,Some college or associate degree,,White,south,60,64,62,68,55,68,61,64,65
+209017,clin,ADHD,,9,9 to 12 years,Female,Some college or associate degree,,White,south,68,55,61,56,65,45,61,62,59
+242047,clin,ASD,,8,5 to 8 years,Female,Some college or associate degree,,Hispanic,south,65,72,72,68,65,66,73,68,73
+269020,clin,MH,,10,9 to 12 years,Female,Some college or associate degree,,White,south,39,45,40,43,46,38,41,50,39
+267001,clin,ASD,,9,9 to 12 years,Male,Bachelor's degree or higher,,White,northeast,70,75,68,50,55,66,75,75,71
+267002,clin,ASD,,10,9 to 12 years,Male,Bachelor's degree or higher,,White,northeast,65,64,67,69,62,70,71,74,71
+267004,clin,ASD,,12,9 to 12 years,Male,Bachelor's degree or higher,,White,northeast,68,75,69,73,71,64,75,72,75
+137004,clin,HEA,,11,9 to 12 years,Male,Some college or associate degree,,White,midwest,39,38,58,37,36,38,41,38,41
+243058,clin,SPD,,8,5 to 8 years,Male,Bachelor's degree or higher,,MultiRacial,south,63,71,72,75,67,73,73,70,75
+137002,clin,VIS,,11,9 to 12 years,Female,Bachelor's degree or higher,,White,midwest,71,68,73,66,58,48,68,72,67
+267003,clin,ASD,,11,9 to 12 years,Male,Bachelor's degree or higher,,White,northeast,61,49,64,59,52,61,63,63,60
+243040,clin,ADHD,,10,9 to 12 years,Male,High school graduate (including GED),,White,south,59,52,40,37,57,57,53,55,51
+141339,clin,MO,,8,5 to 8 years,Female,Bachelor's degree or higher,,White,south,61,68,67,73,75,69,73,62,75
+243059,clin,ASD,,7,5 to 8 years,Male,Bachelor's degree or higher,,White,south,51,66,61,61,52,57,66,63,62
+243022,clin,ADHD,,11,9 to 12 years,Male,Bachelor's degree or higher,,White,south,63,52,58,61,65,57,65,53,62
+243029,clin,MO,,8,5 to 8 years,Male,Bachelor's degree or higher,,Hispanic,south,42,45,40,37,52,45,59,38,46
+269026,clin,MH,,10,9 to 12 years,Male,Some college or associate degree,,White,south,48,45,64,53,36,53,41,69,52
+272007,clin,ASD,,8,5 to 8 years,Female,Bachelor's degree or higher,,White,west,71,75,73,73,67,73,75,75,75
+269015,clin,ASD,,11,9 to 12 years,Male,High school graduate (including GED),,White,south,60,45,47,56,55,53,41,69,50
+242031,clin,ASD,,7,5 to 8 years,Male,Some college or associate degree,,Black,south,57,64,57,50,46,59,63,64,59
+243052,clin,SPD,,11,9 to 12 years,Male,Some college or associate degree,,Hispanic,south,63,74,72,69,57,61,65,67,70
+269065,clin,ASD,,10,9 to 12 years,Female,Some college or associate degree,,White,south,65,71,71,75,67,57,75,74,74
+243053,clin,ID,,8,5 to 8 years,Male,Some college or associate degree,,Hispanic,south,52,63,54,65,57,51,56,66,59
+272002,clin,ASD,,11,9 to 12 years,Male,High school graduate (including GED),,Hispanic,west,75,75,75,75,75,75,70,72,75
+243034,clin,MH,,10,9 to 12 years,Male,Bachelor's degree or higher,,Hispanic,south,61,64,66,65,36,57,65,56,62
+269070,clin,ASD,,9,9 to 12 years,Male,Bachelor's degree or higher,,White,south,63,61,64,56,58,59,53,53,61
+137005,clin,ID,,8,5 to 8 years,Male,Some college or associate degree,,White,midwest,74,68,68,66,71,53,66,74,68
+269027,clin,MH,,10,9 to 12 years,Male,Bachelor's degree or higher,,Black,south,61,63,58,59,46,57,61,64,59
+269028,clin,MH,,9,9 to 12 years,Male,Bachelor's degree or higher,,Black,south,66,60,40,53,43,63,56,62,54
+269029,clin,MH,,11,9 to 12 years,Male,Bachelor's degree or higher,,Hispanic,south,57,72,64,61,55,53,59,62,63
+272010,clin,ASD,,8,5 to 8 years,Female,High school graduate (including GED),,White,west,69,71,57,70,74,68,75,75,73
+280001,clin,VIS,,8,5 to 8 years,Female,Some college or associate degree,,Asian,west,68,75,75,71,68,64,75,73,75
+269030,clin,ID,,12,9 to 12 years,Male,Bachelor's degree or higher,,Hispanic,south,55,60,54,53,43,53,65,64,56
+269031,clin,MH,,11,9 to 12 years,Male,Bachelor's degree or higher,,White,south,60,52,51,50,36,51,49,55,48
+243064,clin,SPD,,11,9 to 12 years,Male,Some college or associate degree,,Black,south,71,71,66,73,62,48,65,74,67
+280006,clin,MO,,11,9 to 12 years,Female,Bachelor's degree or higher,,Hispanic,west,60,69,58,69,60,61,71,73,67
+269093,clin,OTH,,8,5 to 8 years,Male,High school graduate (including GED),,MultiRacial,south,70,60,64,71,64,63,56,56,65
+272003,clin,SPD,,5,5 to 8 years,Male,High school graduate (including GED),,White,west,65,71,60,66,64,75,71,72,73
+243060,clin,SPD,,5,5 to 8 years,Female,Bachelor's degree or higher,,White,south,55,64,58,68,62,66,68,69,66
+269052,clin,MH,,12,9 to 12 years,Male,High school graduate (including GED),,White,south,74,64,61,63,60,57,66,63,64
+272001,clin,SPD,,10,9 to 12 years,Male,Bachelor's degree or higher,,Other,west,53,71,72,75,49,59,63,60,70
+269060,clin,MH,,10,9 to 12 years,Male,Did not complete high school (no diploma),,White,south,69,75,64,75,67,68,61,67,72
+263011,clin,SLP,,10,9 to 12 years,Female,Some college or associate degree,,Hispanic,west,34,38,40,43,36,38,41,48,34
+263010,clin,MH,,5,5 to 8 years,Male,Bachelor's degree or higher,,Hispanic,west,48,55,47,43,49,38,49,38,46
+263019,clin,LD,,11,9 to 12 years,Female,Did not complete high school (no diploma),,Hispanic,west,34,45,40,37,36,48,41,53,38
+243020,clin,ASD,,6,5 to 8 years,Male,Some college or associate degree,,Hispanic,south,68,72,73,56,67,69,66,69,72
+269012,clin,MH,,12,9 to 12 years,Male,Did not complete high school (no diploma),,White,south,46,58,47,47,43,48,41,50,47
+209011,clin,ADHD,,10,9 to 12 years,Male,Bachelor's degree or higher,,White,south,65,55,54,53,43,59,56,63,54
+269025,clin,LD,,10,9 to 12 years,Female,Some college or associate degree,,White,south,66,74,66,73,72,61,61,74,72
+243070,clin,MO,,8,5 to 8 years,Male,Bachelor's degree or higher,,Asian,south,48,52,47,61,71,75,65,53,67
+335011,clin,HEA,,7,5 to 8 years,Male,Bachelor's degree or higher,,White,south,42,45,51,37,36,38,41,45,38
+337016,clin,SPD,,8,5 to 8 years,Male,Bachelor's degree or higher,,White,northeast,55,68,57,53,49,66,65,56,62
+335012,clin,MO,,7,5 to 8 years,Male,Some college or associate degree,,Hispanic,south,65,64,75,61,75,61,49,63,71
+335010,clin,HEA,,9,9 to 12 years,Male,Bachelor's degree or higher,,White,south,65,63,61,70,62,64,61,66,65
+335013,clin,HEA,,8,5 to 8 years,Male,Bachelor's degree or higher,,White,south,59,58,68,63,55,72,70,67,67
+336007,clin,HEA,,8,5 to 8 years,Male,Bachelor's degree or higher,,White,south,60,63,70,65,57,69,59,67,66
+337013,clin,SLP,,7,5 to 8 years,Male,High school graduate (including GED),,White,northeast,66,49,54,61,52,73,59,56,61
+335015,clin,HEA,,10,9 to 12 years,Male,Bachelor's degree or higher,,Hispanic,south,44,45,51,47,49,45,41,45,45
+335008,clin,HEA,,9,9 to 12 years,Female,Bachelor's degree or higher,,White,south,44,49,60,43,43,38,41,56,46
+338004,clin,LD,,9,9 to 12 years,Male,Did not complete high school (no diploma),,White,midwest,55,63,60,68,67,63,59,58,65
+335009,clin,HEA,,8,5 to 8 years,Female,Some college or associate degree,,Asian,south,51,49,62,50,36,48,59,53,52
+338001,clin,SLP,,7,5 to 8 years,Male,Some college or associate degree,,White,midwest,66,71,67,66,67,70,61,60,70
+338002,clin,SLP,,6,5 to 8 years,Female,Some college or associate degree,,White,midwest,75,60,40,56,49,57,66,60,57
+336014,clin,HEA,,6,5 to 8 years,Male,High school graduate (including GED),,White,south,53,49,40,53,55,57,41,50,51
+335007,clin,HEA,,10,9 to 12 years,Male,Bachelor's degree or higher,,White,south,60,58,51,67,46,63,59,58,59
+337015,clin,SLP,,10,9 to 12 years,Male,High school graduate (including GED),,Black,northeast,46,45,40,37,43,57,53,50,46
+337014,clin,SLP,,6,5 to 8 years,Male,High school graduate (including GED),,Black,northeast,55,52,40,47,43,45,53,64,45
+336009,clin,HEA,,5,5 to 8 years,Female,Bachelor's degree or higher,,White,south,34,45,60,56,64,38,41,53,54
+336004,clin,HEA,,11,9 to 12 years,Male,Bachelor's degree or higher,,White,south,55,71,72,67,69,57,73,70,72
+336012,clin,OTH,,10,9 to 12 years,Female,Some college or associate degree,,Asian,south,34,38,40,37,46,38,49,53,38
+344001,clin,ADHD,,6,5 to 8 years,Male,Bachelor's degree or higher,,White,northeast,65,52,40,43,55,70,65,55,59
+337003,clin,MH,,8,5 to 8 years,Male,High school graduate (including GED),,White,northeast,66,55,60,50,57,61,49,60,57
+337004,clin,MH,,7,5 to 8 years,Male,High school graduate (including GED),,Black,northeast,59,55,47,65,57,66,59,62,60
+337005,clin,MH,,8,5 to 8 years,Male,High school graduate (including GED),,Black,northeast,60,38,71,56,57,53,53,58,59
+337006,clin,ADHD,,10,9 to 12 years,Male,High school graduate (including GED),,Black,northeast,59,55,65,59,52,61,49,58,59
+335006,clin,HEA,,5,5 to 8 years,Female,Some college or associate degree,,White,south,34,38,57,37,36,38,41,45,39
+339010,clin,TBI,,7,5 to 8 years,Male,Did not complete high school (no diploma),,Hispanic,south,48,72,60,70,36,66,75,75,69
+339025,clin,SLP,,7,5 to 8 years,Male,High school graduate (including GED),,White,south,51,52,51,61,36,59,41,64,52
+336013,clin,HEA,,6,5 to 8 years,Female,Bachelor's degree or higher,,Hispanic,south,50,49,62,56,62,55,61,70,60
+338003,clin,ID,,11,9 to 12 years,Female,Bachelor's degree or higher,,White,midwest,53,58,65,71,55,53,69,74,64
+339013,clin,SPD,,6,5 to 8 years,Female,High school graduate (including GED),,Black,south,60,72,57,67,64,75,74,75,72
+335014,clin,HEA,,9,9 to 12 years,Male,Bachelor's degree or higher,,MultiRacial,south,39,38,58,43,60,48,41,38,50
+344005,clin,OTH,,6,5 to 8 years,Female,Bachelor's degree or higher,,White,northeast,55,68,69,67,64,61,73,67,70
+339023,clin,SLP,,6,5 to 8 years,Male,Bachelor's degree or higher,,White,south,34,55,47,47,36,53,65,67,52
+267014,clin,MH,,12,9 to 12 years,Male,Bachelor's degree or higher,,White,northeast,68,74,66,63,72,68,65,70,71
+339024,clin,SLP,,7,5 to 8 years,Male,Some college or associate degree,,White,south,44,60,68,56,58,63,59,66,63
+339034,clin,FASD,,9,9 to 12 years,Male,High school graduate (including GED),,White,south,57,74,57,65,58,64,69,72,66
+339026,clin,ID,,7,5 to 8 years,Male,High school graduate (including GED),,Black,south,53,63,67,75,69,68,75,75,74
+339027,clin,SLP,,11,9 to 12 years,Male,High school graduate (including GED),,Black,south,44,68,57,67,36,64,65,75,62
+339014,clin,SPD,,7,5 to 8 years,Male,Some college or associate degree,,White,south,57,66,62,70,64,63,71,75,69
+267011,clin,ADHD,,10,9 to 12 years,Male,Bachelor's degree or higher,,White,northeast,63,71,66,67,49,59,65,64,65
+344007,clin,ADHD,,12,9 to 12 years,Male,High school graduate (including GED),,White,northeast,44,49,58,43,36,48,53,60,48
+344009,clin,SPD,,7,5 to 8 years,Male,Bachelor's degree or higher,,White,northeast,46,61,40,56,57,57,70,64,60
+267007,clin,SPD,,7,5 to 8 years,Female,Some college or associate degree,,White,northeast,44,61,71,65,49,53,63,60,63
+344008,clin,SPD,,6,5 to 8 years,Male,Bachelor's degree or higher,,White,northeast,55,75,71,67,36,74,75,72,73
+344010,clin,SPD,,7,5 to 8 years,Male,Bachelor's degree or higher,,White,northeast,42,61,51,50,52,61,65,63,59
+267012,clin,SPD,,9,9 to 12 years,Male,Bachelor's degree or higher,,White,northeast,65,55,65,61,64,53,66,73,62
+267013,clin,ADHD,,9,9 to 12 years,Male,Bachelor's degree or higher,,White,northeast,61,60,57,56,62,69,56,53,62
+267009,clin,SPD,,7,5 to 8 years,Male,Bachelor's degree or higher,,MultiRacial,northeast,59,52,47,43,49,48,59,56,49
+338005,clin,SPD,,6,5 to 8 years,Male,High school graduate (including GED),,White,midwest,69,58,65,56,52,59,68,58,62
+376010,clin,ASD,,9,9 to 12 years,Male,Bachelor's degree or higher,,White,south,70,64,61,68,64,75,71,64,71
+375004,clin,MH,,10,9 to 12 years,Female,Bachelor's degree or higher,,White,south,42,38,40,47,36,45,49,38,39
+375005,clin,SLP,,8,5 to 8 years,Female,Bachelor's degree or higher,,White,south,39,49,40,37,36,38,53,38,39
+376005,clin,ASD,,12,9 to 12 years,Male,Some college or associate degree,,White,south,65,61,61,67,62,66,65,68,65
+375001,clin,ADHD,,9,9 to 12 years,Female,Bachelor's degree or higher,,White,south,51,68,64,75,49,38,61,75,63
+375006,clin,SLP,,8,5 to 8 years,Male,Bachelor's degree or higher,,White,south,55,58,40,47,49,48,41,53,48
+376007,clin,ADHD,,7,5 to 8 years,Male,Some college or associate degree,,White,south,63,64,58,66,65,72,66,70,68
+376006,clin,ADHD,,10,9 to 12 years,Male,Some college or associate degree,,White,south,65,66,64,66,75,75,75,68,73
+372001,clin,ASD,,7,5 to 8 years,Male,Bachelor's degree or higher,,Hispanic,west,65,58,58,59,49,64,59,58,59
+376014,clin,ADHD,,9,9 to 12 years,Male,High school graduate (including GED),,White,south,66,71,65,75,57,70,63,72,70
+372003,clin,ASD,,6,5 to 8 years,Male,Bachelor's degree or higher,,White,west,71,38,60,50,60,57,63,60,58
+372002,clin,SLP,,6,5 to 8 years,Male,Bachelor's degree or higher,,White,west,57,38,54,66,60,57,56,63,58
+372004,clin,LD,,9,9 to 12 years,Male,Bachelor's degree or higher,,Asian,west,51,52,57,50,49,55,61,63,54
+376009,clin,LD,,9,9 to 12 years,Female,Some college or associate degree,,White,south,48,49,67,66,57,38,56,68,59
+375009,clin,ASD,,9,9 to 12 years,Male,Bachelor's degree or higher,,White,south,63,75,70,75,62,71,73,68,75
+380002,clin,ADHD,,8,5 to 8 years,Male,Bachelor's degree or higher,,White,south,48,63,62,56,62,68,59,53,64
+375010,clin,SLP,,9,9 to 12 years,Female,Bachelor's degree or higher,,White,south,39,49,51,43,43,38,53,38,44
+375007,clin,MH,,8,5 to 8 years,Male,Bachelor's degree or higher,,White,south,50,55,47,50,52,51,56,58,52
+376016,clin,ADHD,,7,5 to 8 years,Male,Bachelor's degree or higher,,White,south,53,61,64,61,49,68,49,56,62
+376015,clin,ASD,,9,9 to 12 years,Male,Bachelor's degree or higher,,White,south,61,63,67,66,46,70,71,64,67
+376003,clin,LD,,12,9 to 12 years,Male,Some college or associate degree,,White,south,53,66,57,67,36,72,56,69,63
+380003,clin,SLP,,8,5 to 8 years,Female,Bachelor's degree or higher,,White,south,53,61,64,61,52,59,65,70,62
+138011,clin,ASD,,7,5 to 8 years,Male,Bachelor's degree or higher,,Other,west,74,63,61,65,57,69,66,74,65
+138016,clin,SPD,,10,9 to 12 years,Male,Bachelor's degree or higher,,White,west,42,45,40,47,62,45,53,60,50
+138015,clin,SPD,,6,5 to 8 years,Male,Bachelor's degree or higher,,White,west,60,72,67,71,75,66,66,73,73
+376025,clin,LD,,8,5 to 8 years,Female,Some college or associate degree,,White,south,69,63,69,65,68,57,68,64,67
+138013,clin,SPD,,9,9 to 12 years,Male,Bachelor's degree or higher,,White,west,55,52,54,53,58,61,59,53,58
+138014,clin,SPD,,8,5 to 8 years,Male,Bachelor's degree or higher,,Hispanic,west,59,58,68,67,64,64,61,60,66
+138009,clin,ASD,,7,5 to 8 years,Male,Bachelor's degree or higher,,Hispanic,west,75,69,69,70,69,69,61,69,72
+380018,clin,ADHD,,8,5 to 8 years,Female,Bachelor's degree or higher,,White,south,61,58,64,67,58,66,61,69,64
+380016,clin,ADHD,,10,9 to 12 years,Female,Bachelor's degree or higher,,Other,south,55,71,64,50,49,55,68,66,62
+380020,clin,ADHD,,12,9 to 12 years,Male,Bachelor's degree or higher,,White,south,51,63,58,56,60,64,68,64,63
+380007,clin,ASD,,12,9 to 12 years,Female,Some college or associate degree,,White,south,48,52,51,68,58,48,61,60,59
+390001,clin,ASD,,6,5 to 8 years,Female,Bachelor's degree or higher,,MultiRacial,northeast,65,45,54,53,49,61,53,60,53
+390002,clin,ASD,,8,5 to 8 years,Male,Bachelor's degree or higher,,MultiRacial,northeast,70,63,67,65,62,69,66,73,67
+390003,clin,ASD,,6,5 to 8 years,Male,Some college or associate degree,,White,northeast,63,60,51,59,55,57,49,60,56
+390005,clin,ASD,,6,5 to 8 years,Male,Some college or associate degree,,White,northeast,75,66,61,69,67,75,69,72,72
+380013,clin,SPD,,9,9 to 12 years,Male,Bachelor's degree or higher,,White,south,61,60,57,63,62,61,73,66,64
+390004,clin,ASD,,7,5 to 8 years,Male,Bachelor's degree or higher,,White,northeast,75,75,67,75,75,75,70,60,75
+390006,clin,ASD,,8,5 to 8 years,Female,Some college or associate degree,,White,northeast,63,68,67,65,67,69,74,64,72
+380032,clin,MH,,8,5 to 8 years,Male,Bachelor's degree or higher,,Black,midwest,57,58,58,65,62,63,61,58,62
+380033,clin,MH,,10,9 to 12 years,Female,Bachelor's degree or higher,,Black,midwest,55,58,62,53,62,59,59,53,61
+380035,clin,ADHD,,8,5 to 8 years,Female,Bachelor's degree or higher,,White,south,46,52,51,47,58,48,59,50,53
+380029,clin,OTH,,11,9 to 12 years,Male,Bachelor's degree or higher,,White,south,48,63,57,53,52,53,61,63,58
+380008,clin,SPD,,6,5 to 8 years,Female,High school graduate (including GED),,MultiRacial,south,53,45,71,63,65,64,73,55,67
+380038,clin,SLP,,8,5 to 8 years,Female,Bachelor's degree or higher,,White,south,39,38,47,43,49,48,49,55,44
+500003,clin,MH,,10,9 to 12 years,Female,Some college or associate degree,,Hispanic,west,52,38,47,59,36,53,41,45,47
+500007,clin,ADHD,,9,9 to 12 years,Female,Some college or associate degree,,Hispanic,west,60,55,47,53,43,64,61,58,56
+500100,clin,LD,,9,9 to 12 years,Male,Some college or associate degree,,White,west,44,63,58,56,43,66,56,62,59
+500101,clin,MH,,8,5 to 8 years,Male,Bachelor's degree or higher,,White,west,65,63,51,56,67,66,66,56,64
+500104,clin,LD,,10,9 to 12 years,Female,Bachelor's degree or higher,,White,west,52,58,58,61,46,53,66,72,59
+500105,clin,LD,,9,9 to 12 years,Male,Some college or associate degree,,White,west,50,52,67,56,57,55,56,69,60
+380017,clin,MH,,7,5 to 8 years,Male,Bachelor's degree or higher,,White,south,57,55,57,53,60,59,53,62,58
+245001,clin,ID,,18,18 to 21 years,Male,Bachelor's degree or higher,,White,northeast,46,53,60,63,55,67,56,70,61
+209001,clin,MO,,17,16 to 17 years,Male,Bachelor's degree or higher,,White,south,61,50,56,59,51,59,43,65,55
+245002,clin,ASD,,17,16 to 17 years,Female,Bachelor's degree or higher,,White,northeast,62,60,66,62,59,67,66,75,65
+242016,clin,ASD,,18,18 to 21 years,Male,Bachelor's degree or higher,,Black,south,64,62,61,67,57,70,60,68,64
+243036,clin,ASD,,12,12 to 13 years,Male,Bachelor's degree or higher,,White,south,64,68,64,70,43,66,67,75,66
+243037,clin,ASD,,14,14 to 15 years,Female,Bachelor's degree or higher,,White,south,66,62,58,60,62,64,64,62,63
+243045,clin,FASD,,12,12 to 13 years,Male,Some college or associate degree,,Other,south,75,66,62,70,64,67,62,75,66
+243047,clin,ASD,,18,18 to 21 years,Female,Some college or associate degree,,White,south,64,55,64,59,57,60,56,61,60
+243014,clin,ASD,,13,12 to 13 years,Male,Bachelor's degree or higher,,White,south,67,55,56,59,59,48,56,59,57
+269007,clin,MH,,16,16 to 17 years,Female,Bachelor's degree or higher,,White,south,62,67,63,65,69,65,65,60,67
+269013,clin,MH,,12,12 to 13 years,Female,Bachelor's degree or higher,,White,south,48,59,60,66,59,60,56,66,62
+269005,clin,ADHD,,16,16 to 17 years,Male,Bachelor's degree or higher,,White,south,48,60,64,57,64,48,52,63,61
+269006,clin,MH,,18,18 to 21 years,Male,Bachelor's degree or higher,,White,south,62,55,62,48,63,55,56,59,59
+269004,clin,ADHD,,13,12 to 13 years,Male,Bachelor's degree or higher,,White,south,56,59,65,52,66,48,56,56,61
+268014,clin,MH,,17,16 to 17 years,Female,Bachelor's degree or higher,,White,northeast,61,55,63,48,43,40,43,45,52
+269067,clin,ADHD,,16,16 to 17 years,Male,Bachelor's degree or higher,,White,south,54,59,62,40,59,40,58,45,57
+137001,clin,LD,,13,12 to 13 years,Male,Some college or associate degree,,White,midwest,39,53,61,52,43,57,43,64,53
+268028,clin,ADHD,,17,16 to 17 years,Male,Bachelor's degree or higher,,White,northeast,50,50,62,40,48,40,43,45,50
+268029,clin,OTH,,17,16 to 17 years,Male,Bachelor's degree or higher,,White,south,56,65,66,63,57,59,65,61,64
+268030,clin,OTH,,14,14 to 15 years,Male,Bachelor's degree or higher,,Hispanic,northeast,58,60,64,59,63,55,58,66,62
+141340,clin,ADHD,,13,12 to 13 years,Male,Bachelor's degree or higher,,Hispanic,south,59,73,74,65,48,69,58,68,67
+268027,clin,ADHD,,17,16 to 17 years,Male,Bachelor's degree or higher,,White,northeast,52,59,56,55,57,57,56,65,58
+272009,clin,ASD,,13,12 to 13 years,Male,Some college or associate degree,,Black,west,74,75,74,75,69,75,73,75,75
+269016,clin,ASD,,13,12 to 13 years,Male,High school graduate (including GED),,White,south,56,50,51,59,51,52,43,60,52
+269074,clin,OTH,,16,16 to 17 years,Male,Bachelor's degree or higher,,White,south,52,55,56,52,55,40,56,65,54
+269077,clin,OTH,,16,16 to 17 years,Male,Bachelor's degree or higher,,White,south,48,55,61,40,51,40,52,53,52
+269076,clin,OTH,,16,16 to 17 years,Male,Bachelor's degree or higher,,White,south,48,50,56,40,43,40,43,45,45
+269075,clin,OTH,,16,16 to 17 years,Male,Bachelor's degree or higher,,White,south,36,55,47,40,43,40,52,51,45
+269008,clin,MH,,17,16 to 17 years,Female,Bachelor's degree or higher,,White,south,46,59,51,48,37,40,52,45,48
+269083,clin,MH,,15,14 to 15 years,Male,Bachelor's degree or higher,,White,south,59,62,64,48,53,40,56,61,58
+269079,clin,MH,,16,16 to 17 years,Male,Some college or associate degree,,White,south,61,68,62,40,57,40,43,51,59
+269073,clin,LD,,13,12 to 13 years,Male,Bachelor's degree or higher,,White,south,48,53,54,40,53,40,52,61,50
+280002,clin,ID,,14,14 to 15 years,Female,Some college or associate degree,,Hispanic,west,59,59,67,67,53,63,60,60,63
+280005,clin,ASD,,14,14 to 15 years,Male,High school graduate (including GED),,White,west,64,62,58,55,55,61,65,64,61
+272005,clin,ASD,,14,14 to 15 years,Male,High school graduate (including GED),,White,west,67,67,65,66,61,67,69,71,67
+272006,clin,ASD,,14,14 to 15 years,Male,Some college or associate degree,,White,west,62,60,64,65,66,64,65,68,65
+269072,clin,ADHD,,13,12 to 13 years,Male,Some college or associate degree,,White,south,48,62,63,65,63,68,56,74,64
+269033,clin,ASD,,14,14 to 15 years,Male,High school graduate (including GED),,White,south,61,63,63,59,51,59,56,59,60
+269034,clin,ASD,,14,14 to 15 years,Male,Some college or associate degree,,White,south,54,67,51,59,61,59,43,65,60
+269035,clin,FASD,,14,14 to 15 years,Male,High school graduate (including GED),,MultiRacial,south,75,65,63,65,61,67,64,72,65
+269036,clin,ADHD,,16,16 to 17 years,Male,Bachelor's degree or higher,,White,south,54,63,62,52,55,40,43,58,57
+294008,clin,TBI,,14,14 to 15 years,Female,High school graduate (including GED),,Black,midwest,50,50,47,40,57,48,60,64,52
+326001,clin,ASD,,18,18 to 21 years,Male,Bachelor's degree or higher,,Asian,midwest,62,59,67,55,46,60,43,68,59
+326003,clin,MO,,14,14 to 15 years,Male,Bachelor's degree or higher,,White,midwest,61,59,67,67,63,71,73,74,68
+326002,clin,ASD,,17,16 to 17 years,Female,Bachelor's degree or higher,,White,midwest,59,72,64,73,65,74,75,75,74
+326017,clin,ASD,,14,14 to 15 years,Male,Bachelor's degree or higher,,White,midwest,62,66,61,67,53,52,52,61,61
+326008,clin,ASD,,16,16 to 17 years,Female,Some college or associate degree,,White,midwest,66,60,56,60,65,61,64,67,62
+326007,clin,ASD,,16,16 to 17 years,Female,Some college or associate degree,,White,midwest,64,65,60,63,65,64,65,70,65
+326015,clin,ASD,,13,12 to 13 years,Male,Bachelor's degree or higher,,White,midwest,54,50,54,52,63,55,43,58,55
+326005,clin,HEA,,13,12 to 13 years,Male,Bachelor's degree or higher,,White,midwest,67,59,65,55,59,57,43,51,60
+326020,clin,FASD,,15,14 to 15 years,Female,Bachelor's degree or higher,,White,midwest,69,73,72,67,74,66,65,63,70
+326021,clin,MO,,16,16 to 17 years,Female,Bachelor's degree or higher,,White,midwest,67,72,68,73,63,74,73,75,73
+326019,clin,ASD,,14,14 to 15 years,Male,Bachelor's degree or higher,,White,midwest,67,67,63,65,48,66,56,66,63
+326004,clin,ADHD,,14,14 to 15 years,Female,Bachelor's degree or higher,,White,midwest,74,63,62,69,69,68,62,75,67
+326018,clin,ASD,,14,14 to 15 years,Male,Bachelor's degree or higher,,White,midwest,58,60,58,59,51,59,56,65,59
+326011,clin,ADHD,,14,14 to 15 years,Male,Bachelor's degree or higher,,White,midwest,64,65,70,59,46,61,67,67,64
+326006,clin,ASD,,18,18 to 21 years,Male,Some college or associate degree,,White,midwest,56,65,56,60,59,65,43,67,62
+326013,clin,ASD,,15,14 to 15 years,Male,Bachelor's degree or higher,,MultiRacial,midwest,69,66,67,64,74,65,75,66,70
+326009,clin,ASD,,12,12 to 13 years,Female,Some college or associate degree,,White,midwest,54,50,51,55,37,55,58,58,50
+326010,clin,ASD,,15,14 to 15 years,Male,Some college or associate degree,,White,midwest,59,57,63,57,43,59,43,64,57
+336011,clin,HEA,,12,12 to 13 years,Male,High school graduate (including GED),,White,south,39,50,47,48,37,48,43,59,43
+337007,clin,MH,,12,12 to 13 years,Male,Some college or associate degree,,White,northeast,46,47,39,57,46,52,43,51,47
+337009,clin,MH,,13,12 to 13 years,Male,High school graduate (including GED),,Black,northeast,59,55,58,52,48,64,52,56,57
+337008,clin,MH,,13,12 to 13 years,Male,Did not complete high school (no diploma),,Black,northeast,59,57,63,60,55,65,58,58,62
+326014,clin,ADHD,,16,16 to 17 years,Female,Some college or associate degree,,White,midwest,61,62,68,63,64,57,52,63,63
+338006,clin,LD,,15,14 to 15 years,Male,Bachelor's degree or higher,,White,midwest,50,50,56,40,48,40,43,51,47
+339012,clin,TBI,,16,16 to 17 years,Male,Some college or associate degree,,White,south,62,66,56,63,37,48,43,73,57
+339028,clin,SLP,,18,18 to 21 years,Male,Some college or associate degree,,Black,south,46,57,39,59,37,52,43,66,50
+339031,clin,SLP,,18,18 to 21 years,Male,High school graduate (including GED),,White,south,64,59,54,59,59,65,58,66,61
+339032,clin,VIS,,19,18 to 21 years,Male,Bachelor's degree or higher,,White,south,67,60,70,69,75,75,69,75,73
+342013,clin,HEA,,12,12 to 13 years,Male,Did not complete high school (no diploma),,Hispanic,west,39,40,61,40,37,52,43,38,47
+342014,clin,HEA,,12,12 to 13 years,Female,Did not complete high school (no diploma),,Hispanic,west,44,50,70,57,37,61,52,72,59
+339029,clin,SLP,,18,18 to 21 years,Male,Did not complete high school (no diploma),,Hispanic,south,52,68,39,52,37,40,43,71,52
+339011,clin,TBI,,12,12 to 13 years,Male,High school graduate (including GED),,White,south,59,66,47,64,37,69,43,67,61
+339030,clin,SLP,,16,16 to 17 years,Female,High school graduate (including GED),,NativeHawPacIsl,south,62,67,58,62,37,68,62,72,63
+338010,clin,ADHD,,12,12 to 13 years,Male,Some college or associate degree,,Black,midwest,56,57,39,62,61,48,43,56,56
+342012,clin,HEA,,12,12 to 13 years,Male,Did not complete high school (no diploma),,Hispanic,west,54,40,61,57,48,48,52,68,52
+376001,clin,ASD,,14,14 to 15 years,Female,Bachelor's degree or higher,,White,south,69,60,74,68,57,69,67,66,67
+376012,clin,MO,,16,16 to 17 years,Female,Bachelor's degree or higher,,White,south,59,67,62,64,48,72,67,75,66
+376019,clin,ADHD,,12,12 to 13 years,Male,Some college or associate degree,,White,south,72,73,65,75,63,71,61,70,70
+376011,clin,MO,,12,12 to 13 years,Male,Bachelor's degree or higher,,White,south,41,47,39,57,53,57,67,66,57
+376004,clin,LD,,16,16 to 17 years,Female,Bachelor's degree or higher,,White,south,31,47,47,40,46,40,43,51,41
+376022,clin,ID,,13,12 to 13 years,Female,Bachelor's degree or higher,,White,south,56,59,60,59,57,52,58,64,59
+376024,clin,ADHD,,14,14 to 15 years,Male,High school graduate (including GED),,White,south,72,67,66,70,61,65,66,71,67
+380006,clin,SLP,,15,14 to 15 years,Male,Some college or associate degree,,Hispanic,south,36,40,39,52,48,40,43,38,43
+376017,clin,ADHD,,15,14 to 15 years,Male,Some college or associate degree,,White,south,59,57,56,57,46,64,43,59,57
+376020,clin,ID,,12,12 to 13 years,Male,Bachelor's degree or higher,,White,south,56,67,63,68,51,60,65,71,64
+376003,clin,ADHD,,12,12 to 13 years,Male,Some college or associate degree,,White,south,58,63,61,65,37,66,56,64,62
+380014,clin,ADHD,,13,12 to 13 years,Male,Bachelor's degree or higher,,White,midwest,62,40,47,52,48,40,43,48,44
+376018,clin,ADHD,,16,16 to 17 years,Female,Some college or associate degree,,White,south,67,75,74,70,65,74,73,71,74
+376021,clin,ASD,,13,12 to 13 years,Male,Bachelor's degree or higher,,Black,south,66,62,68,66,53,65,43,62,64
+380015,clin,ADHD,,14,14 to 15 years,Female,Bachelor's degree or higher,,White,midwest,39,50,39,40,37,52,52,58,43
+380022,clin,SLP,,13,12 to 13 years,Male,Some college or associate degree,,White,midwest,36,47,39,48,51,52,56,59,48
+380011,clin,ASD,,14,14 to 15 years,Male,Bachelor's degree or higher,,White,south,69,72,68,68,63,66,70,66,70
+380024,clin,MH,,13,12 to 13 years,Male,Bachelor's degree or higher,,White,south,59,68,64,68,74,65,75,67,70
+380023,clin,MH,,19,18 to 21 years,Female,Bachelor's degree or higher,,White,south,52,60,65,55,63,57,58,53,62
+413020,clin,SLP,,14,14 to 15 years,Male,Bachelor's degree or higher,,Hispanic,south,48,47,47,48,53,55,43,45,49
+413019,clin,SLP,,12,12 to 13 years,Male,Bachelor's degree or higher,,Black,south,50,59,47,52,53,57,56,60,55
+413018,clin,SLP,,15,14 to 15 years,Female,Bachelor's degree or higher,,White,south,54,60,58,55,63,63,65,62,62
+413008,clin,SLP,,16,16 to 17 years,Male,Some college or associate degree,,White,south,46,40,39,40,46,40,43,45,38
+380036,clin,ADHD,,20,18 to 21 years,Female,High school graduate (including GED),,Hispanic,south,54,65,62,62,51,60,67,61,63
+500005,clin,MH,,13,12 to 13 years,Female,Some college or associate degree,,Hispanic,west,41,57,67,52,43,52,43,60,56
+500006,clin,MH,,13,12 to 13 years,Male,Bachelor's degree or higher,,White,west,64,59,63,67,48,55,52,56,60
+500102,clin,LD,,13,12 to 13 years,Male,Bachelor's degree or higher,,White,west,54,47,58,59,55,60,56,53,57
+500103,clin,LD,,13,12 to 13 years,Male,Some college or associate degree,,Hispanic,west,39,57,47,52,46,48,43,59,49
