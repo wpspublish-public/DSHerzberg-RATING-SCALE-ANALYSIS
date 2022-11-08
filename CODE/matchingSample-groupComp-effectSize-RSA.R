@@ -30,30 +30,31 @@ ASD_clin_stand_preMatch <- bind_rows(
     TRUE ~ FALSE
   ))
 
-
-
-
-
-
 # matchit cannot process NA. First get sum of NA for data. If that is 0,
 # proceed. If sum NA is positive, recode all NA to 999
-sum(is.na(Home_ASD_Clin_Stand_preMatch))
+sum(is.na(ASD_clin_stand_preMatch))
 
 # identify cols with NA
-na_cols <- Home_ASD_Clin_Stand_preMatch %>% select_if(~ any(is.na(.)))
+na_cols <- ASD_clin_stand_preMatch %>% select_if(~ any(is.na(.)))
 
-# in NA cols, replace NA with 999
-Home_ASD_Clin_Stand_preMatch <- Home_ASD_Clin_Stand_preMatch %>%
+# in NA cols, replace NA with 999. Note that we need a separate call of mutate
+# () to replace_na on HighestEducation, because that var is logical on the input
+# file, and replace_na can't convert variable types on the fly, so we have to
+# coerce to as.character() to replace NA with the string "999"
+ASD_clin_stand_preMatch <- ASD_clin_stand_preMatch %>%
   replace_na(
     list(
       IDNumber = 999,
       AgeInMonths = 999,
       Age = 999,
       clin_dx = "999",
-      ParentHighestEducation = "999",
-      HighestEducation = "999",
       Region = "999"
-    ))
+    )) %>% 
+  mutate(HighestEducation = replace_na(as.character(HighestEducation), "999"))
+
+
+
+
 
 # run matchit to get 1:1 matching
 set.seed(12345)
