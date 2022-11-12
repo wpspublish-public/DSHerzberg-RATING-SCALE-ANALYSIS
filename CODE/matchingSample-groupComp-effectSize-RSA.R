@@ -52,26 +52,26 @@ ASD_clin_stand_preMatch <- ASD_clin_stand_preMatch %>%
     )) %>% 
   mutate(HighestEducation = replace_na(as.character(HighestEducation), "999"))
 
-
-
-
-
 # run matchit to get 1:1 matching
 set.seed(12345)
 match <- matchit(
   Group ~ age_range + Gender + ParentHighestEducation + Ethnicity, 
-  data = Home_ASD_Clin_Stand_preMatch, 
+  data = ASD_clin_stand_preMatch, 
   method = "nearest", 
   ratio = 1)
 match_summ <- summary(match)
 
 # save matched samples into new df; split by clin_status
-Home_ASD_Clin_Stand_match <- match.data(match) %>% 
+ASD_clin_stand_match <- match.data(match) %>% 
   select(-Group, -distance, -weights) #%>% 
-Home_ASD_Stand_match <- Home_ASD_Clin_Stand_match %>% 
+ASD_stand_match <- ASD_clin_stand_match %>% 
   filter(clin_status == 'typ')
-Home_ASD_Clin_match <- Home_ASD_Clin_Stand_match %>% 
+ASD_clin_match <- ASD_clin_stand_match %>% 
   filter(clin_status == 'clin')
+
+
+
+
 
 # demo counts
 source(here("CODE/VAR-CAT-ORDER/var-cat-order-demo-tables.R"))
