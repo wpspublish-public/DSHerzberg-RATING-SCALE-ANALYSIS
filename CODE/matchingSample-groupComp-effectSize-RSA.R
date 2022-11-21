@@ -135,47 +135,31 @@ match_dist_clin <- ASD_clin_match %>%
   )) %>% 
   select(group, everything())
 
-
-
-
 # write table of combined matched typical, clinical demo counts.
-match_dist_Home <- bind_rows(
-  match_dist_Clin,
-  match_dist_Stand
+match_dist <- bind_rows(
+  match_dist_clin,
+  match_dist_stand
 ) %>% 
-  mutate(form_dx = case_when(
-    rownames(.) == "1" ~ 'Home-ASD',
+  mutate(dx = case_when(
+    rownames(.) == "1" ~ 'ASD',
     T ~ NA_character_
   )) %>% 
-  select(form_dx, everything())
-
-# RE-READ FINALIZED SAMPLES --------------------------------------------------
-
-Home_ASD_Stand <- 
-  suppressMessages(as_tibble(read_csv(
-    here("OUTPUT-FILES/COMBINED-T-SCORES-PER-CASE/Home-Stand-All-T-scores-per-case.csv")
-  )))
-
-Home_ASD_Clin <-
-  suppressMessages(as_tibble(read_csv(
-    here("OUTPUT-FILES/COMBINED-T-SCORES-PER-CASE/Home-Clin-All-T-scores-per-case.csv")
-  ))) %>% 
-  filter(clin_dx == "ASD")
+  select(dx, everything())
 
 # COMPARE MATCHED SAMPLES ON T-SCORES -------------------------------------
 
 # Extract match cases from stand sample
-Home_ASD_matchStand <- Home_ASD_Stand %>% 
-  semi_join(Home_ASD_Stand_match, by ='IDNumber')
+ASD_matchStand <- stand_preMatch %>% 
+  semi_join(ASD_stand_match, by ='IDNumber')
 
 scale_order <- c("SOC", "VIS", "HEA", "TOU", 
                  "TS", "BOD", "BAL", "PLA", "TOT")
 
 # Write matched typical t-score descriptives
-Home_ASD_matchStand_t_desc <-
-  Home_ASD_matchStand %>% 
+ASD_matchStand_t_desc <-
+  ASD_matchStand %>% 
   select(contains('_NT')) %>% 
-  rename_all(~ str_sub(., 1, -4)) %>% 
+  rename_with(~ str_sub(., 1, -4), everything()) %>% 
   describe(fast = T) %>%
   rownames_to_column() %>% 
   rename(scale = rowname)%>% 
@@ -183,17 +167,19 @@ Home_ASD_matchStand_t_desc <-
   mutate(sample = case_when(
     rownames(.) == "1" ~ 'Matched typical',
     T ~ NA_character_
-  )) %>% 
-  select(sample, scale, n, mean, sd) %>% 
+  ),
+  var = sd^2) %>% 
+  select(sample, scale, n, mean, sd, var) %>% 
   rename(n_typ = n,
          mean_typ = mean,
-         sd_typ = sd)
+         sd_typ = sd,
+         var_typ = var)
 
 # Write clinical t-score descriptives
-Home_ASD_clin_t_desc <-
-  Home_ASD_Clin %>% 
+ASD_clin_t_desc <-
+  clin_ASD_preMatch %>% 
   select(contains('_NT')) %>% 
-  rename_all(~ str_sub(., 1, -4)) %>% 
+  rename_with(~ str_sub(., 1, -4), everything()) %>% 
   describe(fast = T) %>%
   rownames_to_column() %>% 
   rename(scale = rowname)%>% 
@@ -201,16 +187,22 @@ Home_ASD_clin_t_desc <-
   mutate(sample = case_when(
     rownames(.) == "1" ~ 'ASD',
     T ~ NA_character_
-  )) %>% 
-  select(sample, scale, n, mean, sd) %>% 
+  ),
+  var = sd^2) %>% 
+  select(sample, scale, n, mean, sd, var) %>% 
   rename(n_clin = n,
          mean_clin = mean,
-         sd_clin = sd)
+         sd_clin = sd, 
+         var_clin = var)
+
+
+# NEXT: INTEGRATE CORRECTED ES FORMULA
+
 
 # Combine stand, clin columns, add ES column
 
-Home_ASD_match_t_desc <- left_join(Home_ASD_matchStand_t_desc,
-                                   Home_ASD_clin_t_desc, by = "scale") %>%
+ASD_match_t_desc <- left_join(ASD_matchStand_t_desc,
+                                   ASD_clin_t_desc, by = "scale") %>%
   mutate(ES = abs((mean_typ - mean_clin) / ((sd_typ + sd_clin / 2))),
          form_dx = case_when(
            row.names(.) == "1" ~ "Home-ASD"
