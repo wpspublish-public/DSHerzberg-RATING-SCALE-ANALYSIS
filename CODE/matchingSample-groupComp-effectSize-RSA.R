@@ -139,12 +139,7 @@ match_dist_clin <- ASD_clin_match %>%
 match_dist <- bind_rows(
   match_dist_clin,
   match_dist_stand
-) %>% 
-  mutate(dx = case_when(
-    rownames(.) == "1" ~ 'ASD',
-    T ~ NA_character_
-  )) %>% 
-  select(dx, everything())
+)
 
 # COMPARE MATCHED SAMPLES ON T-SCORES -------------------------------------
 
@@ -195,56 +190,27 @@ ASD_clin_t_desc <-
          sd_clin = sd, 
          var_clin = var)
 
-
-# NEXT: INTEGRATE CORRECTED ES FORMULA
-
-
-# Combine stand, clin columns, add ES column
+# Combine stand, clin columns, add ES column based on correct formula for Cohen's d
 
 ASD_match_t_desc <- left_join(ASD_matchStand_t_desc,
-                                   ASD_clin_t_desc, by = "scale") %>%
-  mutate(ES = abs((mean_typ - mean_clin) / ((sd_typ + sd_clin / 2))),
-         form_dx = case_when(
-           row.names(.) == "1" ~ "Home-ASD"
-         ),
+                              ASD_clin_t_desc, by = "scale") %>%
+  mutate(ES = abs((mean_typ - mean_clin) / sqrt(((n_typ * var_typ) + (n_clin * var_clin)) / (n_typ + n_clin))),
          across(c(mean_typ, sd_typ, mean_clin, sd_clin, ES), ~
                   (round(., 2)))) %>%
-  select(form_dx, everything(), -sample.x, -sample.y)
-
-rm(list = setdiff(ls(), c('match_dist_Home', 'Home_ASD_match_t_desc')))
+  select(everything(), -sample.x, -sample.y, -var_typ, -var_clin)
 
 ###### WRITE MANUAL TABLE OUTPUT -----------------------------------------------------
 
-match_dist <- bind_rows(
-  match_dist_Home,
-  match_dist_School,
-  match_dist_Self
-)
-
 write_csv(match_dist,
           here(
-            str_c(
-              'OUTPUT-FILES/MANUAL-TABLES/t526b-ASD-matchDemos-',
-              format(Sys.Date(), "%Y-%m-%d"),
-              '.csv'
-            )
+              "OUTPUT-FILES/TABLES/demos-ASD-matchTyp.csv"
           ),
           na = '')
-
-ASD_match_t_desc <- bind_rows(
-  Home_ASD_match_t_desc,
-  School_ASD_match_t_desc,
-  Self_ASD_match_t_desc
-)
 
 # write table comping t-score descriptives with ES
 write_csv(ASD_match_t_desc,
           here(
-            str_c(
-              'OUTPUT-FILES/MANUAL-TABLES/t526b-ASD-ES-',
-              format(Sys.Date(), "%Y-%m-%d"),
-              '.csv'
-            )
+            "OUTPUT-FILES/TABLES/raw-desc-ES-ASD-matchTyp.csv"
           ),
           na = '')
 
