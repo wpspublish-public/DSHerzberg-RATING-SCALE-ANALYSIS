@@ -210,7 +210,7 @@ write_csv(match_dist,
 # write table comping t-score descriptives with ES
 write_csv(ASD_match_t_desc,
           here(
-            "OUTPUT-FILES/TABLES/raw-desc-ES-ASD-matchTyp.csv"
+            "OUTPUT-FILES/TABLES/t-desc-ES-ASD-matchTyp.csv"
           ),
           na = '')
 
