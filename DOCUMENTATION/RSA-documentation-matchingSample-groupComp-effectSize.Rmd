@@ -16,63 +16,209 @@ The method therefore focuses on drawing a matched subsample from a larger sample
 Output includes two tables:
 
 -   Demographic characteristics
-
 -   Descriptive statistics with effects sizes for the means comparisons
 
-## START HERE
-
-<br>
-
-#### 1. Load packages, read data, initialize tokens for robust code
+This demonstration that you have set up an RStudio project called `RATING-SCALE-ANALYSIS`, with subfolders `CODE`, `INPUT-FILES` and `OUTPUT-FILES`. Save scripts in `CODE`, and run them from within the `RATING-SCALE-ANALYSIS` project.
 
 ###### EXECUTABLE CODE
 
-```{r norms-load, eval = FALSE}
-suppressMessages(library(here))
+```{r RSA-match, eval = FALSE}
+suppressMessages(library(here)) 
 suppressMessages(suppressWarnings(library(tidyverse)))
 suppressMessages(library(psych))
-suppressMessages(library(bestNormalize))
+suppressMessages(library(MatchIt))
 
-urlRemote_path  <- "https://raw.github.com/"
-github_path <- "wpspublish/DSHerzberg-RATING-SCALE-ANALYSIS/master/INPUT-FILES/"
-input_name <- "data-RS-sim-child-parent.csv"
+var_order <- c("age_range", "Age", "AgeInMonths", "Gender", "ParentHighestEducation", "HighestEducation", 
+               "Ethnicity", "Region")
+cat_order <- c(
+  # AgeInMonths
+  NA, '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 
+  '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36',
+  # age_range
+  NA, "03.5 to 6 mo", "03.5 to 10 mo", "4 to 10 mo", "07 to 10.5 mo", "09.5 to 20 mo",  
+  "11 to 20 mo", "11 to 31.5 mo", "21 to 30 mo",
+  "21 to 31.5 mo", "2 to 4 years", "5 years", "5 to 8 years", "9 to 12 years", "12 to 13 years", 
+  "14 to 15 years", "16 to 17 years", "18 to 21 years", "21.00 to 30.99 years", "31.00 to 40.99 years", 
+  "41.00 to 50.99 years", "51.00 to 64.99 years", "65.00 to 99.99 years",
+  # Age
+  "2", "3", "4", "5",
+  # Gender
+  NA, "Male", "Female",
+  # ParentHighestEducation & HighestEducation
+  NA, "Did not complete high school (no diploma)", "High school graduate (including GED)", 
+  "Some college or associate degree", "Bachelor's degree or higher",
+  # Ethnicity
+  NA, "Hispanic", "Asian", "Black", "White", "AmericanIndAlaskanNat", 
+  "NativeHawPacIsl", "MultiRacial", "Other",
+  # Region
+  NA, "northeast", "midwest", "south", "west")
 
-item_prefix <- "cp"
-scale_prefix <- "CP"
-scale_suffix <- c("S1", "S2", "S3", "S4", "S5", "TOT")
-age_range_name <- "child"
-form_name <- "parent"
-all_raw_range <- 10:200
-TOT_raw_lower_bound <- 50
-subscale_raw_upper_bound <- 40
-t_score_lower_bound <- 40
-t_score_upper_bound <- 80
+stand_preMatch <- 
+  suppressMessages(as_tibble(read_csv(
+    here("INPUT-FILES/data-RS-spm2-stand-all-T-scores-per-case.csv")
+  )))
 
-assign(
-  str_c("data", age_range_name, form_name, sep = "_"),
-  suppressMessages(read_csv(url(
-    str_c(urlRemote_path, github_path, input_name)
-  ))) %>%
-    mutate(across(
-      contains(str_c(item_prefix, "i")),
-      ~ case_when(
-        .x == "never" ~ 1,
-        .x == "occasionally" ~ 2,
-        .x == "frequently" ~ 3,
-        .x == "always" ~ 4
-      )
-    ))
+clin_ASD_preMatch <-
+  suppressMessages(as_tibble(read_csv(
+    here("INPUT-FILES/data-RS-spm2-clin-all-T-scores-per-case.csv")
+  ))) %>% 
+  filter(clin_dx == "ASD")
+
+ASD_clin_stand_preMatch <- bind_rows(
+  clin_ASD_preMatch,
+  stand_preMatch 
+) %>% 
+  mutate(Group = case_when(
+    clin_status == 'clin' ~ TRUE,
+    TRUE ~ FALSE
+  ))
+
+sum(is.na(ASD_clin_stand_preMatch))
+na_cols <- ASD_clin_stand_preMatch %>% select_if(~ any(is.na(.)))
+
+ASD_clin_stand_preMatch <- ASD_clin_stand_preMatch %>%
+  replace_na(
+    list(
+      IDNumber = 999,
+      AgeInMonths = 999,
+      Age = 999,
+      clin_dx = "999",
+      Region = "999"
+    )) %>% 
+  mutate(HighestEducation = replace_na(as.character(HighestEducation), "999"))
+
+set.seed(12345)
+match <- matchit(
+  Group ~ age_range + Gender + ParentHighestEducation + Ethnicity, 
+  data = ASD_clin_stand_preMatch, 
+  method = "nearest", 
+  ratio = 1)
+match_summ <- summary(match)
+
+ASD_clin_stand_match <- match.data(match) %>% 
+  select(-Group, -distance, -weights) #%>% 
+ASD_stand_match <- ASD_clin_stand_match %>% 
+  filter(clin_status == 'typ')
+ASD_clin_match <- ASD_clin_stand_match %>% 
+  filter(clin_status == 'clin')
+
+match_dist_stand <- ASD_stand_match %>% 
+  select(age_range, Gender, ParentHighestEducation, Ethnicity) %>% 
+  gather("Variable", "Category") %>% 
+  group_by(Variable, Category) %>%
+  count(Variable, Category) %>%
+  arrange(match(Variable, var_order), match(Category, cat_order)) %>% 
+  ungroup() %>% 
+  mutate(Variable = case_when(
+    lag(Variable) == "age_range" & Variable == "age_range" ~ "",
+    lag(Variable) == "Gender" & Variable == "Gender" ~ "",
+    lag(Variable) == "ParentHighestEducation" & Variable == "ParentHighestEducation" ~ "",
+    lag(Variable) == "Ethnicity" & Variable == "Ethnicity" ~ "",
+    TRUE ~ Variable
+  )) %>% 
+  mutate(group = case_when(
+    rownames(.) == "1" ~ 'Matched typical',
+    T ~ NA_character_
+  )) %>% 
+  select(group, everything())
+
+match_dist_clin <- ASD_clin_match %>% 
+  select(age_range, Gender, ParentHighestEducation, Ethnicity) %>% 
+  gather("Variable", "Category") %>% 
+  group_by(Variable, Category) %>%
+  count(Variable, Category) %>%
+  arrange(match(Variable, var_order), match(Category, cat_order)) %>% 
+  ungroup() %>% 
+  mutate(Variable = case_when(
+    lag(Variable) == "age_range" & Variable == "age_range" ~ "",
+    lag(Variable) == "Gender" & Variable == "Gender" ~ "",
+    lag(Variable) == "ParentHighestEducation" & Variable == "ParentHighestEducation" ~ "",
+    lag(Variable) == "Ethnicity" & Variable == "Ethnicity" ~ "",
+    TRUE ~ Variable
+  )) %>% 
+  mutate(group = case_when(
+    rownames(.) == "1" ~ 'ASD',
+    T ~ NA_character_
+  )) %>% 
+  select(group, everything())
+
+match_dist <- bind_rows(
+  match_dist_clin,
+  match_dist_stand
 )
+
+ASD_matchStand <- stand_preMatch %>% 
+  semi_join(ASD_stand_match, by ='IDNumber')
+
+scale_order <- c("SOC", "VIS", "HEA", "TOU", 
+                 "TS", "BOD", "BAL", "PLA", "TOT")
+
+ASD_matchStand_t_desc <-
+  ASD_matchStand %>% 
+  select(contains('_NT')) %>% 
+  rename_with(~ str_sub(., 1, -4), everything()) %>% 
+  describe(fast = T) %>%
+  rownames_to_column() %>% 
+  rename(scale = rowname)%>% 
+  arrange(match(scale, scale_order)) %>% 
+  mutate(sample = case_when(
+    rownames(.) == "1" ~ 'Matched typical',
+    T ~ NA_character_
+  ),
+  var = sd^2) %>% 
+  select(sample, scale, n, mean, sd, var) %>% 
+  rename(n_typ = n,
+         mean_typ = mean,
+         sd_typ = sd,
+         var_typ = var)
+
+ASD_clin_t_desc <-
+  clin_ASD_preMatch %>% 
+  select(contains('_NT')) %>% 
+  rename_with(~ str_sub(., 1, -4), everything()) %>% 
+  describe(fast = T) %>%
+  rownames_to_column() %>% 
+  rename(scale = rowname)%>% 
+  arrange(match(scale, scale_order)) %>% 
+  mutate(sample = case_when(
+    rownames(.) == "1" ~ 'ASD',
+    T ~ NA_character_
+  ),
+  var = sd^2) %>% 
+  select(sample, scale, n, mean, sd, var) %>% 
+  rename(n_clin = n,
+         mean_clin = mean,
+         sd_clin = sd, 
+         var_clin = var)
+
+ASD_match_t_desc <- left_join(ASD_matchStand_t_desc,
+                              ASD_clin_t_desc, by = "scale") %>%
+  mutate(ES = abs((mean_typ - mean_clin) / sqrt(((n_typ * var_typ) + (n_clin * var_clin)) / (n_typ + n_clin))),
+         across(c(mean_typ, sd_typ, mean_clin, sd_clin, ES), ~
+                  (round(., 2)))) %>%
+  select(everything(), -sample.x, -sample.y, -var_typ, -var_clin)
+
+write_csv(match_dist,
+          here(
+            "OUTPUT-FILES/TABLES/demos-ASD-matchTyp.csv"
+          ),
+          na = '')
+
+write_csv(ASD_match_t_desc,
+          here(
+            "OUTPUT-FILES/TABLES/t-desc-ES-ASD-matchTyp.csv"
+          ),
+          na = '')
 ```
 
 <br>
 
 ###### COMMENTED SNIPPETS
 
-Load packages for file path specification (`here`), data wrangling (`tidyverse`), psychometric data simulation and analysis (`psych`), and normalization of raw score distributions (`bestNormalize`).
 
-```{r norms-load, echo = 1:4, eval = F}
-```
+#### 1. Load packages, initialize tokens for robust code, read data
+
+Load packages for file path specification (`here`), data wrangling (`tidyverse`), psychometric data simulation and analysis (`psych`), and drawing matched samples (`MatchIt`).
 
 Ideally, code templates are *robust*, meaning that they can be adapted to different projects with minimal copying-and-pasting of text. Robust templates are characterized by their liberal use of *tokens*, which are names for *project-specific* data and text elements that are used repeatedly throughout the template.
 
@@ -80,646 +226,18 @@ These tokenized elements include names of variables, files, test forms, raters, 
 
 In contrast, the *project-general* aspects of an R script are those functions and operations whose specification is identical for all projects (e.g., creating a table of descriptive statistics requires calling the same set of functions, regardless of whether the input data are from the autism rating scale or the ADHD rating scale). In a robust template, tokens representing project-specific elements are defined at the head of the script. The remainder of the script, therefore, consists only of project-general code.
 
-In R, we initialize tokens as *vectors*. In the next code snippet, for example, `item_prefix <- "cp"` defines a vector that holds a prefix used in the names of all columns containing item responses. The code block also includes tokens for reading a certain input file from a certain remote URL, among other project-specific elements.
+In R, we initialize tokens as *vectors*. In the next code snippet, for example, `var_order` is a vector specifying the sequence in which the names of demographic variables are presented in the output tables.
 
-```{r norms-load, echo = 5:19, eval = F}
+In this demonstration, we employ data from the SPM-2 project, because that project has both small clinical samples and a large standardization sample from which we can draw matched subsamples. We read in the data using `read_csv()`, transforming the `.csv` files into the simplified tibble format with `as_tibble().` The data are in two objects named `stand_preMatch` and `clin_ASD_preMatch`. The names differentiate the clinical group (children diagnosed with ASD) from the typically developing standardization group, and indicate that the data are in their raw input form, prior to the matched sample draw (`preMatch`). For the clinical group, we use
+`filter(clin_dx == "ASD")` to read in only the persons with ASD, out of the larger clinical sample that contains numerous diagoses.
+
+```{r RSA-match, echo = 1:40, eval = F}
 ```
 
-Many analytic procedures require the specification of an entire set of project-specific elements, such as the entire set of item names, or form names. We can use string functions to combine tokens and explicit text as needed, both to create the names of the elements within the set, and to create the accompanying token names. For instance, we can assemble a vector containing all of the item names by concatenating the token `item_prefix` with a numerical series (e.g., `c("001", "002", "003")`).
+#### 2. Prep input data for matching
 
-Often, the best token name for the resulting set of elements is itself a concatenated string. To use a concatenated string as the name of an object in R, we cannot rely on the conventional assignment operator `<-`. Instead, we use `base::assign()` to initialize these concatenated names. `assign()` takes two arguments, the desired token name (concatenated with `stringr::str_c()`), and the code snippet that defines the object(s) to be named.
-
-As an example, `str_c("data", age_range_name, form_name, sep = "_")` returns the name `data_child_parent`, combining the file type description (`"data"`, provided as an explicit string) with the age-range (`age_range_name`) and rater (`form_name`) vectors. The combination of these latter two vectors identifies the form whose data is contained in the input file.
-
-```{r norms-load, echo = 21:22, eval = F}
+Text
+```{r RSA-match, echo = 42:63, eval = F}
 ```
 
-The next snippet contains the second argument of `assign()`, which defines the data object to be named with the concatenated string. Here, an object is created by reading the input data file with `readr::read_csv()`, and recoding the item responses with `dplyr::mutate()`. Note how the input file path is a concatenation of three previously defined tokens `str_c(urlRemote_path, github_path, input_name)`.
 
-Within `mutate()`, we use `across()` to identify and process a subset of columns. `across()` takes two arguments: the column subset, and a function to be applied to those columns. In this example, we subset the item response columns with the `tidyselect` helper `contains()`, providing as its argument a concatenated string that appears *only* in the names of the item response columns. We use `case_when()` to conditionally recode the cell values (`.x`) of these columns, converting the input strings to numbers (e.g., `"never" ~ 1`).
-
-```{r norms-load, echo = 23:33, eval = F}
-```
-
-<br>
-
-#### 2. Determine optimal normalization model and calculate normalized T-scores per case
-
-###### EXECUTABLE CODE
-
-```{r norms-model, eval = FALSE}
-assign(str_c("data", age_range_name, form_name, "TOT", sep = "_"),
-       suppressMessages(read_csv(url(
-         str_c(urlRemote_path, github_path, input_name)
-       ))) %>% 
-         select(!!sym(str_c(scale_prefix, "TOT_raw"))) %>% 
-         as_vector() %>% 
-         set_names(NULL)
-)
-
-set.seed(12345)
-TOT_nz_obj <- bestNormalize(data_child_parent_TOT)
-TOT_nz_obj$chosen_transform
-chosen_transform <- class(TOT_nz_obj$chosen_transform)
-
-raw_score_vecs_list <-
-  map(str_c(scale_prefix, scale_suffix),
-      ~ get(str_c("data", age_range_name, form_name, sep = "_")) %>%
-        pull(!!sym(str_c(.x, "_raw")))) %>% 
-  set_names(str_c(scale_prefix, scale_suffix, "_raw"))
-
-nzScore_perCase <- raw_score_vecs_list %>% 
-  map(~ get(chosen_transform)(.x)) %>% 
-  map(~ tibble(pluck(.x, "x.t"))) %>% 
-  bind_cols() %>%
-  set_names(str_c(scale_suffix, "_nz")) 
-
-ntScore_perCase <- nzScore_perCase %>%
-  mutate(across(everything(),
-                ~
-                  (round(. * 10) + 50) %>%
-                  {
-                    case_when(
-                      . < t_score_lower_bound ~ t_score_lower_bound,
-                      . > t_score_upper_bound ~ t_score_upper_bound,
-                      TRUE ~ .
-                    )
-                  } %>%
-                  as.integer)) %>%
-  rename_with( ~ str_c(scale_prefix, str_replace_all(., "nz", "nt")))
-
-assign(
-  str_c("data", age_range_name, form_name, "nt", sep = "_"),
-  get(str_c("data", age_range_name, form_name, sep = "_")) %>% bind_cols(ntScore_perCase) %>%
-    mutate(clin_status = 'typ',
-           clin_dx = NA) %>%
-    select(
-      ID:region,
-      clin_status,
-      clin_dx,
-      contains("raw"),
-      contains("nt"),
-      everything()
-    )
-)
-
-write_csv(get(str_c(
-  "data", age_range_name, form_name, "nt", sep = "_"
-)),
-here(str_c(
-  "OUTPUT-FILES/TABLES/",
-  str_c("nt-Scores-per-case",
-        age_range_name,
-        form_name,
-        sep = "-"),
-  ".csv"
-)),
-na = '')
-
-get(str_c("data", age_range_name, form_name, "nt", sep = "_")) %>%
-  select(contains("TOT_nt")) %>%
-  as_vector() %>%
-  MASS::truehist(.,
-                 h = 1,
-                 prob = FALSE,
-                 xlab = "TOT_nt")
-```
-
-###### COMMENTED SNIPPETS
-
-The `bestNormalize` package provides tools for determining an optimal normalization model and applying that model to a raw score distribution. For the latter step, the `bestNormalize()` function requires the raw score distribution to be formatted as a numerical vector (as opposed to a data frame column).
-
-As in previous steps, we use `assign()` to name objects with concatenated strings. We call `readr::read_csv()` to read in the data file from a remote URL. To create the numerical vector required by `bestNormalize()`, we `select()` the column containing the raw total scores (`TOT_raw`). For developing a normalization model, it is best to use a total or composite score, because by definition a total score captures more of the sample variance than a subscale score that consists of fewer items. `select()` requires unquoted column names as input, which we provide by wrapping the concatenated column name (the quoted string returned by `str_c()`) in the unquoting function `!!sym()`.
-
-After the `select()` line, the data object is a single-column data frame that holds the `TOT_raw` scores from the input data set. We use two functions from `purrr` to return the requisite vector formatting: `as_vector()`, which returns a named vector, and `set_names(NULL)`, which strips out the name. The vector containing the raw score distribution (`data_child_parent_TOT`) is now ready for processing with `bestNormalize()`.
-
-```{r norms-model, echo = 1:8, eval = F}
-```
-
-To ensure that `bestNormalize()` chooses the same normalizing function every time the script is run, we call `base::set.seed()` to lock down the output of R's random number generator[^1]. Calling `bestNormalize(data_parent_child_TOT)` returns a list, with the element `TOT_nz_obj$chosen_transform` holding the name of the selected normalizing function as a class attribute. To use that function in downstream code, we extract its name with `base::class()`, which returns the class attribute(s) of a list element.
-
-[^1]: `bestNormalize()` can be used inside a `purrr::map()` iteration structure to generate optimal normalizing functions for multiple subtest inputs. In this application, it's important to call `set.seed()` anew at the start of each iteration, to insure that the same normalizing models are selected over all subtests, each time the code is run. This can be accomplished by enclosing the `.fun` argument within `map()` (that is, the anonymous function set off by `~` ) within curly braces `{}` , as in the example below.
-
-        norm_model_per_score_chosen_transform <- map(
-          norm_input_per_score,
-          ~ {
-            set.seed(12345)
-            bestNormalize(.x) %>%
-              pluck("chosen_transform") %>% 
-              class() %>% 
-              pluck(1)
-          }
-        ) %>% 
-          set_names(score_names)
-
-    Without the curly braces, R throws an error because `map()` can't evaluate `set.seed()` as a separate statement within the `.fun` argument. With the curly braces in place, `map()` evaluates `set.seed()` as the first of a group of statements, resetting the random number generator at the start of each iteration, which is what we want for repeatable results.
-
-```{r norms-model, echo = 10:13, eval = F}
-```
-
-Next we apply the chosen normalization function iteratively to all of the raw score distributions in the input file, including total and subscale scores. As noted previously, the normalization function requires raw score distributions to be formatted as numerical vectors.
-
-The next snippet extracts those vectors from the input file and places them in a list (`raw_score_vecs_list`). The core function is `dplyr::pull()`, which extracts a column from a data frame and returns it as a vector. In this example, we have six raw score columns to extract, so we use `purrr::map()` to iterate over a vector (`str_c(scale_prefix, scale_suffix)`) that holds the six concatenated substrings that identify the target columns.
-
-Because the name of the input file is a concatenated string `str_c("data", age_range_name, form_name, sep = "_")`, we wrap that string in `base::get()` which returns the actual data object (in this case, the input data file) named by the string. This data object is piped into `pull()` which requires an unquoted column name as its argument. `map()` supplies this argument by iterating over the input vector `str_c(scale_prefix, scale_suffix)`. The string elements of this vector are supplied iteratively to the call of `pull()` via the token `.x`, which `str_c()` combines with the explicit string `"_raw"` to yield a target column name. Because the column name is a quoted string, we need to unquote by wrapping it in `!!sym()`.
-
-After `map()` finishes iterating, the data object is a list holding six numerical vectors (the raw score distributions). We use `set_names()` to name these elements for downstream processing.
-
-```{r norms-model, echo = 15:19, eval = F}
-```
-
-Now we use two sequential `map()` calls to apply the chosen normalizing function to each raw score distribution, yielding a normalized z-score for each case (row). In the next snippet, we initiate the pipeline with the list of raw score distributions to be processed (`raw_score_vecs_list`). The first `map()` call iterates over this list and applies the normalizing function. We use `get()` to call the function named by `chosen_transform`, supplying the `.x` token as that function's argument. As `map()` iterates, `.x` is replaced sequentially by the elements of the input list (the vectors containing the raw score distribution). This enables the application of the normalizing function separately to each raw score distribution. At the conclusion of this iteration cycle, the data object is a list containing six `bestNormalize` normalization objects, each one itself a list named for the raw score distribution (e.g., `CPS1_raw`) whose normalized output it contains.
-
-These normalization objects include an element `x.t.`, which holds the distribution of normalized z-scores per case. Because each normalizing object is a list, we call `purrr::pluck()` to extract a list element. We pass two arguments: `.x`, which represents the currently-iterated normalization object; and `"x.t."`, which names the list element we want to extract. `pluck()` returns the z-score distribution as a numerical vector. We format the vector as a single-column data frame by wrapping the `pluck()` call in `tibble::tibble()`. Note the difference between `pull()`, which extracts a column from a data frame, and `pluck()`, which extracts an element from a list.
-
-The data object is now a list of six single-column data frames, which we bind into a single data frame with `dplyr::bind_cols`. We complete the operation by applying desired column names with `set_names()`. The resulting output is a six-column data frame containing the distributions of normalized z-scores corresponding to the six raw score distributions.
-
-```{r norms-model, echo = 21:25, eval = F}
-```
-
-The next step is to convert the z-scores to T-scores, and to truncate the T-score distribution according to the project parameters (represented in the tokens `t_score_lower_bound` and `t_score_upper_bound`). The input here is `nzScore_perCase`, the data frame containing the z-score distributions.
-
-We use `mutate()` to carry out the these transformations. Because `nzScore_perCase` consists only of the six z-score columns, we can use `across(everything())` to apply a series of functions to all columns. In the snippet below, we convert the z-scores to T-scores with `(round(. * 10) + 50)`, truncate the resulting T-score distribution with `case_when()`, and format all values `as.integer()`. We supply desired concatenated column names with `dplyr::rename_with()`.
-
-Note that the`case_when()` call is enclosed in curly braces `{}`. This approach enables control over how `.` (the token representing the data object) is evaluated within a pipeline containing functions that subset `.`. In the code below, `case_when()` subsets the data object with predicates, executing a different transformation when `. < t_score_lower_bound` returns `TRUE` than when `. > t_score_upper_bound` returns `TRUE`. This behavior can cause problems at certain positions within a pipeline. In these instances, the pipe operator `%>%` injects the intact data object as an argument to `case_when()`, replacing the predicate-segmented data that `case_when()` expects. This throws an error. Wrapping the `case_when()` call in curly braces prevents this substitution, thereby allowing `case_when()` to subset `.` and operate in its usual fashion.
-
-```{r norms-model, echo = 27:39, eval = F}
-```
-
-Now we can assemble a table that contains, for each person, the scale-wise raw scores and normalized T-scores. As in previous steps, we use `assign()` to name objects with concatenated strings, and `get()` to initiate the pipeline with a data object *named by* a concatenated string. Here, we bind the table named by `str_c("data", age_range_name, form_name, sep = "_")`, which contains the raw score columns, to `ntscore_perCase`, which contains the T-score columns, by calling `dplyr::bind_cols()`, which joins two data frames side-by-side, without indexing them on a shared variable. We then add two new columns with `mutate()`, choose columns to keep, in the desired sequence, with `select()`, and `write_csv()` the output table of T-scores per case to .csv.
-
-```{r norms-model, echo = 41:67, eval = F}
-```
-
-As an optional procedure, the script includes a snippet to plot a histogram of the distribution of normalized T-scores for the total score (e.g., `TOT_nt`). This allows a visual check on normality.
-
-The histogram is based on the data frame containing normalized T-scores per case, which we access with `get(str_c("data", age_range_name, form_name, "nt", sep = "_"))`. We then `select()` only the column containing the distribution of `TOT_nt`, and use `as.vector()` to transform it from a data frame column into a numeric vector, as required for input to the plotting function.
-
-We use `MASS::truehist()` to generate the plot, passing as arguments bin width `h`, `prob = FALSE` so that the y-axis scale is person counts, as opposed to relative frequency density, and a label `xlab` for the x-axis scale showing that it depicts values of `TOT_nt`.
-
-```{r norms-model, echo = 69:75, eval = F}
-```
-
-<br>
-
-#### 3. Generate raw-to-T lookup tables
-
-The lookup relationship between raw and T-scores is *many-to-one*, meaning that each value of raw maps onto one and only one value of T, but each value of T *may* map onto more than one value of raw.[^2]
-
-[^2]: This implies the converse relationship of *one-to-many* from T-scores to raw scores.
-
-The next code section yields two raw-to-T-score lookup tables.
-
--   **Basic format**: The left-most column contains all possible values of raw, across all scales, sorted ascending. Rightward columns contain corresponding T-scores for each scale.
--   **Print format**: The left-most column contains all possible values of T (reflecting any truncation of the T-score distribution), sorted descending. Rightward columns contain corresponding raw scores for each scale. Reflecting the many-to-one lookup relationship, some of the rightward cells contain single raw scores, while others contain a range of raw scores.
-
-Note that in the basic-format table, the process of looking up T-scores begins with finding a raw score in the left-most column, whereas in the print-format table, it begins with finding a raw score in one of the rightward columns
-
-<br>
-
-##### **BASIC FORMAT LOOKUP TABLE**
-
-###### EXECUTABLE CODE
-
-```{r norms-lookup-basic, eval = FALSE}
-all_lookup_basic <- map(
-  scale_suffix,
-  ~ get(str_c(
-    "data", age_range_name, form_name, "nt", sep = "_"
-  )) %>%
-    group_by(!!sym(str_c(
-      scale_prefix, .x, "_raw"
-    ))) %>%
-    summarize(!!sym(str_c(
-      scale_prefix, .x, "_nt"
-    )) := min(!!sym(
-      str_c(scale_prefix, .x, "_nt")
-    ))) %>%
-    complete(!!sym(str_c(
-      scale_prefix, .x, "_raw"
-    )) := all_raw_range) %>%
-    fill(!!sym(str_c(
-      scale_prefix, .x, "_nt"
-    )),
-    .direction = "downup") %>%
-    rename(raw = !!sym(str_c(
-      scale_prefix, .x, "_raw"
-    ))) 
-) %>%
-  reduce(left_join,
-         by = 'raw') %>% 
-mutate(across(
-  contains(scale_suffix[-length(scale_suffix)]),
-  ~ case_when(raw > subscale_raw_upper_bound ~ NA_integer_,
-              TRUE ~ .x)
-),
-across(
-  contains(scale_suffix[length(scale_suffix)]),
-  ~ case_when(raw < TOT_raw_lower_bound ~ NA_integer_,
-              TRUE ~ .x)
-))
-
-write_csv(all_lookup_basic,
-here(str_c(
-  "OUTPUT-FILES/TABLES/",
-  str_c("raw-T-lookup",
-        age_range_name,
-        form_name,
-        sep = "-"),
-  ".csv"
-)),
-na = '')
-```
-
-###### COMMENTED SNIPPETS
-
-To produce a single basic-format lookup table that includes all scales, we start by creating separate two-column lookup tables, one for each scale. We call `map()` to initiate an iterative process that returns a list containing the required two-column data frames.
-
-We pass the `scale_suffix` vector as the first argument to `map()`, as this vector holds the six scale identifiers. The second argument for `map()` is a pipeline of functions, set off with the formula shorthand `~`, to be applied iteratively to the elements of `scale_suffix`. We initiate the pipeline with the data frame containing raw scores and normalized T-scores per case, which we access with `get(str_c("data", age_range_name, form_name, "nt", sep = "_"))`.
-
-```{r norms-lookup-basic, echo = 1:5, eval = F}
-```
-
-Recall that in the basic-format lookup table, all possible raw score values appear in the left-most column. We use the `dplyr` functions `group_by()` and `summarize()` to begin assembling this column, passing concatenated score names as arguments to both functions.
-
-As an example, `str_c(scale_prefix, .x, "_raw")` returns a single score name, the one corresponding to the currently-iterated element (`.x`) of `scale_suffix`, the input vector to `map()`. `str_c()` inserts this element between `scale_prefix` (a single-element token) and `"_raw"` (static text), and returns the resulting concatenated string (e.g., `"CPS1_raw"`). In order to use a string as a column name within a `dplyr` function, we must unquote it by wrapping `str_c()` with `!!sym()`.
-
-In the code below, the call of `group_by()` groups the data by raw score. At this point, the data object includes all rows in the original input file, meaning the raw score column has many duplicate values. To create a lookup table, we need the raw score column to contain a single value for each possible raw score, with no duplicates.
-
-To remove the duplicate raw score rows, we can call `summarize()`, which aggregates multiple rows of grouped data into a single row, based on a summary function. Here we can take advantage of the many-to-one relationship of raw-to-T, which means that each raw score corresponds to one and only one T-score. Thus, for example, the data object may contain multiple rows where raw score is 10 and T-score is 50. We need only one of these rows in the output.
-
-We can use the summary function `min()` to return the only the rows that contain the minimum T-score associated with each raw score, which by definition is also the *only* T-score associated with that raw score. In the example, `min()` summarizes the group of identical rows that contain the raw score of 10 by returning only one of these rows. The summary row contains a T-score of 50, which is the *minimum* T-score present in *that* group of identical rows.
-
-`summarize()` takes as its argument an equation in which the LHS is the name of the newly created summary variable, and the RHS is the definition of that new variable, expressed as the application of a summary function to an existing variable. In our example, the R = HS is the call of `min()` on the T-score column. Because our template relies on tokenized, concatenated names, both sides of this equation evaluate to unquoted strings. In this situation, we need to use the non-standard evaluation (NSE) operator `:=` (instead of a conventional equals sign) in the equation that defines the summary variable.
-
-After applying `summarize()`, the data object contains a single row for *each raw score value present in the input data file* (but not yet all possible raw score values). These rows also contain associated T-score values. Note that within `summarize()`, we use unquoted strings on both sides of an equals sign.
-
-```{r norms-lookup-basic, echo = 6:13, eval = F}
-```
-
-In the next snippet, we use `tidyr::complete()` to add rows for possible raw score values that are *not* present in the input data file. The total range of possible raw score values is a project-specific element previously defined in the token `all_raw_range`. As an argument to `complete()`, we pass an equation whose LHS is the concatenated string naming the raw score column as the variable to be expanded with new values/rows. Because the LHS evaluates to an unquoted string, we need to use the `:=` operator instead of an equals sign. The RHS is `all_raw_range`, which provides the range of raw scores within which `complete()` adds new rows, for raw score values *missing* from the input data file.
-
-`complete()` returns a data frame in which all possible raw score values are present in the raw score column, but the T-score column has many cells with `NA`. In the final lookup table, each possible raw score needs to be paired with a T-score. We can use `tidyr::fill()` to replace each `NA` with an appropriate T-score.
-
-The arguments to `fill()` are the concatenated string naming the column to be filled in (i.e., the T-score column), and the `.direction` in which `fill()` sweeps through the column. Here we specify `"downup"`, meaning the `fill()` first works down the column, and then back up, in each case replacing `NA` with the nearest actually occurring value.
-
-To clarify, this would mean that in the following example:
-
-    raw   T
-
-    24    50
-    25    NA
-    26    NA
-    27    NA
-    28    NA
-    29    55
-
-`fill()` would return:
-
-    raw   T
-
-    24    50
-    25    50
-    26    50
-    27    50
-    28    50
-    29    55
-
-This *seems* concerning at first glance, because we assume that, for example, `53` would be a more accurate T-score than `50` to pair with a raw score of `27`. But in practice, because we are almost always working with large samples, gaps this large between adjacent, actually occurring raw scores are exceedingly rare, especially near the midpoint of the raw score distribution. More commonly, we encounter gaps of 1-2 raw score points, where the use of `fill()` to replace `NA` does not produce meaningful distortion in the underlying raw-to-T lookup relationship.
-
-At this point in the script, we are still within the iteration cycle of `map()`, and the data object is a list of data frames, each with two columns, raw- and T-score (each named for their associated scale). We use `rename()` to drop the scale identifier from raw-score column name. This returns a column named `"raw"`, which will be used as an index to join the two-column data frames into a single lookup table for the final output.
-
-```{r norms-lookup-basic, echo = 14:24, eval = F}
-```
-
-The `map()` cycle is now closed, and the next step is to process the resulting list into the required final output. We use `purrr::reduce()` to collapse the list of two-column data frames into a single lookup table. Here, `reduce()` applies `dplyr::left_join()` iteratively over the input list. It joins the first pair of two-column data frames by `"raw"`, thereby returning a three-column data frame, which it then joins to the next list element (i.e., the next two-column data frame), returning a four-column data frame, and so on. The final returned object is a seven-column data frame, with the `"raw"` column on the far left. The six columns to the right of `"raw"` are the T-score lookup columns for each scale.
-
-At this point, the consolidated lookup table contains rows that represent impossible raw scores for the subscales (too high) and total score (too low). The next call of `mutate()` recodes the T-score lookup columns to `NA` for impossible raw scores. It accomplishes this with two separate calls of `across()`, isolating first the subscale columns and then the `TOT` column for conditional recoding with `case_when()`. Within `case_when()`, we identify the range of impossible raw scores to be recoded with predicates containing the tokens `subscale_raw_upper_bound` and `TOT_raw_lower_bound`.
-
-Within each call of `across()`, we segregate the columns to be recoded with the tidyselect helper `contains()`, extracting scale name suffixes from the token `scale_suffix` with single subsetting brackets `[]`. In the `scale_suffix` vector, `TOT`, is the last element, so we can identify it with `length(scale_suffix)`, which returns an integer representing the last position in the vector. To retain all elements *except* the last (i.e., the subscale suffixes), we simply prepend `length()` with a minus `-` sign.
-
-```{r norms-lookup-basic, echo = 25:47, eval = F}
-```
-
-<br>
-
-##### **PRINT FORMAT LOOKUP TABLE**
-
-###### EXECUTABLE CODE
-
-```{r norms-lookup-print, eval = FALSE}
-all_lookup_print <- all_lookup_basic %>% 
-pivot_longer(contains("nt"), names_to = "scale", values_to = "NT") %>% 
-  arrange(scale) %>% 
-  group_by(scale) %>%
-  complete(NT = 40:80) %>% 
-  group_by(scale, NT) %>%
-  filter(n() == 1 | n() > 1 & row_number()  %in% c(1, n())) %>%
-  summarize(raw = str_c(raw, collapse = '--')) %>%
-  mutate(across(raw, ~ case_when(is.na(.x) ~ '-', TRUE ~ .x))) %>%
-  arrange(scale, desc(NT)) %>% 
-  pivot_wider(names_from = scale,
-              values_from = raw) %>% 
-  rename_with(~ str_replace_all(., "_nt", "_raw")) %>%
-  rename(T_score = NT) %>% 
-  filter(!is.na(T_score))
-
-write_csv(all_lookup_print,
-          here(str_c(
-            "OUTPUT-FILES/TABLES/",
-            str_c("raw-T-lookup-print",
-                  age_range_name,
-                  form_name,
-                  sep = "-"),
-            ".csv"
-          )),
-          na = '')
-```
-
-###### COMMENTED SNIPPETS
-
-The print-format lookup table `all_lookup_print` is a transformed version of the basic format table `all_lookup_basic`, which serves as the input data object for the next section of code. We use `tidyr::pivot_longer()` to transform `all_lookup_basic` to a long, multilevel format, in which a set of six associated T-scores (one for each scale) is nested within each value of raw score. The first argument to `pivot_longer()`, which we specify with `contains("nt")`, names the columns to be pivoted to long format (i.e., the six columns in `all_lookup_basic` that contain the T-scores for each scale). The second argument, `names_to = "scale"`, names the column whose rows, in long format, will hold the *names* (from `all_lookup_basic`) of the pivoted columns. The third argument, `values_to = "NT"`, names the column whose rows, in long format, will hold the *cell values* contained in the pivoted columns.[^3]
-
-[^3]: The `NT` acronym refers to "normalized T-scores". Although `T` might seem a more natural column name, it's not good practice to use `T` for this purpose, because `T` can function as a shorthand for `TRUE`, which is a reserved word in R.
-
-Here we are excluding the `raw` column from the pivot, meaning that in the long table, `raw` remains in the left-most column and becomes a Level 2 variable (in nomenclature of multilevel modeling). The rows of `raw` are expanded such that each raw score value has six rows, one for each of the six associated T-score values. The new columns, `scale` and `NT`, are now Level 1 variables, because they are nested within the Level 2 variable `raw`. We then use `arrange()` to sort the data by `scale`.
-
-To visualize the transformation, here are a few rows and columns from the input object `all_lookup_basic`:
-
-       raw CPS1_nt CPS2_nt CPS3_nt
-       
-        19      46      46      46
-        20      49      49      50
-        21      53      53      53
-        22      56      56      57
-        23      60      60      60
-        24      63      63      64
-
-Applying `pivot_longer()` and `arrange()` transforms `all_lookup_basic` from a wide table into a long, multilevel table. The separate `_nt` columns of the wide table are now stacked on top of one another in the new `NT` column. This stacking replicates across the other two columns of the long table. Thus, the head of the table contains all rows (i.e., all raw-to-T pairs) for the `CPS1_nt` scale. Proceeding down the table, the `CPS1_nt` rows are followed by the `CPS2_nt` rows, then the `CPS3_nt` rows, and so on. The table segment below shows the transition between the `CPS1_nt` rows and the `CPS2_nt` rows, where the value of `raw` recycles to its lower bound, beginning the raw-to-T lookup pairs for the `CPS2` scale.
-
-        raw scale      NT
-        
-        196 CPS1_nt    NA
-        197 CPS1_nt    NA
-        198 CPS1_nt    NA
-        199 CPS1_nt    NA
-        200 CPS1_nt    NA
-         10 CPS2_nt    40
-         11 CPS2_nt    40
-         12 CPS2_nt    40
-         13 CPS2_nt    40
-         14 CPS2_nt    40
-
-```{r norms-lookup-print, echo = 1:3, eval = F}
-```
-
-The current `NT` column is the antecedent of the left-most column of the print-format lookup table. As such, it needs to contain all possible values of T, sorted descending, with no duplicates. To get it to this state, we call `tidyr::complete()`, which fills in missing values of a variable, adding a new row for each filled-in value. As an argument to `complete()`, we pass `NT = 40:80`, which adds rows for any values in the range of `40` to `80` that are missing from the current `NT` column. To ensure that values are filled in consecutively within each scale, we `group_by(scale)` before calling `complete()`.
-
-```{r norms-lookup-print, echo = 4:5, eval = F}
-```
-
-As noted earlier, the lookup relationship between T and raw scores is one-to-many, meaning that each value of T may map onto multiple values of raw. This mapping is represented explicitly in the current data object, where many rows may exist for a single T-score value, one for each associated value of raw. Below are the first ten rows of the current data object, showing the one-to-many mapping of `NT = 40` to its eight associated raw scores:
-
-      scale      NT   raw
-
-      CPS1_nt    40    10
-      CPS1_nt    40    11
-      CPS1_nt    40    12
-      CPS1_nt    40    13
-      CPS1_nt    40    14
-      CPS1_nt    40    15
-      CPS1_nt    40    16
-      CPS1_nt    40    17
-      CPS1_nt    41    NA
-      CPS1_nt    42    18
-
-In the finalized print-format lookup table, there is only a single row for each possible value of T. In example above, where there are eight rows mapping `NT = 40` onto eight consecutive values of `raw`, we need to collapse *multiple values* of `raw` into a *single range* of raw scores. We can then replace the eight rows above with a single row in which `NT` is `40` and `raw` is `10-17`.
-
-In addition to the one-to-many mapping for `NT = 40`, the rows above include a one-to-one mapping for `NT = 42` (to `raw = 18`). In the next code snippet, we use `dplyr::filter()` to collapse the table vertically and retain rows according to the following rules:
-
--   **One-to-one** T-to-raw mapping: retain that *single* row.
--   **One-to-many** T-to-raw mapping: retain the *first* and *last* rows of the series, which contain, respectively, the values of `raw` that are the lower and upper bounds of the required raw-score range.
-
-To execute this transformation, we first re-group the data object hierarchically (`group_by(scale, NT)`), so that ranges of `raw` can be assembled within each value of `NT`, and within each `scale`. After grouping, the one-to-one mappings are single-row groups, and the one-to-many mappings are multi-row groups (in which each row has an identical value of `NT`).
-
-`filter()` operates on these groups according to a complex predicate: `n() == 1 | n() > 1 & row_number() %in% c(1, n())`. The predicate makes use of `dplyr::n()`, which returns the number of rows in groups defined by `group_by()`. The single-row groups are captured by the expression `n() == 1`.
-
-To get the first and last rows of the multi-row groups, we use the expression `n() > 1 & row_number() %in% c(1, n()))`. The LHS side of this expression (`n() > 1`) captures all rows of the multi-row groups. The RHS of this expression (`row_number()  %in% c(1, n()`) uses `row_number()` to retain only the first and last rows of the multi-row groups. The expression captures only the two rows where `row_number() == 1` (the first row) or `row_number == n()` (i.e, the row number is equal to the total number of rows in the group, which is also the row number of the *last* row of the group). Rather than specify these latter two sub-predicates separately, we can combine them by using `%in%` to specify that `row_number()` is equal to *either* of the two elements of the vector `c(1, n())`.
-
-After applying the `filter()` step, the first 10 rows of the data object appear as follows:
-
-      scale      NT   raw
-
-      CPS1_nt    40    10
-      CPS1_nt    40    17
-      CPS1_nt    41    NA
-      CPS1_nt    42    18
-      CPS1_nt    43    NA
-      CPS1_nt    44    NA
-      CPS1_nt    45    NA
-      CPS1_nt    46    19
-      CPS1_nt    47    NA
-      CPS1_nt    48    NA
-
-Note that the group of rows for `NT = 40`, which previously included eight rows, now consists of only two: those containing the values of `raw` for the lower and upper bounds of the required raw score range `10-17`. All other rows in the example are single rows, representing one-to-one T-to-raw mappings.
-
-Because the data object is grouped by `NT`, we can call `dplyr::summarize()` to further collapse the table so there is a single row for each possible value of `NT`. `summarize()` operates within groups, and is used to aggregate the values of a variable, returning a new `raw` column containing a single summary value for each group. [^4]
-
-[^4]: To avoid confusion, keep in mind that the "new" `raw` column summarizes values in the "old" raw column, which is dropped from the returned data object.
-
-As an argument to `summarize()`, we pass the expression `raw = str_c(raw, collapse = '--')`, which returns the required values for both types of T-to-raw mappings. Note that the RHS is wrapped in `str_c`, meaning that numbers will be formatted as strings in the new `raw` column. One-to-one mappings are represented in the current object as single rows, so the summarizing expression simply returns the "old" value of `raw` in that row. One-to-many mappings are now represented by two-row groups, with the rows containing the lower and upper bounds of the required raw-score ranges. For these two-row groups, `str_c()` joins the two "old" values of raw, collapsing them into a single string with the separator `--`.[^5]
-
-[^5]: We use two dashes (`--`), instead of a single dash, to prevent the score ranges from being mistakenly read as dates when the saved output is opened in MS Excel.
-
-Because the mapping of T-to-raw is one-to-many, there may be values of T in the `NT` column that are not mapped onto any raw score value. In the rows shown above, the first eight values of raw `10-17` map onto `NT = 40`. The next value of raw `18` maps onto `NT = 42`, leaving `NT = 41` "unmapped" (i.e., `raw = NA` for `NT = 41`). To format the `raw` column properly for final output, we use `mutate(across(case_when()))` to recode `NA` to `-` in the `raw` column. We then use arrange to sort the table by `scale`, and descending by `NT`.
-
-```{r norms-lookup-print, echo = 6:10, eval = F}
-```
-
-Recall that the original data input to this process was the wide-format `all_lookup_basic` data frame. We pivoted this input to long format to so that we could transform it by applying `dplyr` functions on a row-wise basis. As a result, the current data object is a long-format, three-column table whose cell values are formatted as required for the print-format lookup table. The `NT` column contains all possible values of T-score in descending order (nested within `scale`), thus conforming with the requirements for the left-most column of the print-format table.
-
-To prepare the final output, we call `pivot_wider()` to return the table to wide format. We include two of the three existing columns in arguments to `pivot_wider`: `names_from = scale`, to specify that names for the new columns in the wide table are to be drawn from the existing `scale` column; and `values_from = raw`, to indicate that cell values for the new columns are to be drawn from the existing `raw` column. `pivot_wider()` thus returns a wide table in which the existing `NT` becomes the left-most column, the existing `scale` and `raw` columns are dropped, and the new rightward columns are named for the scales and contain the raw-score lookup values corresponding to each T-score. Here is the head of the resulting table:
-
-        NT    CPS1_nt CPS2_nt CPS3_nt CPS4_nt CPS5_nt CPTOT_nt
-
-        80    29--40  29--40  31--40  29--40  29--40  123--200
-        79    -       -       28--30  -       -       121--122
-        78    -       -       -       -       28      -       
-        77    28      -       -       28      -       120     
-        76    -       28      -       -       -       -       
-        75    -       -       27      -       27      -       
-
-We can repair inaccurate column names with `rename_with()` which enables the application of `stringr` functions to a batch of column names (here replacing `"_nt"` with `"_raw"`, because the rightward columns now contain raw scores, not T scores). We use `filter(!is.na(T_score))` to drop extraneous rows that are missing T scores. Finally, we `write_csv()` the finished output to .csv.
-
-```{r norms-lookup-print, echo = 11:26, eval = F}
-```
-
-<br>
-
-#### 4. Prepare raw score descriptive and demographic summary tables
-
-It is often useful to obtain descriptive output on the final normative data set, after it has been cleaned and its demographic composition adjusted to meet project requirements.
-
-###### EXECUTABLE CODE
-
-```{r norms-desc-demos, eval = FALSE}
-assign(
-  str_c("raw_score_desc", age_range_name, form_name, sep = "_"),
-  get(str_c("data", age_range_name, form_name, sep = "_")) %>%
-    select(contains("raw")) %>%
-    describe(fast = TRUE) %>%
-    rownames_to_column(var = "scale") %>%
-    select(scale, n, mean, sd) %>%
-    mutate(across(c(mean, sd), ~ (round(
-      ., 2
-    ))))
-)
-
-write_csv(get(str_c(
-  "raw_score_desc", age_range_name, form_name, sep = "_"
-)),
-here(str_c(
-  "OUTPUT-FILES/TABLES/",
-  str_c("raw-score-desc",
-        age_range_name,
-        form_name,
-        sep = "-"),
-  ".csv"
-)),
-na = '')
-
-var_order <- c("age_range", "gender", "educ", "ethnic", "region")
-
-cat_order <- c(
-  str_sort(unique(get(str_c("data", age_range_name, form_name, sep = "_"))$age_range)),
-  str_sort(unique(get(str_c("data", age_range_name, form_name, sep = "_"))$gender), 
-           decreasing = TRUE),
-  "no_HS", "HS_grad", "some_college", "BA_plus" , 
-  "hispanic", "asian", "black", "white", "other",
-  "northeast", "midwest", "south", "west")
-
-assign(
-  str_c("demo_counts", age_range_name, form_name, sep = "_"),
-  get(str_c("data", age_range_name, form_name, sep = "_")) %>%
-    select(all_of(var_order)) %>%
-    pivot_longer(everything(), names_to = "variable", values_to = "category") %>%
-    group_by(variable, category) %>%
-    count(variable, category) %>%
-    arrange(match(variable, var_order), match(category, cat_order)) %>%
-    ungroup() %>%
-    mutate(across(
-      variable,
-      ~
-        case_when(lag(.x) == .x ~ NA_character_,
-                  TRUE ~ .x)
-    ))
-)
-
-write_csv(get(str_c(
-  "demo_counts", age_range_name, form_name, sep = "_"
-)),
-here(str_c(
-  "OUTPUT-FILES/TABLES/",
-  str_c("demo-counts",
-        age_range_name,
-        form_name,
-        sep = "-"),
-  ".csv"
-)),
-na = '')
-```
-
-###### COMMENTED SNIPPETS
-
-As in previous steps, we use `assign()` to name objects with concatenated strings. The raw score descriptives table is based on the original input file, which we call as before with `get(str_c("data", age_range_name, form_name, sep = "_"))`. We use `select(contains("raw"))` to return only the raw score columns for further processing.
-
-```{r norms-desc-demos, echo = 1:4, eval = F}
-```
-
-We obtain descriptive statistics on these columns using `psych::describe()`. The argument `fast = TRUE` limits the output to the most frequently reported measures (e.g., `n`, `mean`, `sd`, `min`, `max`, `range`, `se`). These measures become column names for the summary data object, which now has a row for each score being analyzed, as in:
-
-              vars    n  mean   sd min max range   se
-    CPS1_raw     1 1000 10.27 2.84   1  19    18 0.09
-    CPS2_raw     2 1000 10.19 2.92   2  20    18 0.09
-    CPS3_raw     3 1000 10.08 2.79   2  21    19 0.09
-    CPS4_raw     4 1000 10.30 2.79   2  21    19 0.09
-    CPS5_raw     5 1000 10.21 2.77   1  19    18 0.09
-    CPTOT_raw    6 1000 51.05 8.82  18  73    55 0.28
-
-Because `describe()` converts the column names of the input object into row names, we use `tibble::rownames_to_column()` to move these row names into a column named `scale`.
-
-```{r norms-desc-demos, echo = 5:6, eval = F}
-```
-
-For the final output, we `select()` only the four required columns, and `round()` `mean` and `sd` to `2` digits with `mutate()`. Within `mutate()`, we select columns to be modified with `across()`, and then use the `.` token to pass those columns to `round()`. We `write_csv()` the finished descriptives table to .csv.
-
-```{r norms-desc-demos, echo = 7:15, eval = F}
-```
-
-To format the table of demographic counts, we define two tokens, `var_order` and `cat_order` that specify the sorting sequence for the demographic variables `c("age_range", "gender", "educ", "ethnic", "region")` and their associated subcategories. The `cat_order` token is a single vector containing all subcategories. For more readable code, we list the subcategories of each demographic variable on a separate line.
-
-Within `cat_order`, we can use tokens to create more robust definitions of the `age_range` and `gender` subcategories. These tokenized specifications take advantage of naturally occurring numerical or alphabetical sequences in the subcategory names.
-
-For example, in the final output table, we want the subcategory rows for the `gender` variable to be sorted in reverse alphabetical order (i.e., `male`, `female`). To extract these category names as vector elements, we start with `get(str_c("data", age_range_name, form_name, sep = "_"))$gender)`, which calls the original input data file and uses the `$` operator to subset only the `gender` column. We wrap this expression in `base::unique()`, which extracts only a single instance each of the strings `"female"` and `"male"` (from a column containing *many* instances of each). We then wrap the two strings in `stringr::str_sort()`, which enables sorting a vector in reverse alphabetical order with the argument `decreasing = TRUE`.
-
-By contrast, the required subcategory sequence for `educ` (for example) does not conform to an alphabetical sort. We therefore must specify the sequence explicitly (i.e., `"no_HS", "HS_grad", "some_college", "BA_plus"`).
-
-```{r norms-desc-demos, echo = 26:34, eval = F}
-```
-
-To assemble the demographic table, we begin with previously described methods for calling the original input data with `get()`, and naming the output object with `assign()`. We use `select(all_of())` to keep only the columns named by the token `var_order`. We `pivot_longer()` these columns to long format, creating a table with two columns: `variable` and `category`, where each row is a pairing of a demographic variable and one of its subcategories. Because we are tallying demographic counts across five variables (`c("age_range", "gender", "educ", "ethnic", "region")`), each case (row) in the input file has five rows in the transformed long object, corresponding to the five subcategory assignments for that case. As an example, here is a single row in the wide-format input file:
-
-     age_range   gender   educ      ethnic   region   
-
-     5 to 8 yo   female   BA_plus   white    northeast
-
-Transforming that row to long format yields:
-
-    variable    category 
-
-    age_range   5 to 8 yo
-    gender      female   
-    educ        BA_plus  
-    ethnic      white    
-    region      northeast
-
-```{r norms-desc-demos, echo = 36:40, eval = F}
-```
-
-The next step is to `group_by(variable, category)` so that the number of instances of each subcategory can be summarized with `count(variable, category)`. Calling the latter function collapses the long table so that there is a single row for each variable-subcategory pair. It creates a new column `n` that provides the number of cases falling into each variable-subcategory bucket, as in:
-
-     variable    category         n
-
-     age_range   5 to 8 yo      492
-     age_range   9 to 12 yo     508
-     educ        BA_plus        311
-     educ        HS_grad        247
-     educ        no_HS          133
-     educ        some_college   309
-     ...
-
-```{r norms-desc-demos, echo = 41:42, eval = F}
-```
-
-The current object has all rows required for final output, but they are not yet in the preferred sort order. We apply that sequencing with `arrange()`, using `match()` to specify that we want `variable` and `category` to be sorted by the orders provided in the tokens `var_order` and `cat_order`, respectively.
-
-Note that in the example above, `variable` contains a value in every row. To make the output more readable, we want to drop duplicate values from that column, as in:
-
-     variable    category         n
-
-     age_range   5 to 8 yo      492
-                 9 to 12 yo     508
-     educ        BA_plus        311
-                 HS_grad        247
-                 no_HS          133
-                 some_college   309
-     ...
-
-We accomplish this by first removing the existing group structure with `dplyr::ungroup()`. We then recode only the variable column with `mutate(across(variable))`. Within `mutate()`, we call `case_when()` to recode `variable` to `NA_character_` when the predicate `lag(.x) == .x` returns `TRUE`. That is, when the value of `variable` is equal to its value *in the previous row*, the function replaces the current value with `NA`. This leaves the first occurrence of each `variable` name intact and yields the more-readable table format.[^6]
-
-[^6]: Within `case_when()`, `.x` is a token for `variable`.
-
-This template concludes by writing the finished table of demographic counts to .csv.
-
-```{r norms-desc-demos, echo = 43:55, eval = F}
-```
