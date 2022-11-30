@@ -371,8 +371,8 @@ consisting of children who have been diagnosed with ASD. The goal of the
 validity analysis is to determine the extent to which the SPM-2 t-scores
 of this clincial group differ from a group of typically developing
 children with matched demographic characteristics.</p>
-<p>The method therefore focuses on drawing a matched subsample from a
-larger sample of typically developing children (in this case the SPM-2
+<p>The method focuses on drawing a matched subsample from a larger
+sample of typically developing children (in this case the SPM-2
 Standardization Sample). Once we have assemble comparison group, we then
 calculate descriptive statistics on each group, and use a measure of
 effect size to assess the magnitude of differences between the two
@@ -383,7 +383,7 @@ groups on SPM-2 scores.</p>
 <li>Descriptive statistics with effects sizes for the means
 comparisons</li>
 </ul>
-<p>This demonstration that you have set up an RStudio project called
+<p>This demonstration assumes an RStudio project called
 <code>RATING-SCALE-ANALYSIS</code>, with subfolders <code>CODE</code>,
 <code>INPUT-FILES</code> and <code>OUTPUT-FILES</code>. Save scripts in
 <code>CODE</code>, and run them from within the
@@ -399,8 +399,8 @@ var_order &lt;- c(&quot;age_range&quot;, &quot;Age&quot;, &quot;AgeInMonths&quot
                &quot;Ethnicity&quot;, &quot;Region&quot;)
 cat_order &lt;- c(
   # AgeInMonths
-  NA, &#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;, &#39;5&#39;, &#39;6&#39;, &#39;7&#39;, &#39;8&#39;, &#39;9&#39;, &#39;10&#39;, &#39;11&#39;, &#39;12&#39;, &#39;13&#39;, &#39;14&#39;, &#39;15&#39;, &#39;16&#39;, &#39;17&#39;, &#39;18&#39;, &#39;19&#39;, &#39;20&#39;, &#39;21&#39;, &#39;22&#39;, 
-  &#39;23&#39;, &#39;24&#39;, &#39;25&#39;, &#39;26&#39;, &#39;27&#39;, &#39;28&#39;, &#39;29&#39;, &#39;30&#39;, &#39;31&#39;, &#39;32&#39;, &#39;33&#39;, &#39;34&#39;, &#39;35&#39;, &#39;36&#39;,
+  NA, &quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;, &quot;6&quot;, &quot;7&quot;, &quot;8&quot;, &quot;9&quot;, &quot;10&quot;, &quot;11&quot;, &quot;12&quot;, &quot;13&quot;, &quot;14&quot;, &quot;15&quot;, &quot;16&quot;, &quot;17&quot;, &quot;18&quot;, &quot;19&quot;, &quot;20&quot;, &quot;21&quot;, &quot;22&quot;, 
+  &quot;23&quot;, &quot;24&quot;, &quot;25&quot;, &quot;26&quot;, &quot;27&quot;, &quot;28&quot;, &quot;29&quot;, &quot;30&quot;, &quot;31&quot;, &quot;32&quot;, &quot;33&quot;, &quot;34&quot;, &quot;35&quot;, &quot;36&quot;,
   # age_range
   NA, &quot;03.5 to 6 mo&quot;, &quot;03.5 to 10 mo&quot;, &quot;4 to 10 mo&quot;, &quot;07 to 10.5 mo&quot;, &quot;09.5 to 20 mo&quot;,  
   &quot;11 to 20 mo&quot;, &quot;11 to 31.5 mo&quot;, &quot;21 to 30 mo&quot;,
@@ -436,12 +436,12 @@ ASD_clin_stand_preMatch &lt;- bind_rows(
   stand_preMatch 
 ) %&gt;% 
   mutate(Group = case_when(
-    clin_status == &#39;clin&#39; ~ TRUE,
+    clin_status == &quot;clin&quot; ~ TRUE,
     TRUE ~ FALSE
   ))
 
 sum(is.na(ASD_clin_stand_preMatch))
-na_cols &lt;- ASD_clin_stand_preMatch %&gt;% select_if(~ any(is.na(.)))
+na_cols &lt;- ASD_clin_stand_preMatch %&gt;% select(where(~ any(is.na(.))))
 
 ASD_clin_stand_preMatch &lt;- ASD_clin_stand_preMatch %&gt;%
   replace_na(
@@ -465,9 +465,9 @@ match_summ &lt;- summary(match)
 ASD_clin_stand_match &lt;- match.data(match) %&gt;% 
   select(-Group, -distance, -weights) #%&gt;% 
 ASD_stand_match &lt;- ASD_clin_stand_match %&gt;% 
-  filter(clin_status == &#39;typ&#39;)
+  filter(clin_status == &quot;typ&quot;)
 ASD_clin_match &lt;- ASD_clin_stand_match %&gt;% 
-  filter(clin_status == &#39;clin&#39;)
+  filter(clin_status == &quot;clin&quot;)
 
 match_dist_stand &lt;- ASD_stand_match %&gt;% 
   select(age_range, Gender, ParentHighestEducation, Ethnicity) %&gt;% 
@@ -484,7 +484,7 @@ match_dist_stand &lt;- ASD_stand_match %&gt;%
     TRUE ~ Variable
   )) %&gt;% 
   mutate(group = case_when(
-    rownames(.) == &quot;1&quot; ~ &#39;Matched typical&#39;,
+    rownames(.) == &quot;1&quot; ~ &quot;Matched typical&quot;,
     T ~ NA_character_
   )) %&gt;% 
   select(group, everything())
@@ -504,7 +504,7 @@ match_dist_clin &lt;- ASD_clin_match %&gt;%
     TRUE ~ Variable
   )) %&gt;% 
   mutate(group = case_when(
-    rownames(.) == &quot;1&quot; ~ &#39;ASD&#39;,
+    rownames(.) == &quot;1&quot; ~ &quot;ASD&quot;,
     T ~ NA_character_
   )) %&gt;% 
   select(group, everything())
@@ -515,21 +515,21 @@ match_dist &lt;- bind_rows(
 )
 
 ASD_matchStand &lt;- stand_preMatch %&gt;% 
-  semi_join(ASD_stand_match, by =&#39;IDNumber&#39;)
+  semi_join(ASD_stand_match, by =&quot;IDNumber&quot;)
 
 scale_order &lt;- c(&quot;SOC&quot;, &quot;VIS&quot;, &quot;HEA&quot;, &quot;TOU&quot;, 
                  &quot;TS&quot;, &quot;BOD&quot;, &quot;BAL&quot;, &quot;PLA&quot;, &quot;TOT&quot;)
 
 ASD_matchStand_t_desc &lt;-
   ASD_matchStand %&gt;% 
-  select(contains(&#39;_NT&#39;)) %&gt;% 
+  select(contains(&quot;_NT&quot;)) %&gt;% 
   rename_with(~ str_sub(., 1, -4), everything()) %&gt;% 
   describe(fast = T) %&gt;%
   rownames_to_column() %&gt;% 
   rename(scale = rowname)%&gt;% 
   arrange(match(scale, scale_order)) %&gt;% 
   mutate(sample = case_when(
-    rownames(.) == &quot;1&quot; ~ &#39;Matched typical&#39;,
+    rownames(.) == &quot;1&quot; ~ &quot;Matched typical&quot;,
     T ~ NA_character_
   ),
   var = sd^2) %&gt;% 
@@ -541,14 +541,14 @@ ASD_matchStand_t_desc &lt;-
 
 ASD_clin_t_desc &lt;-
   clin_ASD_preMatch %&gt;% 
-  select(contains(&#39;_NT&#39;)) %&gt;% 
+  select(contains(&quot;_NT&quot;)) %&gt;% 
   rename_with(~ str_sub(., 1, -4), everything()) %&gt;% 
   describe(fast = T) %&gt;%
   rownames_to_column() %&gt;% 
   rename(scale = rowname)%&gt;% 
   arrange(match(scale, scale_order)) %&gt;% 
   mutate(sample = case_when(
-    rownames(.) == &quot;1&quot; ~ &#39;ASD&#39;,
+    rownames(.) == &quot;1&quot; ~ &quot;ASD&quot;,
     T ~ NA_character_
   ),
   var = sd^2) %&gt;% 
@@ -569,13 +569,13 @@ write_csv(match_dist,
           here(
             &quot;OUTPUT-FILES/TABLES/demos-ASD-matchTyp.csv&quot;
           ),
-          na = &#39;&#39;)
+          na = &quot;&quot;)
 
 write_csv(ASD_match_t_desc,
           here(
             &quot;OUTPUT-FILES/TABLES/t-desc-ES-ASD-matchTyp.csv&quot;
           ),
-          na = &#39;&#39;)</code></pre>
+          na = &quot;&quot;)</code></pre>
 <p><br></p>
 </div>
 <div id="commented-snippets" class="section level6">
@@ -631,8 +631,8 @@ var_order &lt;- c(&quot;age_range&quot;, &quot;Age&quot;, &quot;AgeInMonths&quot
                &quot;Ethnicity&quot;, &quot;Region&quot;)
 cat_order &lt;- c(
   # AgeInMonths
-  NA, &#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;, &#39;5&#39;, &#39;6&#39;, &#39;7&#39;, &#39;8&#39;, &#39;9&#39;, &#39;10&#39;, &#39;11&#39;, &#39;12&#39;, &#39;13&#39;, &#39;14&#39;, &#39;15&#39;, &#39;16&#39;, &#39;17&#39;, &#39;18&#39;, &#39;19&#39;, &#39;20&#39;, &#39;21&#39;, &#39;22&#39;, 
-  &#39;23&#39;, &#39;24&#39;, &#39;25&#39;, &#39;26&#39;, &#39;27&#39;, &#39;28&#39;, &#39;29&#39;, &#39;30&#39;, &#39;31&#39;, &#39;32&#39;, &#39;33&#39;, &#39;34&#39;, &#39;35&#39;, &#39;36&#39;,
+  NA, &quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;, &quot;6&quot;, &quot;7&quot;, &quot;8&quot;, &quot;9&quot;, &quot;10&quot;, &quot;11&quot;, &quot;12&quot;, &quot;13&quot;, &quot;14&quot;, &quot;15&quot;, &quot;16&quot;, &quot;17&quot;, &quot;18&quot;, &quot;19&quot;, &quot;20&quot;, &quot;21&quot;, &quot;22&quot;, 
+  &quot;23&quot;, &quot;24&quot;, &quot;25&quot;, &quot;26&quot;, &quot;27&quot;, &quot;28&quot;, &quot;29&quot;, &quot;30&quot;, &quot;31&quot;, &quot;32&quot;, &quot;33&quot;, &quot;34&quot;, &quot;35&quot;, &quot;36&quot;,
   # age_range
   NA, &quot;03.5 to 6 mo&quot;, &quot;03.5 to 10 mo&quot;, &quot;4 to 10 mo&quot;, &quot;07 to 10.5 mo&quot;, &quot;09.5 to 20 mo&quot;,  
   &quot;11 to 20 mo&quot;, &quot;11 to 31.5 mo&quot;, &quot;21 to 30 mo&quot;,
@@ -665,18 +665,60 @@ clin_ASD_preMatch &lt;-
 </div>
 <div id="prep-input-data-for-matching" class="section level4">
 <h4>2. Prep input data for matching</h4>
-<p>Text</p>
+<p>To prepare the data for the <code>MatchIt</code> functions, we join
+the clinical and standardization input files with
+<code>bind_rows()</code>, which essentially stacks the rows of the two
+inputs on top of one another. The joined object is named
+<code>ASD_clin_stand_preMatch</code>. We include a call to
+<code>mutate()</code> to create a new logical variable,
+<code>Group</code>, which is required by the <code>MatchIt</code>
+functions. <code>Group</code> is coded <code>TRUE</code> for clinical
+cases.</p>
+<p>A further preperatory step is dealing with any <code>NA</code> codes
+in the data, which the <code>MatchIt</code> functions cannot process. We
+use <code>sum(is.na())</code> to obtain a count of the <code>NA</code>
+cells in <code>ASD_clin_stand_preMatch</code>. If this count is 0, the
+data are ready for downstream processing.</p>
+<p>If <code>NA</code> cells exist, we can identify the columns where
+they appear by piping <code>ASD_clin_stand_preMatch</code> into
+<code>select()</code>. We can use a predicate to select columns within
+<code>select()</code> by wrapping the predicate in the selection helper
+<code>where()</code>. The predicate allows <code>select()</code> to
+return columns where <code>any(is.na(.))</code> returns
+<code>TRUE</code>. Here, <code>.</code> is shorthand for the piped data
+object, <code>is.na()</code> returns a logical vector (whose length
+equals <code>ncol(.)</code>, where <code>TRUE</code> is the code for any
+column where <code>NA</code> is present, and <code>any()</code> serves
+as a wrapper to return <code>TRUE</code> to <code>where()</code> when
+<code>NA</code> is present in <em>any</em> column. <code>na_cols</code>
+names a new data frame holding only the columns that have
+<code>NA</code> values.</p>
+<p>To recode <code>NA</code> cells to <code>999</code> (which is
+acceptable to the <code>MatchIt</code> functions), we pipe
+<code>ASD_clin_stand_preMatch</code> into <code>replace_na()</code>,
+supplying as an argument to the latter a list of the columns identified
+in <code>na_cols</code>. Note that each column name is paired with the
+replacement value of <code>999</code>, some encoded as numbers, some as
+strings, depending on the format of the column. In this example we need
+to add a separate call of <code>mutate()</code> to recode the
+<code>NA</code> values in the <code>HighestEducation</code> column. The
+this latter column was a logical variable in the input file.
+<code>replace_na()</code> cannot reformat variables on the fly, so we
+need to use <code>mutate()</code> to coerce
+<code>HighestEducation</code> to character (with
+<code>as.character()</code>), before substituting <code>&quot;999&quot;</code> for
+the <code>NA</code> values.</p>
 <pre class="r"><code>ASD_clin_stand_preMatch &lt;- bind_rows(
   clin_ASD_preMatch,
   stand_preMatch 
 ) %&gt;% 
   mutate(Group = case_when(
-    clin_status == &#39;clin&#39; ~ TRUE,
+    clin_status == &quot;clin&quot; ~ TRUE,
     TRUE ~ FALSE
   ))
 
 sum(is.na(ASD_clin_stand_preMatch))
-na_cols &lt;- ASD_clin_stand_preMatch %&gt;% select_if(~ any(is.na(.)))
+na_cols &lt;- ASD_clin_stand_preMatch %&gt;% select(where(~ any(is.na(.))))
 
 ASD_clin_stand_preMatch &lt;- ASD_clin_stand_preMatch %&gt;%
   replace_na(

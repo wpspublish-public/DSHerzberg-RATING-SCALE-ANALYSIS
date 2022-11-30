@@ -60,7 +60,7 @@ ASD_clin_stand_preMatch <- bind_rows(
 sum(is.na(ASD_clin_stand_preMatch))
 
 # identify cols with NA
-na_cols <- ASD_clin_stand_preMatch %>% select_if(~ any(is.na(.)))
+na_cols <- ASD_clin_stand_preMatch %>% select(where(~ any(is.na(.))))
 
 # in NA cols, replace NA with 999. Note that we need a separate call of mutate
 # () to replace_na on HighestEducation, because that var is logical on the input
