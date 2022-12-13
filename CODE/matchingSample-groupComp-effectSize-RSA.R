@@ -84,7 +84,6 @@ match <- matchit(
   data = ASD_clin_stand_preMatch, 
   method = "nearest", 
   ratio = 1)
-match_summ <- summary(match)
 
 # save matched samples into new df; split by clin_status
 ASD_clin_stand_match <- match.data(match) %>% 

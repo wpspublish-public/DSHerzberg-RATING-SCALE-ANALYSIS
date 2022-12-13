@@ -93,7 +93,6 @@ match <- matchit(
   data = ASD_clin_stand_preMatch, 
   method = "nearest", 
   ratio = 1)
-match_summ <- summary(match)
 
 ASD_clin_stand_match <- match.data(match) %>% 
   select(-Group, -distance, -weights) #%>% 
@@ -246,4 +245,10 @@ To recode `NA` cells to `999` (which is acceptable to the `MatchIt` functions), 
 ```{r RSA-match, echo = 42:63, eval = F}
 ```
 
+#### 3. Extract the matched sample
+
+`matchit()` is used to extract a subsample from the  typically developing input file that is demographically matched to the clincial sample. Because `matchit()` incorporates R's random number generator, we use `set.seed()` to insure identical results each time we run the script.
+
+```{r RSA-match, echo = 64:70, eval = F}
+```
 

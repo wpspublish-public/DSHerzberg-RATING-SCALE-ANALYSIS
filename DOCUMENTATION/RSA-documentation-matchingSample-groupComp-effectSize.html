@@ -460,7 +460,6 @@ match &lt;- matchit(
   data = ASD_clin_stand_preMatch, 
   method = &quot;nearest&quot;, 
   ratio = 1)
-match_summ &lt;- summary(match)
 
 ASD_clin_stand_match &lt;- match.data(match) %&gt;% 
   select(-Group, -distance, -weights) #%&gt;% 
@@ -730,6 +729,15 @@ ASD_clin_stand_preMatch &lt;- ASD_clin_stand_preMatch %&gt;%
       Region = &quot;999&quot;
     )) %&gt;% 
   mutate(HighestEducation = replace_na(as.character(HighestEducation), &quot;999&quot;))</code></pre>
+</div>
+<div id="extract-the-matched-sample" class="section level4">
+<h4>3. Extract the matched sample</h4>
+<pre class="r"><code>set.seed(12345)
+match &lt;- matchit(
+  Group ~ age_range + Gender + ParentHighestEducation + Ethnicity, 
+  data = ASD_clin_stand_preMatch, 
+  method = &quot;nearest&quot;, 
+  ratio = 1)</code></pre>
 </div>
 </div>
 
