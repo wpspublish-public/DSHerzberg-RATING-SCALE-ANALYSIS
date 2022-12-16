@@ -732,6 +732,30 @@ ASD_clin_stand_preMatch &lt;- ASD_clin_stand_preMatch %&gt;%
 </div>
 <div id="extract-the-matched-sample" class="section level4">
 <h4>3. Extract the matched sample</h4>
+<p><code>matchit()</code> is used to extract a subsample from the
+typically developing input file that is demographically matched to the
+clincial sample. Because <code>matchit()</code> incorporates R’s random
+number generator, we use <code>set.seed()</code> to insure identical
+results each time we run the script.</p>
+<p><code>matchit()</code> matches the demographic distribution of the
+clinical sample, identified as <code>TRUE</code> on the logical variable
+<code>Group</code> defined in upstream code. <code>matchit()</code>
+takes four key arguments:</p>
+<ul>
+<li><code>Group ~ age_range + Gender + ParentHighestEducation + Ethnicity</code>
+is a formula that sets the parameters of the matching operation. On the
+RHS is <code>Group</code>, identifying the clinical sample whose
+characteristics will be matched in the draw from the typical sample. On
+the LHS are the four demographic variables whose distributions will be
+replicated in the matched sample.</li>
+<li><code>data = ASD_clin_stand_preMatch</code> identifies the input
+file that contains both the small clinical sample
+(<code>Group == TRUE</code>) and the typical sample
+(<code>Group == FALSE</code>).</li>
+<li><code>method = &quot;nearest&quot;</code> specifies the matching method (here
+<em>nearest neighbor matching by propensity score</em>).</li>
+<li><code>ratio = 1</code> specifies 1:1 case matching.</li>
+</ul>
 <pre class="r"><code>set.seed(12345)
 match &lt;- matchit(
   Group ~ age_range + Gender + ParentHighestEducation + Ethnicity, 

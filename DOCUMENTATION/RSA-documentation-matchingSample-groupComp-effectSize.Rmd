@@ -249,6 +249,12 @@ To recode `NA` cells to `999` (which is acceptable to the `MatchIt` functions), 
 
 `matchit()` is used to extract a subsample from the  typically developing input file that is demographically matched to the clincial sample. Because `matchit()` incorporates R's random number generator, we use `set.seed()` to insure identical results each time we run the script.
 
+`matchit()` matches the demographic distribution of the clinical sample, identified as `TRUE` on the logical variable `Group` defined in upstream code. `matchit()` takes four key arguments:
+
+* `Group ~ age_range + Gender + ParentHighestEducation + Ethnicity` is a formula that sets the parameters of the matching operation. On the RHS is `Group`, identifying the clinical sample whose characteristics will be matched in the draw from the typical sample. On the LHS are the four demographic variables whose distributions will be replicated in the matched sample.
+* `data = ASD_clin_stand_preMatch` identifies the input file that contains both the small clinical sample (`Group == TRUE`) and the typical sample (`Group == FALSE`).
+* `method = "nearest"` specifies the matching method (here *nearest neighbor matching by propensity score*).
+* `ratio = 1` specifies 1:1 case matching.
 ```{r RSA-match, echo = 64:70, eval = F}
 ```
 
