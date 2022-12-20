@@ -730,8 +730,8 @@ ASD_clin_stand_preMatch &lt;- ASD_clin_stand_preMatch %&gt;%
     )) %&gt;% 
   mutate(HighestEducation = replace_na(as.character(HighestEducation), &quot;999&quot;))</code></pre>
 </div>
-<div id="extract-the-matched-sample" class="section level4">
-<h4>3. Extract the matched sample</h4>
+<div id="extract-matched-sample-set-up-files-for-analysis" class="section level4">
+<h4>3. Extract matched sample, set up files for analysis</h4>
 <p><code>matchit()</code> is used to extract a subsample from the
 typically developing input file that is demographically matched to the
 clincial sample. Because <code>matchit()</code> incorporates R’s random
@@ -762,6 +762,24 @@ match &lt;- matchit(
   data = ASD_clin_stand_preMatch, 
   method = &quot;nearest&quot;, 
   ratio = 1)</code></pre>
+<p><code>matchit()</code> returns a list (<code>match</code>) that
+includes several data elements. <code>match.data(match)</code> is used
+to extract a new data frame <code>ASD_clin_stand_match</code>, which
+includes the clinical cases and their matched counterparts drawn from
+the typical sample. We use <code>select()</code> to remove columns not
+needed for the subsequent analysis. We use <code>filter()</code> to
+split the new data frame by clinic status into clinical
+(<code>ASD_clin_match</code>) and typical (<code>ASD_stand_match</code>)
+samples.</p>
+<pre class="r"><code>ASD_clin_stand_match &lt;- match.data(match) %&gt;% 
+  select(-Group, -distance, -weights) #%&gt;% 
+ASD_stand_match &lt;- ASD_clin_stand_match %&gt;% 
+  filter(clin_status == &quot;typ&quot;)
+ASD_clin_match &lt;- ASD_clin_stand_match %&gt;% 
+  filter(clin_status == &quot;clin&quot;)</code></pre>
+</div>
+<div id="obtain-demographic-counts" class="section level4">
+<h4>4. Obtain demographic counts</h4>
 </div>
 </div>
 

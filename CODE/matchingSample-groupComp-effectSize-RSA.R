@@ -30,7 +30,6 @@ cat_order <- c(
   # Region
   NA, "northeast", "midwest", "south", "west")
 
-# use spm2 data, not RSA sim data
 stand_preMatch <- 
   suppressMessages(as_tibble(read_csv(
     here("INPUT-FILES/data-RS-spm2-stand-all-T-scores-per-case.csv")
@@ -42,10 +41,6 @@ clin_ASD_preMatch <-
   ))) %>% 
   filter(clin_dx == "ASD")
 
-# EXTRACT MATCHED TYPICAL SAMPLE ------------------------------------------
-
-# This step encodes a logical var (Group), needed by matchit, that captures clin
-# vs typ status
 ASD_clin_stand_preMatch <- bind_rows(
   clin_ASD_preMatch,
   stand_preMatch 
@@ -55,17 +50,9 @@ ASD_clin_stand_preMatch <- bind_rows(
     TRUE ~ FALSE
   ))
 
-# matchit cannot process NA. First get sum of NA for data. If that is 0,
-# proceed. If sum NA is positive, recode all NA to 999
 sum(is.na(ASD_clin_stand_preMatch))
-
-# identify cols with NA
 na_cols <- ASD_clin_stand_preMatch %>% select(where(~ any(is.na(.))))
 
-# in NA cols, replace NA with 999. Note that we need a separate call of mutate
-# () to replace_na on HighestEducation, because that var is logical on the input
-# file, and replace_na can't convert variable types on the fly, so we have to
-# coerce to as.character() to replace NA with the string "999"
 ASD_clin_stand_preMatch <- ASD_clin_stand_preMatch %>%
   replace_na(
     list(
@@ -77,7 +64,6 @@ ASD_clin_stand_preMatch <- ASD_clin_stand_preMatch %>%
     )) %>% 
   mutate(HighestEducation = replace_na(as.character(HighestEducation), "999"))
 
-# run matchit to get 1:1 matching
 set.seed(12345)
 match <- matchit(
   Group ~ age_range + Gender + ParentHighestEducation + Ethnicity, 
@@ -85,9 +71,8 @@ match <- matchit(
   method = "nearest", 
   ratio = 1)
 
-# save matched samples into new df; split by clin_status
 ASD_clin_stand_match <- match.data(match) %>% 
-  select(-Group, -distance, -weights) #%>% 
+  select(-Group, -distance, -weights)
 ASD_stand_match <- ASD_clin_stand_match %>% 
   filter(clin_status == 'typ')
 ASD_clin_match <- ASD_clin_stand_match %>% 

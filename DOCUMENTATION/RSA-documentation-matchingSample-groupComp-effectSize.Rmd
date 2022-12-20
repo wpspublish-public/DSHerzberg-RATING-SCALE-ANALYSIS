@@ -245,7 +245,7 @@ To recode `NA` cells to `999` (which is acceptable to the `MatchIt` functions), 
 ```{r RSA-match, echo = 42:63, eval = F}
 ```
 
-#### 3. Extract the matched sample
+#### 3. Extract matched sample, set up files for analysis
 
 `matchit()` is used to extract a subsample from the  typically developing input file that is demographically matched to the clincial sample. Because `matchit()` incorporates R's random number generator, we use `set.seed()` to insure identical results each time we run the script.
 
@@ -257,4 +257,9 @@ To recode `NA` cells to `999` (which is acceptable to the `MatchIt` functions), 
 * `ratio = 1` specifies 1:1 case matching.
 ```{r RSA-match, echo = 64:70, eval = F}
 ```
+`matchit()` returns a list (`match`) that includes several data elements. `match.data(match)` is used to extract a new data frame `ASD_clin_stand_match`, which includes the clinical cases and their matched counterparts drawn from the typical sample. We use `select()` to remove columns not needed for the subsequent analysis. We use `filter()` to split the new data frame by clinic status into clinical (`ASD_clin_match`) and typical (`ASD_stand_match`) samples.
+```{r RSA-match, echo = 71:77, eval = F}
+```
+
+#### 4. Obtain demographic counts
 
