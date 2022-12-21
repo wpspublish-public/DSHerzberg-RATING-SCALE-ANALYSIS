@@ -794,10 +794,9 @@ transform this object into long format, wherein the column names from
 <code>Category</code>. The object is now in multi-level format, in which
 the values of <code>Category</code> are nested within each value of
 <code>Variable</code>. Thus, each case from <code>ASD_stand_match</code>
-is now represented four times in the long-format object. The four rows
-for each case give its values, respectively, on the four demographic
-variables. Here is an example of how a single case would be represented
-in long format:</p>
+is now represented in four rows in the long-format object. The four rows
+give the values on the four demographic variables. Here is an example of
+how a single case would be represented in long format:</p>
 <pre><code>Variable               Category                        
 
 age_range              21 to 31.5 mo                   
@@ -807,6 +806,29 @@ Ethnicity              Hispanic </code></pre>
 <pre class="r"><code>match_dist_stand &lt;- ASD_stand_match %&gt;% 
   select(age_range, Gender, ParentHighestEducation, Ethnicity) %&gt;% 
   pivot_longer(cols = everything(), names_to = &quot;Variable&quot;, values_to = &quot;Category&quot;) %&gt;% </code></pre>
+<p>To transform the object from a record of cases into a summary table,
+we first group the data by its values on the two columns, using
+<code>group_by(Variable, Category)</code>. We can then apply the
+summarizing function <code>count()</code>, which returns counts of the
+number of cases in each of the groups created in the previous step.
+Then, by calling <code>arrange(match())</code>, we can sort the table
+using sort orders (<code>var_order</code>, <code>cat_order</code>) that
+we previously specified as token. Here are several rows of the resulting
+data object:</p>
+<pre><code>Variable               Category                                 n
+
+age_range              16 to 17 years                           4
+age_range              18 to 21 years                           4
+Gender                 Male                                    69
+Gender                 Female                                  22
+ParentHighestEducation High school graduate (including GED)    10
+ParentHighestEducation Some college or associate degree        30
+ParentHighestEducation Bachelor&#39;s degree or higher             51
+Ethnicity              Hispanic                                13
+Ethnicity              Asian                                    2</code></pre>
+<pre class="r"><code>  group_by(Variable, Category) %&gt;%
+  count(Variable, Category) %&gt;%
+  arrange(match(Variable, var_order), match(Category, cat_order)) %&gt;% </code></pre>
 </div>
 </div>
 

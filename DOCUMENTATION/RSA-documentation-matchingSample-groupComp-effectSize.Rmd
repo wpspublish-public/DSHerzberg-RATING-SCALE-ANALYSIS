@@ -265,7 +265,7 @@ To recode `NA` cells to `999` (which is acceptable to the `MatchIt` functions), 
 
 The next section of code generates separate tables for the demographic distributions of the two samples, and then joins them together in a summary table.
 
-To create the demographics table (`match_dist_stand`) for the typical sample, we use `select()` to extract the columns for the four demographic variables (`age_range, Gender, ParentHighestEducation, Ethnicity`) from `ASD_stand_match`. We use `pivot_longer()` to transform this object into long format, wherein the column names from `ASD_stand_match` now occupy the column `Variable`, and the cell values occupy the column `Category`. The object is now in multi-level format, in which the values of `Category` are nested within each value of `Variable`. Thus, each case from `ASD_stand_match` is now represented four times in the long-format object. The four rows for each case give its values, respectively, on the four demographic variables. Here is an example of how a single case would be represented in long format:
+To create the demographics table (`match_dist_stand`) for the typical sample, we use `select()` to extract the columns for the four demographic variables (`age_range, Gender, ParentHighestEducation, Ethnicity`) from `ASD_stand_match`. We use `pivot_longer()` to transform this object into long format, wherein the column names from `ASD_stand_match` now occupy the column `Variable`, and the cell values occupy the column `Category`. The object is now in multi-level format, in which the values of `Category` are nested within each value of `Variable`. Thus, each case from `ASD_stand_match` is now represented in four rows in the long-format object. The four rows give the values on the four demographic variables. Here is an example of how a single case would be represented in long format:
 
 ```
 Variable               Category                        
@@ -277,5 +277,22 @@ Ethnicity              Hispanic
 ```
 
 ```{r RSA-match, echo = 78:81, eval = F}
+```
+To transform the object from a record of cases into a summary table, we first group the data by its values on the two columns, using `group_by(Variable, Category)`. We can then apply the summarizing function `count()`, which returns counts of the number of cases in each of the groups created in the previous step. Then, by calling `arrange(match())`, we can sort the table using sort orders (`var_order`, `cat_order`) that we previously specified as token. Here are several rows of the resulting data object:
+
+```
+Variable               Category                                 n
+
+age_range              16 to 17 years                           4
+age_range              18 to 21 years                           4
+Gender                 Male                                    69
+Gender                 Female                                  22
+ParentHighestEducation High school graduate (including GED)    10
+ParentHighestEducation Some college or associate degree        30
+ParentHighestEducation Bachelor's degree or higher             51
+Ethnicity              Hispanic                                13
+Ethnicity              Asian                                    2
+```
+```{r RSA-match, echo = 82:84, eval = F}
 ```
 
