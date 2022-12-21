@@ -103,7 +103,7 @@ ASD_clin_match <- ASD_clin_stand_match %>%
 
 match_dist_stand <- ASD_stand_match %>% 
   select(age_range, Gender, ParentHighestEducation, Ethnicity) %>% 
-  gather("Variable", "Category") %>% 
+  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Category") %>% 
   group_by(Variable, Category) %>%
   count(Variable, Category) %>%
   arrange(match(Variable, var_order), match(Category, cat_order)) %>% 
@@ -123,7 +123,7 @@ match_dist_stand <- ASD_stand_match %>%
 
 match_dist_clin <- ASD_clin_match %>% 
   select(age_range, Gender, ParentHighestEducation, Ethnicity) %>% 
-  gather("Variable", "Category") %>% 
+  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Category") %>% 
   group_by(Variable, Category) %>%
   count(Variable, Category) %>%
   arrange(match(Variable, var_order), match(Category, cat_order)) %>% 
@@ -262,4 +262,20 @@ To recode `NA` cells to `999` (which is acceptable to the `MatchIt` functions), 
 ```
 
 #### 4. Obtain demographic counts
+
+The next section of code generates separate tables for the demographic distributions of the two samples, and then joins them together in a summary table.
+
+To create the demographics table (`match_dist_stand`) for the typical sample, we use `select()` to extract the columns for the four demographic variables (`age_range, Gender, ParentHighestEducation, Ethnicity`) from `ASD_stand_match`. We use `pivot_longer()` to transform this object into long format, wherein the column names from `ASD_stand_match` now occupy the column `Variable`, and the cell values occupy the column `Category`. The object is now in multi-level format, in which the values of `Category` are nested within each value of `Variable`. Thus, each case from `ASD_stand_match` is now represented four times in the long-format object. The four rows for each case give its values, respectively, on the four demographic variables. Here is an example of how a single case would be represented in long format:
+
+```
+Variable               Category                        
+
+age_range              21 to 31.5 mo                   
+Gender                 Female                          
+ParentHighestEducation Some college or associate degree
+Ethnicity              Hispanic 
+```
+
+```{r RSA-match, echo = 78:81, eval = F}
+```
 

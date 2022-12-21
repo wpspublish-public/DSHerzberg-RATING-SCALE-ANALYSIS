@@ -470,7 +470,7 @@ ASD_clin_match &lt;- ASD_clin_stand_match %&gt;%
 
 match_dist_stand &lt;- ASD_stand_match %&gt;% 
   select(age_range, Gender, ParentHighestEducation, Ethnicity) %&gt;% 
-  gather(&quot;Variable&quot;, &quot;Category&quot;) %&gt;% 
+  pivot_longer(cols = everything(), names_to = &quot;Variable&quot;, values_to = &quot;Category&quot;) %&gt;% 
   group_by(Variable, Category) %&gt;%
   count(Variable, Category) %&gt;%
   arrange(match(Variable, var_order), match(Category, cat_order)) %&gt;% 
@@ -490,7 +490,7 @@ match_dist_stand &lt;- ASD_stand_match %&gt;%
 
 match_dist_clin &lt;- ASD_clin_match %&gt;% 
   select(age_range, Gender, ParentHighestEducation, Ethnicity) %&gt;% 
-  gather(&quot;Variable&quot;, &quot;Category&quot;) %&gt;% 
+  pivot_longer(cols = everything(), names_to = &quot;Variable&quot;, values_to = &quot;Category&quot;) %&gt;% 
   group_by(Variable, Category) %&gt;%
   count(Variable, Category) %&gt;%
   arrange(match(Variable, var_order), match(Category, cat_order)) %&gt;% 
@@ -780,6 +780,33 @@ ASD_clin_match &lt;- ASD_clin_stand_match %&gt;%
 </div>
 <div id="obtain-demographic-counts" class="section level4">
 <h4>4. Obtain demographic counts</h4>
+<p>The next section of code generates separate tables for the
+demographic distributions of the two samples, and then joins them
+together in a summary table.</p>
+<p>To create the demographics table (<code>match_dist_stand</code>) for
+the typical sample, we use <code>select()</code> to extract the columns
+for the four demographic variables
+(<code>age_range, Gender, ParentHighestEducation, Ethnicity</code>) from
+<code>ASD_stand_match</code>. We use <code>pivot_longer()</code> to
+transform this object into long format, wherein the column names from
+<code>ASD_stand_match</code> now occupy the column
+<code>Variable</code>, and the cell values occupy the column
+<code>Category</code>. The object is now in multi-level format, in which
+the values of <code>Category</code> are nested within each value of
+<code>Variable</code>. Thus, each case from <code>ASD_stand_match</code>
+is now represented four times in the long-format object. The four rows
+for each case give its values, respectively, on the four demographic
+variables. Here is an example of how a single case would be represented
+in long format:</p>
+<pre><code>Variable               Category                        
+
+age_range              21 to 31.5 mo                   
+Gender                 Female                          
+ParentHighestEducation Some college or associate degree
+Ethnicity              Hispanic </code></pre>
+<pre class="r"><code>match_dist_stand &lt;- ASD_stand_match %&gt;% 
+  select(age_range, Gender, ParentHighestEducation, Ethnicity) %&gt;% 
+  pivot_longer(cols = everything(), names_to = &quot;Variable&quot;, values_to = &quot;Category&quot;) %&gt;% </code></pre>
 </div>
 </div>
 

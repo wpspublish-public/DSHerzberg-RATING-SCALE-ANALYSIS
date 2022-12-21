@@ -81,7 +81,7 @@ ASD_clin_match <- ASD_clin_stand_match %>%
 # demo counts
 match_dist_stand <- ASD_stand_match %>% 
   select(age_range, Gender, ParentHighestEducation, Ethnicity) %>% 
-  gather("Variable", "Category") %>% 
+  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Category") %>% 
   group_by(Variable, Category) %>%
   count(Variable, Category) %>%
   arrange(match(Variable, var_order), match(Category, cat_order)) %>% 
@@ -101,7 +101,7 @@ match_dist_stand <- ASD_stand_match %>%
 
 match_dist_clin <- ASD_clin_match %>% 
   select(age_range, Gender, ParentHighestEducation, Ethnicity) %>% 
-  gather("Variable", "Category") %>% 
+  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Category") %>% 
   group_by(Variable, Category) %>%
   count(Variable, Category) %>%
   arrange(match(Variable, var_order), match(Category, cat_order)) %>% 
