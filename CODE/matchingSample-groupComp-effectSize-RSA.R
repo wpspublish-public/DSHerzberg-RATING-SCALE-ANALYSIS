@@ -95,7 +95,7 @@ match_dist_stand <- ASD_stand_match %>%
   )) %>% 
   mutate(group = case_when(
     rownames(.) == "1" ~ 'Matched typical',
-    T ~ NA_character_
+    TRUE ~ NA_character_
   )) %>% 
   select(group, everything())
 
@@ -115,7 +115,7 @@ match_dist_clin <- ASD_clin_match %>%
   )) %>% 
   mutate(group = case_when(
     rownames(.) == "1" ~ 'ASD',
-    T ~ NA_character_
+    TRUE ~ NA_character_
   )) %>% 
   select(group, everything())
 
@@ -145,7 +145,7 @@ ASD_matchStand_t_desc <-
   arrange(match(scale, scale_order)) %>% 
   mutate(sample = case_when(
     rownames(.) == "1" ~ 'Matched typical',
-    T ~ NA_character_
+    TRUE ~ NA_character_
   ),
   var = sd^2) %>% 
   select(sample, scale, n, mean, sd, var) %>% 
@@ -165,7 +165,7 @@ ASD_clin_t_desc <-
   arrange(match(scale, scale_order)) %>% 
   mutate(sample = case_when(
     rownames(.) == "1" ~ 'ASD',
-    T ~ NA_character_
+    TRUE ~ NA_character_
   ),
   var = sd^2) %>% 
   select(sample, scale, n, mean, sd, var) %>% 

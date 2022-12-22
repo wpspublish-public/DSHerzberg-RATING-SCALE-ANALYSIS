@@ -484,7 +484,7 @@ match_dist_stand &lt;- ASD_stand_match %&gt;%
   )) %&gt;% 
   mutate(group = case_when(
     rownames(.) == &quot;1&quot; ~ &quot;Matched typical&quot;,
-    T ~ NA_character_
+    TRUE ~ NA_character_
   )) %&gt;% 
   select(group, everything())
 
@@ -504,7 +504,7 @@ match_dist_clin &lt;- ASD_clin_match %&gt;%
   )) %&gt;% 
   mutate(group = case_when(
     rownames(.) == &quot;1&quot; ~ &quot;ASD&quot;,
-    T ~ NA_character_
+    TRUE ~ NA_character_
   )) %&gt;% 
   select(group, everything())
 
@@ -529,7 +529,7 @@ ASD_matchStand_t_desc &lt;-
   arrange(match(scale, scale_order)) %&gt;% 
   mutate(sample = case_when(
     rownames(.) == &quot;1&quot; ~ &quot;Matched typical&quot;,
-    T ~ NA_character_
+    TRUE ~ NA_character_
   ),
   var = sd^2) %&gt;% 
   select(sample, scale, n, mean, sd, var) %&gt;% 
@@ -548,7 +548,7 @@ ASD_clin_t_desc &lt;-
   arrange(match(scale, scale_order)) %&gt;% 
   mutate(sample = case_when(
     rownames(.) == &quot;1&quot; ~ &quot;ASD&quot;,
-    T ~ NA_character_
+    TRUE ~ NA_character_
   ),
   var = sd^2) %&gt;% 
   select(sample, scale, n, mean, sd, var) %&gt;% 
@@ -813,8 +813,8 @@ summarizing function <code>count()</code>, which returns counts of the
 number of cases in each of the groups created in the previous step.
 Then, by calling <code>arrange(match())</code>, we can sort the table
 using sort orders (<code>var_order</code>, <code>cat_order</code>) that
-we previously specified as token. Here are several rows of the resulting
-data object:</p>
+we previously specified as tokens. Here are several rows of the
+resulting data object:</p>
 <pre><code>Variable               Category                                 n
 
 age_range              16 to 17 years                           4
@@ -829,6 +829,68 @@ Ethnicity              Asian                                    2</code></pre>
 <pre class="r"><code>  group_by(Variable, Category) %&gt;%
   count(Variable, Category) %&gt;%
   arrange(match(Variable, var_order), match(Category, cat_order)) %&gt;% </code></pre>
+<p>With <code>mutate()</code> and <code>case_when()</code>, we can
+recode specific cells of an existing column to produce a more readable
+output table. In the current data object, the <code>Variable</code>
+column names a demographic variable, whose categories are contained in
+the <code>Category</code> column. For example, one value of
+<code>Variable</code> is <code>Gender</code>. In the current data,
+object, two rows of the <code>Variable</code> column are coded with
+<code>Gender</code>. In the <code>Category</code> column, those two rows
+are coded with the categories of <code>Male</code> and
+<code>Female</code>.</p>
+<p>To make the output more readable, we can recode all but the first
+<code>Gender</code> row to <code>&quot;&quot;</code> (blank). Within
+<code>case_when</code>, we specify the predicate
+<code>lag(Variable) == &quot;Gender&quot; &amp; var == &quot;Gender&quot;</code>, which
+returns <code>TRUE</code> for all rows where the value of
+<code>Variable</code> is <code>Gender</code>, and where the value of
+<code>Variable</code> in the <em>preceding</em> row is
+<code>Gender</code>. This captures all <code>Gender</code> rows except
+the first, where value of <code>Variable</code> in the preceding row is
+<code>age_range</code>. The captured rows are then recoded with
+<code>&quot;&quot;</code> to yield the transformed table slice:</p>
+<pre><code>Variable               Category                                 n
+
+age_range              16 to 17 years                           4
+                       18 to 21 years                           4
+Gender                 Male                                    69
+                       Female                                  22
+ParentHighestEducation High school graduate (including GED)    10
+                       Some college or associate degree        30
+                       Bachelor&#39;s degree or higher             51
+Ethnicity              Hispanic                                13
+                       Asian                                    2</code></pre>
+<p>Note that the next code snippet begins with a call of
+<code>ungroup()</code>, which we use to remove the grouping structures,
+which can sometimes cause <code>case_when()</code> to throw an
+error.</p>
+<pre class="r"><code>  ungroup() %&gt;% 
+  mutate(Variable = case_when(
+    lag(Variable) == &quot;age_range&quot; &amp; Variable == &quot;age_range&quot; ~ &quot;&quot;,
+    lag(Variable) == &quot;Gender&quot; &amp; Variable == &quot;Gender&quot; ~ &quot;&quot;,
+    lag(Variable) == &quot;ParentHighestEducation&quot; &amp; Variable == &quot;ParentHighestEducation&quot; ~ &quot;&quot;,
+    lag(Variable) == &quot;Ethnicity&quot; &amp; Variable == &quot;Ethnicity&quot; ~ &quot;&quot;,
+    TRUE ~ Variable
+  )) %&gt;% </code></pre>
+<p>Because the current table, which gives the demographic count for the
+typical sample, will eventually be combined with an analogous table for
+the clincal sample, we need to create a column to identify the sample.
+Here, we call <code>mutate(case_when())</code> to create a new column
+named <code>group</code>. We capture the first row of the data object
+with the predicate <code>rownames(.) == &quot;1&quot;</code>, and use the formula
+notation <code>~</code> to apply the the lable of
+<code>Matched typical</code> to this row. The “else” condition of
+<code>case_when()</code>, given as <code>TRUE ~ _NA_character</code>
+codes the remaining cells of the <code>group</code> column as
+<code>NA</code>. Finally, we use <code>select()</code> to arrange the
+columns of the data object in the left-right sequence required for
+output.</p>
+<pre class="r"><code>  mutate(group = case_when(
+    rownames(.) == &quot;1&quot; ~ &quot;Matched typical&quot;,
+    TRUE ~ NA_character_
+  )) %&gt;% 
+  select(group, everything())</code></pre>
 </div>
 </div>
 
