@@ -30,6 +30,9 @@ cat_order <- c(
   # Region
   NA, "northeast", "midwest", "south", "west")
 
+scale_order <- c("SOC", "VIS", "HEA", "TOU", 
+                 "TS", "BOD", "BAL", "PLA", "TOT")
+
 stand_preMatch <- 
   suppressMessages(as_tibble(read_csv(
     here("INPUT-FILES/data-RS-spm2-stand-all-T-scores-per-case.csv")
@@ -78,7 +81,6 @@ ASD_stand_match <- ASD_clin_stand_match %>%
 ASD_clin_match <- ASD_clin_stand_match %>% 
   filter(clin_status == 'clin')
 
-# demo counts
 match_dist_stand <- ASD_stand_match %>% 
   select(age_range, Gender, ParentHighestEducation, Ethnicity) %>% 
   pivot_longer(cols = everything(), names_to = "Variable", values_to = "Category") %>% 
@@ -119,29 +121,17 @@ match_dist_clin <- ASD_clin_match %>%
   )) %>% 
   select(group, everything())
 
-# write table of combined matched typical, clinical demo counts.
 match_dist <- bind_rows(
   match_dist_clin,
   match_dist_stand
 )
 
-# COMPARE MATCHED SAMPLES ON T-SCORES -------------------------------------
-
-# Extract match cases from stand sample
-ASD_matchStand <- stand_preMatch %>% 
-  semi_join(ASD_stand_match, by ='IDNumber')
-
-scale_order <- c("SOC", "VIS", "HEA", "TOU", 
-                 "TS", "BOD", "BAL", "PLA", "TOT")
-
-# Write matched typical t-score descriptives
-ASD_matchStand_t_desc <-
-  ASD_matchStand %>% 
+match_t_desc_stand <-
+  ASD_stand_match %>% 
   select(contains('_NT')) %>% 
   rename_with(~ str_sub(., 1, -4), everything()) %>% 
   describe(fast = T) %>%
-  rownames_to_column() %>% 
-  rename(scale = rowname)%>% 
+  rownames_to_column(var = "scale") %>% 
   arrange(match(scale, scale_order)) %>% 
   mutate(sample = case_when(
     rownames(.) == "1" ~ 'Matched typical',
@@ -154,14 +144,12 @@ ASD_matchStand_t_desc <-
          sd_typ = sd,
          var_typ = var)
 
-# Write clinical t-score descriptives
-ASD_clin_t_desc <-
-  clin_ASD_preMatch %>% 
+match_t_desc_clin <-
+  ASD_clin_match %>% 
   select(contains('_NT')) %>% 
   rename_with(~ str_sub(., 1, -4), everything()) %>% 
   describe(fast = T) %>%
-  rownames_to_column() %>% 
-  rename(scale = rowname)%>% 
+  rownames_to_column(var = "scale") %>% 
   arrange(match(scale, scale_order)) %>% 
   mutate(sample = case_when(
     rownames(.) == "1" ~ 'ASD',
@@ -174,16 +162,12 @@ ASD_clin_t_desc <-
          sd_clin = sd, 
          var_clin = var)
 
-# Combine stand, clin columns, add ES column based on correct formula for Cohen's d
-
-ASD_match_t_desc <- left_join(ASD_matchStand_t_desc,
-                              ASD_clin_t_desc, by = "scale") %>%
+match_t_desc <- left_join(match_t_desc_stand,
+                              match_t_desc_clin, by = "scale") %>%
   mutate(ES = abs((mean_typ - mean_clin) / sqrt(((n_typ * var_typ) + (n_clin * var_clin)) / (n_typ + n_clin))),
          across(c(mean_typ, sd_typ, mean_clin, sd_clin, ES), ~
                   (round(., 2)))) %>%
   select(everything(), -sample.x, -sample.y, -var_typ, -var_clin)
-
-###### WRITE MANUAL TABLE OUTPUT -----------------------------------------------------
 
 write_csv(match_dist,
           here(
@@ -191,8 +175,7 @@ write_csv(match_dist,
           ),
           na = '')
 
-# write table comping t-score descriptives with ES
-write_csv(ASD_match_t_desc,
+write_csv(match_t_desc,
           here(
             "OUTPUT-FILES/TABLES/t-desc-ES-ASD-matchTyp.csv"
           ),

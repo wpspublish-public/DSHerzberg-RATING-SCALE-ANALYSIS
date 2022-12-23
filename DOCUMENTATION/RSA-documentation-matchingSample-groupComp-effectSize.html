@@ -366,11 +366,11 @@ group</h3>
 comparison of clinical groups (e.g., those with diagnoses of ASD, ADHD,
 LD, etc.) to groups of typically developing students who are matched on
 demographic characteristics. For this demonstration, we employ data
-collected in ???? as part of the SPM-2 project. We have a clinical group
-consisting of children who have been diagnosed with ASD. The goal of the
-validity analysis is to determine the extent to which the SPM-2 t-scores
-of this clincial group differ from a group of typically developing
-children with matched demographic characteristics.</p>
+collected in 2016-2017 as part of the SPM-2 project. We have a clinical
+group consisting of children who have been diagnosed with ASD. The goal
+of the validity analysis is to determine the extent to which the SPM-2
+t-scores of this clincial group differ from a group of typically
+developing children with matched demographic characteristics.</p>
 <p>The method focuses on drawing a matched subsample from a larger
 sample of typically developing children (in this case the SPM-2
 Standardization Sample). Once we have assemble comparison group, we then
@@ -399,8 +399,8 @@ var_order &lt;- c(&quot;age_range&quot;, &quot;Age&quot;, &quot;AgeInMonths&quot
                &quot;Ethnicity&quot;, &quot;Region&quot;)
 cat_order &lt;- c(
   # AgeInMonths
-  NA, &quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;, &quot;6&quot;, &quot;7&quot;, &quot;8&quot;, &quot;9&quot;, &quot;10&quot;, &quot;11&quot;, &quot;12&quot;, &quot;13&quot;, &quot;14&quot;, &quot;15&quot;, &quot;16&quot;, &quot;17&quot;, &quot;18&quot;, &quot;19&quot;, &quot;20&quot;, &quot;21&quot;, &quot;22&quot;, 
-  &quot;23&quot;, &quot;24&quot;, &quot;25&quot;, &quot;26&quot;, &quot;27&quot;, &quot;28&quot;, &quot;29&quot;, &quot;30&quot;, &quot;31&quot;, &quot;32&quot;, &quot;33&quot;, &quot;34&quot;, &quot;35&quot;, &quot;36&quot;,
+  NA, &#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;, &#39;5&#39;, &#39;6&#39;, &#39;7&#39;, &#39;8&#39;, &#39;9&#39;, &#39;10&#39;, &#39;11&#39;, &#39;12&#39;, &#39;13&#39;, &#39;14&#39;, &#39;15&#39;, &#39;16&#39;, &#39;17&#39;, &#39;18&#39;, &#39;19&#39;, &#39;20&#39;, &#39;21&#39;, &#39;22&#39;, 
+  &#39;23&#39;, &#39;24&#39;, &#39;25&#39;, &#39;26&#39;, &#39;27&#39;, &#39;28&#39;, &#39;29&#39;, &#39;30&#39;, &#39;31&#39;, &#39;32&#39;, &#39;33&#39;, &#39;34&#39;, &#39;35&#39;, &#39;36&#39;,
   # age_range
   NA, &quot;03.5 to 6 mo&quot;, &quot;03.5 to 10 mo&quot;, &quot;4 to 10 mo&quot;, &quot;07 to 10.5 mo&quot;, &quot;09.5 to 20 mo&quot;,  
   &quot;11 to 20 mo&quot;, &quot;11 to 31.5 mo&quot;, &quot;21 to 30 mo&quot;,
@@ -419,6 +419,9 @@ cat_order &lt;- c(
   &quot;NativeHawPacIsl&quot;, &quot;MultiRacial&quot;, &quot;Other&quot;,
   # Region
   NA, &quot;northeast&quot;, &quot;midwest&quot;, &quot;south&quot;, &quot;west&quot;)
+
+scale_order &lt;- c(&quot;SOC&quot;, &quot;VIS&quot;, &quot;HEA&quot;, &quot;TOU&quot;, 
+                 &quot;TS&quot;, &quot;BOD&quot;, &quot;BAL&quot;, &quot;PLA&quot;, &quot;TOT&quot;)
 
 stand_preMatch &lt;- 
   suppressMessages(as_tibble(read_csv(
@@ -513,19 +516,12 @@ match_dist &lt;- bind_rows(
   match_dist_stand
 )
 
-ASD_matchStand &lt;- stand_preMatch %&gt;% 
-  semi_join(ASD_stand_match, by =&quot;IDNumber&quot;)
-
-scale_order &lt;- c(&quot;SOC&quot;, &quot;VIS&quot;, &quot;HEA&quot;, &quot;TOU&quot;, 
-                 &quot;TS&quot;, &quot;BOD&quot;, &quot;BAL&quot;, &quot;PLA&quot;, &quot;TOT&quot;)
-
-ASD_matchStand_t_desc &lt;-
-  ASD_matchStand %&gt;% 
+match_t_desc_stand &lt;-
+  ASD_stand_match %&gt;% 
   select(contains(&quot;_NT&quot;)) %&gt;% 
   rename_with(~ str_sub(., 1, -4), everything()) %&gt;% 
-  describe(fast = T) %&gt;%
-  rownames_to_column() %&gt;% 
-  rename(scale = rowname)%&gt;% 
+  describe(fast = TRUE) %&gt;%
+  rownames_to_column(var = &quot;scale&quot;) %&gt;% 
   arrange(match(scale, scale_order)) %&gt;% 
   mutate(sample = case_when(
     rownames(.) == &quot;1&quot; ~ &quot;Matched typical&quot;,
@@ -538,13 +534,12 @@ ASD_matchStand_t_desc &lt;-
          sd_typ = sd,
          var_typ = var)
 
-ASD_clin_t_desc &lt;-
-  clin_ASD_preMatch %&gt;% 
+match_t_desc_clin &lt;-
+  ASD_clin_match %&gt;% 
   select(contains(&quot;_NT&quot;)) %&gt;% 
   rename_with(~ str_sub(., 1, -4), everything()) %&gt;% 
-  describe(fast = T) %&gt;%
-  rownames_to_column() %&gt;% 
-  rename(scale = rowname)%&gt;% 
+  describe(fast = TRUE) %&gt;%
+  rownames_to_column(var = &quot;scale&quot;) %&gt;% 
   arrange(match(scale, scale_order)) %&gt;% 
   mutate(sample = case_when(
     rownames(.) == &quot;1&quot; ~ &quot;ASD&quot;,
@@ -557,8 +552,8 @@ ASD_clin_t_desc &lt;-
          sd_clin = sd, 
          var_clin = var)
 
-ASD_match_t_desc &lt;- left_join(ASD_matchStand_t_desc,
-                              ASD_clin_t_desc, by = &quot;scale&quot;) %&gt;%
+match_t_desc &lt;- left_join(match_t_desc_stand,
+                              match_t_desc_clin, by = &quot;scale&quot;) %&gt;%
   mutate(ES = abs((mean_typ - mean_clin) / sqrt(((n_typ * var_typ) + (n_clin * var_clin)) / (n_typ + n_clin))),
          across(c(mean_typ, sd_typ, mean_clin, sd_clin, ES), ~
                   (round(., 2)))) %&gt;%
@@ -566,11 +561,11 @@ ASD_match_t_desc &lt;- left_join(ASD_matchStand_t_desc,
 
 write_csv(match_dist,
           here(
-            &quot;OUTPUT-FILES/TABLES/demos-ASD-matchTyp.csv&quot;
+              &quot;OUTPUT-FILES/TABLES/demos-ASD-matchTyp.csv&quot;
           ),
           na = &quot;&quot;)
 
-write_csv(ASD_match_t_desc,
+write_csv(match_t_desc,
           here(
             &quot;OUTPUT-FILES/TABLES/t-desc-ES-ASD-matchTyp.csv&quot;
           ),
@@ -630,8 +625,8 @@ var_order &lt;- c(&quot;age_range&quot;, &quot;Age&quot;, &quot;AgeInMonths&quot
                &quot;Ethnicity&quot;, &quot;Region&quot;)
 cat_order &lt;- c(
   # AgeInMonths
-  NA, &quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;, &quot;6&quot;, &quot;7&quot;, &quot;8&quot;, &quot;9&quot;, &quot;10&quot;, &quot;11&quot;, &quot;12&quot;, &quot;13&quot;, &quot;14&quot;, &quot;15&quot;, &quot;16&quot;, &quot;17&quot;, &quot;18&quot;, &quot;19&quot;, &quot;20&quot;, &quot;21&quot;, &quot;22&quot;, 
-  &quot;23&quot;, &quot;24&quot;, &quot;25&quot;, &quot;26&quot;, &quot;27&quot;, &quot;28&quot;, &quot;29&quot;, &quot;30&quot;, &quot;31&quot;, &quot;32&quot;, &quot;33&quot;, &quot;34&quot;, &quot;35&quot;, &quot;36&quot;,
+  NA, &#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;, &#39;5&#39;, &#39;6&#39;, &#39;7&#39;, &#39;8&#39;, &#39;9&#39;, &#39;10&#39;, &#39;11&#39;, &#39;12&#39;, &#39;13&#39;, &#39;14&#39;, &#39;15&#39;, &#39;16&#39;, &#39;17&#39;, &#39;18&#39;, &#39;19&#39;, &#39;20&#39;, &#39;21&#39;, &#39;22&#39;, 
+  &#39;23&#39;, &#39;24&#39;, &#39;25&#39;, &#39;26&#39;, &#39;27&#39;, &#39;28&#39;, &#39;29&#39;, &#39;30&#39;, &#39;31&#39;, &#39;32&#39;, &#39;33&#39;, &#39;34&#39;, &#39;35&#39;, &#39;36&#39;,
   # age_range
   NA, &quot;03.5 to 6 mo&quot;, &quot;03.5 to 10 mo&quot;, &quot;4 to 10 mo&quot;, &quot;07 to 10.5 mo&quot;, &quot;09.5 to 20 mo&quot;,  
   &quot;11 to 20 mo&quot;, &quot;11 to 31.5 mo&quot;, &quot;21 to 30 mo&quot;,
@@ -650,6 +645,9 @@ cat_order &lt;- c(
   &quot;NativeHawPacIsl&quot;, &quot;MultiRacial&quot;, &quot;Other&quot;,
   # Region
   NA, &quot;northeast&quot;, &quot;midwest&quot;, &quot;south&quot;, &quot;west&quot;)
+
+scale_order &lt;- c(&quot;SOC&quot;, &quot;VIS&quot;, &quot;HEA&quot;, &quot;TOU&quot;, 
+                 &quot;TS&quot;, &quot;BOD&quot;, &quot;BAL&quot;, &quot;PLA&quot;, &quot;TOT&quot;)
 
 stand_preMatch &lt;- 
   suppressMessages(as_tibble(read_csv(
@@ -891,6 +889,97 @@ output.</p>
     TRUE ~ NA_character_
   )) %&gt;% 
   select(group, everything())</code></pre>
+<p>The script also generates a table of demographic counts
+(<code>match_dist_clin</code>) for the clinical sample, using analogous
+procedures. For the final output configuration including both samples
+(<code>match_dist</code>) we use <code>bind_rows()</code> to stack the
+sample-specific tables on top of one another</p>
+<pre class="r"><code>match_dist &lt;- bind_rows(
+  match_dist_clin,
+  match_dist_stand
+)</code></pre>
+</div>
+<div id="t-score-descriptive-statistics-and-effect-size-comparisons" class="section level4">
+<h4>4. T-score descriptive statistics and effect size comparisons</h4>
+<p>In next section, we generate descriptive statistics for the scale
+t-scores for each sample, and then compare the mean t-scores with an
+effect-size measure.</p>
+<p>To recount, <code>ASD_stand_match</code> is a data frame containing
+the matched cases drawn from the typical sample. In the next snippet of
+code, we use <code>select(contains(&quot;NT&quot;))</code> to subset only the
+columns containing the t-scores). We then call
+<code>rename_with()</code> to apply a function that truncates the names
+of these columns. <code>str_sub(., 1, -4)</code> processes all
+(<code>everything()</code>) of the names in the data object
+(<code>.</code>), shortening them to the string that begins with the
+first character and ends with the character four positions to the left
+of the string’s end.</p>
+<pre class="r"><code>match_t_desc_stand &lt;-
+  ASD_stand_match %&gt;% 
+  select(contains(&quot;_NT&quot;)) %&gt;% 
+  rename_with(~ str_sub(., 1, -4), everything()) %&gt;% </code></pre>
+<p><code>psych::describe()</code> is used to obtain descriptive
+statistics on the t-score columns. The argument <code>fast = TRUE</code>
+limits the output to the most frequently reported measures (e.g.,
+<code>n</code>, <code>mean</code>, <code>sd</code>, <code>min</code>,
+<code>max</code>, <code>range</code>, <code>se</code>). These measures
+become column names for the summary data object, which now has a row for
+each score being analyzed, as in:</p>
+<pre><code>    vars  n  mean   sd min max range   se
+SOC    1 91 64.64 6.27  48  75    27 0.66
+VIS    2 91 62.52 8.42  37  75    38 0.88
+HEA    3 91 63.24 6.52  47  75    28 0.68
+TOU    4 91 62.71 7.33  43  75    32 0.77
+TS     5 91 59.48 8.77  37  75    38 0.92
+BOD    6 91 63.43 7.54  38  75    37 0.79
+BAL    7 91 63.23 9.44  41  75    34 0.99
+PLA    8 91 66.88 5.80  53  75    22 0.61
+TOT    9 91 64.85 6.61  44  75    31 0.69</code></pre>
+<p>Because <code>describe()</code> converts the column names of the
+input object into row names, we use
+<code>tibble::rownames_to_column()</code> to move these row names into a
+column named <code>scale</code>. We then call
+<code>arrange(match())</code> to sort the rows into the sequence
+required for output.</p>
+<pre class="r"><code>  describe(fast = TRUE) %&gt;%
+  rownames_to_column(var = &quot;scale&quot;) %&gt;% 
+  arrange(match(scale, scale_order)) %&gt;% </code></pre>
+<p>As with the demographic tables, we call
+<code>mutate(case_when())</code> to encode a new columns
+(<code>sample</code>) that identifies the source of the set of scores in
+the data object. We add a variance column <code>var = sd^2)</code> for
+use in calculating the effect size measure, and <code>select()</code>
+and <code>rename()</code> columns for final output.</p>
+<pre class="r"><code>  mutate(sample = case_when(
+    rownames(.) == &quot;1&quot; ~ &quot;Matched typical&quot;,
+    TRUE ~ NA_character_
+  ),
+  var = sd^2) %&gt;% 
+  select(sample, scale, n, mean, sd, var) %&gt;% 
+  rename(n_typ = n,
+         mean_typ = mean,
+         sd_typ = sd,
+         var_typ = var)</code></pre>
+<p>The script also generates a table of descriptive statistics
+(<code>match_t_desc_clin</code>) for the clinical sample, using
+analogous procedures. We call <code>left_join()</code> to merge the
+tables for the two samples into a single comparison table
+(<code>match_t_desc</code>), aligning rows with
+<code>by = &quot;scale&quot;</code>. Within a call of <code>mutate()</code>, we
+calculate the effect size measure (<code>ES</code>), and round the
+values in the columns named in <code>across()</code>. We finish the
+process with <code>select()</code> which drops spurious columns created
+by the join, and creates the sequence of columns required for final
+output.</p>
+<pre class="r"><code>match_t_desc &lt;- left_join(match_t_desc_stand,
+                              match_t_desc_clin, by = &quot;scale&quot;) %&gt;%
+  mutate(ES = abs((mean_typ - mean_clin) / sqrt(((n_typ * var_typ) + (n_clin * var_clin)) / (n_typ + n_clin))),
+         across(c(mean_typ, sd_typ, mean_clin, sd_clin, ES), ~
+                  (round(., 2)))) %&gt;%
+  select(everything(), -sample.x, -sample.y, -var_typ, -var_clin)</code></pre>
+<p>The script concludes with two calls of <code>write_csv()</code>, to
+write the summary demographic and descriptive tables to separate .csv
+files.</p>
 </div>
 </div>
 
