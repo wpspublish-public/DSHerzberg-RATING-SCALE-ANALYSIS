@@ -363,20 +363,21 @@ display: none;
 <h3>t-score comparisons between clinical group, matched typical
 group</h3>
 <p>A core set of analyses supporting rating scale validity is the
-comparison of clinical groups (e.g., those with diagnoses of ASD, ADHD,
-LD, etc.) to groups of typically developing students who are matched on
-demographic characteristics. For this demonstration, we employ data
-collected in 2016-2017 as part of the SPM-2 project. We have a clinical
-group consisting of children who have been diagnosed with ASD. The goal
-of the validity analysis is to determine the extent to which the SPM-2
-t-scores of this clincial group differ from a group of typically
-developing children with matched demographic characteristics.</p>
+comparison of clinical groups (e.g., persons with diagnoses of ASD,
+ADHD, LD, etc.) to groups of typically developing students who are
+matched on demographic characteristics. For this demonstration, we
+employ data collected in 2016-2017 as part of the SPM-2 project. We have
+a clinical group consisting of children who have been diagnosed with
+ASD. The goal of the validity analysis is to determine the extent to
+which the SPM-2 t-scores of this clincial group differ from a group of
+typically developing children who are matched to the clinical group on
+key demographic variables.</p>
 <p>The method focuses on drawing a matched subsample from a larger
 sample of typically developing children (in this case the SPM-2
-Standardization Sample). Once we have assemble comparison group, we then
-calculate descriptive statistics on each group, and use a measure of
-effect size to assess the magnitude of differences between the two
-groups on SPM-2 scores.</p>
+Standardization Sample). After assembling this comparison group, we
+calculate descriptive statistics and use a measure of effect size to
+assess the magnitude of differences between the two groups on mean SPM-2
+t-scores.</p>
 <p>Output includes two tables:</p>
 <ul>
 <li>Demographic characteristics</li>
@@ -587,7 +588,7 @@ Robust templates are characterized by their liberal use of
 <em>tokens</em>, which are names for <em>project-specific</em> data and
 text elements that are used repeatedly throughout the template.</p>
 <p>These tokenized elements include names of variables, files, test
-forms, raters, etc., as well as labels for age- and score ranges, score
+forms, raters, etc., as well as labels for age and score ranges, score
 item counts, score numerical bounds, and so forth. By definition, these
 elements differ between, say, an autism rating-scale project and an ADHD
 rating-scale project.</p>
@@ -678,18 +679,19 @@ cells in <code>ASD_clin_stand_preMatch</code>. If this count is 0, the
 data are ready for downstream processing.</p>
 <p>If <code>NA</code> cells exist, we can identify the columns where
 they appear by piping <code>ASD_clin_stand_preMatch</code> into
-<code>select()</code>. We can use a predicate to select columns within
-<code>select()</code> by wrapping the predicate in the selection helper
-<code>where()</code>. The predicate allows <code>select()</code> to
-return columns where <code>any(is.na(.))</code> returns
-<code>TRUE</code>. Here, <code>.</code> is shorthand for the piped data
-object, <code>is.na()</code> returns a logical vector (whose length
-equals <code>ncol(.)</code>, where <code>TRUE</code> is the code for any
-column where <code>NA</code> is present, and <code>any()</code> serves
-as a wrapper to return <code>TRUE</code> to <code>where()</code> when
-<code>NA</code> is present in <em>any</em> column. <code>na_cols</code>
-names a new data frame holding only the columns that have
-<code>NA</code> values.</p>
+<code>select()</code>. We can use a predicate to select columns by
+wrapping the predicate in the selection helper <code>where()</code>,
+which allows <code>select()</code> to isolate columns where
+<code>any(is.na(.))</code> returns <code>TRUE</code>. Here,
+<code>.</code> is shorthand for the piped data object, and
+<code>is.na()</code> returns a logical vector (whose length equals
+<code>ncol(.)</code>), where <code>TRUE</code> is the code for any
+column where <code>NA</code> is present. This vector thus identifies the
+columns that are to be subsetted by <code>select()</code>.
+<code>any()</code> enables the <code>select()</code> operation by
+returning <code>TRUE</code> to <code>where()</code> if <code>NA</code>
+is present in <em>any</em> column. <code>na_cols</code> names a new data
+frame holding only the columns that have <code>NA</code> values.</p>
 <p>To recode <code>NA</code> cells to <code>999</code> (which is
 acceptable to the <code>MatchIt</code> functions), we pipe
 <code>ASD_clin_stand_preMatch</code> into <code>replace_na()</code>,
@@ -728,6 +730,9 @@ ASD_clin_stand_preMatch &lt;- ASD_clin_stand_preMatch %&gt;%
     )) %&gt;% 
   mutate(HighestEducation = replace_na(as.character(HighestEducation), &quot;999&quot;))</code></pre>
 </div>
+</div>
+<div id="start-here" class="section level1">
+<h1>start here</h1>
 <div id="extract-matched-sample-set-up-files-for-analysis" class="section level4">
 <h4>3. Extract matched sample, set up files for analysis</h4>
 <p><code>matchit()</code> is used to extract a subsample from the

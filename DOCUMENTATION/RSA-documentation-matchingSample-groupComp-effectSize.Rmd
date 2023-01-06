@@ -9,9 +9,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### t-score comparisons between clinical group, matched typical group
 
-A core set of analyses supporting rating scale validity is the comparison of clinical groups (e.g., those with diagnoses of ASD, ADHD, LD, etc.) to groups of typically developing students who are matched on demographic characteristics. For this demonstration, we employ data collected in 2016-2017 as part of the SPM-2 project. We have a clinical group consisting of children who have been diagnosed with ASD. The goal of the validity analysis is to determine the extent to which the SPM-2 t-scores of this clincial group differ from a group of typically developing children with matched demographic characteristics.
+A core set of analyses supporting rating scale validity is the comparison of clinical groups (e.g., persons with diagnoses of ASD, ADHD, LD, etc.) to groups of typically developing students who are matched on demographic characteristics. For this demonstration, we employ data collected in 2016-2017 as part of the SPM-2 project. We have a clinical group consisting of children who have been diagnosed with ASD. The goal of the validity analysis is to determine the extent to which the SPM-2 t-scores of this clincial group differ from a group of typically developing children who are matched to the clinical group on key demographic variables.
 
-The method focuses on drawing a matched subsample from a larger sample of typically developing children (in this case the SPM-2 Standardization Sample). Once we have assemble comparison group, we then calculate descriptive statistics on each group, and use a measure of effect size to assess the magnitude of differences between the two groups on SPM-2 scores.
+The method focuses on drawing a matched subsample from a larger sample of typically developing children (in this case the SPM-2 Standardization Sample). After assembling this comparison group, we calculate descriptive statistics and use a measure of effect size to assess the magnitude of differences between the two groups on mean SPM-2 t-scores.
 
 Output includes two tables:
 
@@ -216,7 +216,7 @@ Load packages for file path specification (`here`), data wrangling (`tidyverse`)
 
 Ideally, code templates are *robust*, meaning that they can be adapted to different projects with minimal copying-and-pasting of text. Robust templates are characterized by their liberal use of *tokens*, which are names for *project-specific* data and text elements that are used repeatedly throughout the template.
 
-These tokenized elements include names of variables, files, test forms, raters, etc., as well as labels for age- and score ranges, score item counts, score numerical bounds, and so forth. By definition, these elements differ between, say, an autism rating-scale project and an ADHD rating-scale project.
+These tokenized elements include names of variables, files, test forms, raters, etc., as well as labels for age and score ranges, score item counts, score numerical bounds, and so forth. By definition, these elements differ between, say, an autism rating-scale project and an ADHD rating-scale project.
 
 In contrast, the *project-general* aspects of an R script are those functions and operations whose specification is identical for all projects (e.g., creating a table of descriptive statistics requires calling the same set of functions, regardless of whether the input data are from the autism rating scale or the ADHD rating scale). In a robust template, tokens representing project-specific elements are defined at the head of the script. The remainder of the script, therefore, consists only of project-general code.
 
@@ -234,11 +234,14 @@ To prepare the data for the `MatchIt` functions, we join the clinical and standa
 
 A further preperatory step is dealing with any `NA` codes in the data, which the `MatchIt` functions cannot process. We use `sum(is.na())` to obtain a count of the `NA` cells in `ASD_clin_stand_preMatch`. If this count is 0, the data are ready for downstream processing.
 
-If `NA` cells exist, we can identify the columns where they appear by piping `ASD_clin_stand_preMatch` into `select()`. We can use a predicate to select columns within `select()` by wrapping the predicate in the selection helper `where()`. The predicate allows `select()` to return columns where `any(is.na(.))` returns `TRUE`. Here, `.` is shorthand for the piped data object, `is.na()` returns a logical vector (whose length equals `ncol(.)`, where `TRUE` is the code for any column where `NA` is present, and `any()` serves as a wrapper to return `TRUE` to `where()` when `NA` is present in *any* column. `na_cols` names a new data frame holding only the columns that have `NA` values.
+If `NA` cells exist, we can identify the columns where they appear by piping `ASD_clin_stand_preMatch` into `select()`. We can use a predicate to select columns by wrapping the predicate in the selection helper `where()`, which allows `select()` to isolate columns where `any(is.na(.))` returns `TRUE`. Here, `.` is shorthand for the piped data object, and `is.na()` returns a logical vector (whose length equals `ncol(.)`), where `TRUE` is the code for any column where `NA` is present. This vector thus identifies the columns that are to be subsetted by `select()`. `any()` enables the `select()` operation by returning `TRUE` to `where()` if `NA` is present in *any* column. `na_cols` names a new data frame holding only the columns that have `NA` values.
 
 To recode `NA` cells to `999` (which is acceptable to the `MatchIt` functions), we pipe `ASD_clin_stand_preMatch` into `replace_na()`, supplying as an argument to the latter a list of the columns identified in `na_cols`. Note that each column name is paired with the replacement value of `999`, some encoded as numbers, some as strings, depending on the format of the column. In this example we need to add a separate call of `mutate()` to recode the `NA` values in the `HighestEducation` column. The this latter column was a logical variable in the input file. `replace_na()` cannot reformat variables on the fly, so we need to use `mutate()` to coerce `HighestEducation` to character (with `as.character()`), before substituting `"999"` for the `NA` values.
 ```{r RSA-match, echo = 45:66, eval = F}
 ```
+
+
+# start here
 
 #### 3. Extract matched sample, set up files for analysis
 
