@@ -359,30 +359,30 @@ display: none;
 </div>
 
 
-<div id="t-score-comparisons-between-clinical-group-matched-typical-group" class="section level3">
-<h3>t-score comparisons between clinical group, matched typical
-group</h3>
+<div id="mean-t-score-comparisons-between-clinical-and-matched-typical-samples" class="section level3">
+<h3>Mean <em>t</em>-score comparisons between clinical and matched
+typical samples</h3>
 <p>A core set of analyses supporting rating scale validity is the
-comparison of clinical groups (e.g., persons with diagnoses of ASD,
-ADHD, LD, etc.) to groups of typically developing students who are
+comparison of clinical samples (e.g., persons with diagnoses of ASD,
+ADHD, LD, etc.) to samples of typically developing students who are
 matched on demographic characteristics. For this demonstration, we
 employ data collected in 2016-2017 as part of the SPM-2 project. We have
-a clinical group consisting of children who have been diagnosed with
+a clinical sample consisting of children who have been diagnosed with
 ASD. The goal of the validity analysis is to determine the extent to
-which the SPM-2 t-scores of this clincial group differ from a group of
-typically developing children who are matched to the clinical group on
-key demographic variables.</p>
+which the SPM-2 <em>t</em>-scores of this clincial sample differ from a
+sample of typically developing children who are matched to the clinical
+sample on key demographic variables.</p>
 <p>The method focuses on drawing a matched subsample from a larger
 sample of typically developing children (in this case the SPM-2
-Standardization Sample). After assembling this comparison group, we
+Standardization Sample). After assembling this comparison sample, we
 calculate descriptive statistics and use a measure of effect size to
-assess the magnitude of differences between the two groups on mean SPM-2
-t-scores.</p>
+assess the magnitude of differences between the two samples on mean
+SPM-2 <em>t</em>-scores.</p>
 <p>Output includes two tables:</p>
 <ul>
 <li>Demographic characteristics</li>
-<li>Descriptive statistics with effects sizes for the means
-comparisons</li>
+<li>Descriptive statistics with effects sizes for differences in mean
+<em>t</em>-scores</li>
 </ul>
 <p>This demonstration assumes an RStudio project called
 <code>RATING-SCALE-ANALYSIS</code>, with subfolders <code>CODE</code>,
@@ -426,12 +426,12 @@ scale_order &lt;- c(&quot;SOC&quot;, &quot;VIS&quot;, &quot;HEA&quot;, &quot;TOU
 
 stand_preMatch &lt;- 
   suppressMessages(as_tibble(read_csv(
-    here(&quot;INPUT-FILES/data-RS-spm2-stand-all-T-scores-per-case.csv&quot;)
+    here(&quot;INPUT-FILES/data-RS-spm2-stand-all-*t*-scores-per-case.csv&quot;)
   )))
 
 clin_ASD_preMatch &lt;-
   suppressMessages(as_tibble(read_csv(
-    here(&quot;INPUT-FILES/data-RS-spm2-clin-all-T-scores-per-case.csv&quot;)
+    here(&quot;INPUT-FILES/data-RS-spm2-clin-all-*t*-scores-per-case.csv&quot;)
   ))) %&gt;% 
   filter(clin_dx == &quot;ASD&quot;)
 
@@ -611,12 +611,12 @@ using <code>read_csv()</code>, transforming the <code>.csv</code> files
 into the simplified tibble format with <code>as_tibble().</code> The
 data are in two objects named <code>stand_preMatch</code> and
 <code>clin_ASD_preMatch</code>. The names differentiate the clinical
-group (children diagnosed with ASD) from the typically developing
-standardization group, and indicate that the data are in their raw input
-form, prior to the matched sample draw (<code>preMatch</code>). For the
-clinical group, we use <code>filter(clin_dx == &quot;ASD&quot;)</code> to read in
-only the persons with ASD, out of the larger clinical sample that
-contains numerous diagoses.</p>
+sample (children diagnosed with ASD) from the typical sample, and
+indicate that the data are in their raw input form, prior to the matched
+sample draw (<code>preMatch</code>). For the clinical sample, we use
+<code>filter(clin_dx == &quot;ASD&quot;)</code> to read in only the persons with
+ASD, out of the larger clinical sample that contains numerous
+diagoses.</p>
 <pre class="r"><code>suppressMessages(library(here)) 
 suppressMessages(suppressWarnings(library(tidyverse)))
 suppressMessages(library(psych))
@@ -652,12 +652,12 @@ scale_order &lt;- c(&quot;SOC&quot;, &quot;VIS&quot;, &quot;HEA&quot;, &quot;TOU
 
 stand_preMatch &lt;- 
   suppressMessages(as_tibble(read_csv(
-    here(&quot;INPUT-FILES/data-RS-spm2-stand-all-T-scores-per-case.csv&quot;)
+    here(&quot;INPUT-FILES/data-RS-spm2-stand-all-*t*-scores-per-case.csv&quot;)
   )))
 
 clin_ASD_preMatch &lt;-
   suppressMessages(as_tibble(read_csv(
-    here(&quot;INPUT-FILES/data-RS-spm2-clin-all-T-scores-per-case.csv&quot;)
+    here(&quot;INPUT-FILES/data-RS-spm2-clin-all-*t*-scores-per-case.csv&quot;)
   ))) %&gt;% 
   filter(clin_dx == &quot;ASD&quot;)</code></pre>
 </div>
@@ -730,34 +730,31 @@ ASD_clin_stand_preMatch &lt;- ASD_clin_stand_preMatch %&gt;%
     )) %&gt;% 
   mutate(HighestEducation = replace_na(as.character(HighestEducation), &quot;999&quot;))</code></pre>
 </div>
-</div>
-<div id="start-here" class="section level1">
-<h1>start here</h1>
 <div id="extract-matched-sample-set-up-files-for-analysis" class="section level4">
 <h4>3. Extract matched sample, set up files for analysis</h4>
-<p><code>matchit()</code> is used to extract a subsample from the
-typically developing input file that is demographically matched to the
-clincial sample. Because <code>matchit()</code> incorporates R’s random
+<p><code>matchit()</code> is used to extract a small subsample from the
+large typical sample. This subsample has approximately the same number
+of persons, and the same distributions of demographic variables, as the
+clinical sample. Because <code>matchit()</code> incorporates R’s random
 number generator, we use <code>set.seed()</code> to insure identical
-results each time we run the script.</p>
-<p><code>matchit()</code> matches the demographic distribution of the
-clinical sample, identified as <code>TRUE</code> on the logical variable
-<code>Group</code> defined in upstream code. <code>matchit()</code>
-takes four key arguments:</p>
+results each time the script is run.</p>
+<p><code>matchit()</code> takes four key arguments:</p>
 <ul>
 <li><code>Group ~ age_range + Gender + ParentHighestEducation + Ethnicity</code>
 is a formula that sets the parameters of the matching operation. On the
-RHS is <code>Group</code>, identifying the clinical sample whose
-characteristics will be matched in the draw from the typical sample. On
-the LHS are the four demographic variables whose distributions will be
-replicated in the matched sample.</li>
+RHS of <code>~</code> is <code>Group</code>, identifying the clinical
+sample whose demographic distributions will be matched in the draw from
+the typical sample. On the LHS are the four demographic variables whose
+distributions will be replicated in the matched typical sample.</li>
 <li><code>data = ASD_clin_stand_preMatch</code> identifies the input
-file that contains both the small clinical sample
-(<code>Group == TRUE</code>) and the typical sample
+file, which contains both the small clinical sample
+(<code>Group == TRUE</code>) and the large typical sample
 (<code>Group == FALSE</code>).</li>
 <li><code>method = &quot;nearest&quot;</code> specifies the matching method (here
 <em>nearest neighbor matching by propensity score</em>).</li>
-<li><code>ratio = 1</code> specifies 1:1 case matching.</li>
+<li><code>ratio = 1</code> specifies 1:1 case matching, which insures
+that the matched typical sample has approximately the same <em>n</em> as
+the clinical sample.</li>
 </ul>
 <pre class="r"><code>set.seed(12345)
 match &lt;- matchit(
@@ -768,10 +765,10 @@ match &lt;- matchit(
 <p><code>matchit()</code> returns a list (<code>match</code>) that
 includes several data elements. <code>match.data(match)</code> is used
 to extract a new data frame <code>ASD_clin_stand_match</code>, which
-includes the clinical cases and their matched counterparts drawn from
-the typical sample. We use <code>select()</code> to remove columns not
+includes the clinical sample and the matched subsample drawn from the
+typical sample. We use <code>select()</code> to remove columns not
 needed for the subsequent analysis. We use <code>filter()</code> to
-split the new data frame by clinic status into clinical
+split the new data frame by clinical status into clinical
 (<code>ASD_clin_match</code>) and typical (<code>ASD_stand_match</code>)
 samples.</p>
 <pre class="r"><code>ASD_clin_stand_match &lt;- match.data(match) %&gt;% 
@@ -783,12 +780,12 @@ ASD_clin_match &lt;- ASD_clin_stand_match %&gt;%
 </div>
 <div id="obtain-demographic-counts" class="section level4">
 <h4>4. Obtain demographic counts</h4>
-<p>The next section of code generates separate tables for the
-demographic distributions of the two samples, and then joins them
-together in a summary table.</p>
-<p>To create the demographics table (<code>match_dist_stand</code>) for
-the typical sample, we use <code>select()</code> to extract the columns
-for the four demographic variables
+<p>The next section of code generates frequency counts for the
+demographic variables in the clinical and typical samples, and then
+joins them together in a summary table.</p>
+<p>To create the frequency table (<code>match_dist_stand</code>) for the
+typical sample, we use <code>select()</code> to extract the columns for
+the four demographic variables
 (<code>age_range, Gender, ParentHighestEducation, Ethnicity</code>) from
 <code>ASD_stand_match</code>. We use <code>pivot_longer()</code> to
 transform this object into long format, wherein the column names from
@@ -866,8 +863,7 @@ Ethnicity              Hispanic                                13
                        Asian                                    2</code></pre>
 <p>Note that the next code snippet begins with a call of
 <code>ungroup()</code>, which we use to remove the grouping structures,
-which can sometimes cause <code>case_when()</code> to throw an
-error.</p>
+which sometimes cause <code>case_when()</code> to throw an error.</p>
 <pre class="r"><code>  ungroup() %&gt;% 
   mutate(Variable = case_when(
     lag(Variable) == &quot;age_range&quot; &amp; Variable == &quot;age_range&quot; ~ &quot;&quot;,
@@ -876,13 +872,13 @@ error.</p>
     lag(Variable) == &quot;Ethnicity&quot; &amp; Variable == &quot;Ethnicity&quot; ~ &quot;&quot;,
     TRUE ~ Variable
   )) %&gt;% </code></pre>
-<p>Because the current table, which gives the demographic count for the
+<p>Because the current table, which gives the demographic counts for the
 typical sample, will eventually be combined with an analogous table for
-the clincal sample, we need to create a column to identify the sample.
+the clinical sample, we need to create a column to identify the sample.
 Here, we call <code>mutate(case_when())</code> to create a new column
 named <code>group</code>. We capture the first row of the data object
 with the predicate <code>rownames(.) == &quot;1&quot;</code>, and use the formula
-notation <code>~</code> to apply the the lable of
+notation <code>~</code> to apply the the label of
 <code>Matched typical</code> to this row. The “else” condition of
 <code>case_when()</code>, given as <code>TRUE ~ _NA_character</code>
 codes the remaining cells of the <code>group</code> column as
@@ -905,14 +901,15 @@ sample-specific tables on top of one another</p>
 )</code></pre>
 </div>
 <div id="t-score-descriptive-statistics-and-effect-size-comparisons" class="section level4">
-<h4>4. T-score descriptive statistics and effect size comparisons</h4>
-<p>In next section, we generate descriptive statistics for the scale
-t-scores for each sample, and then compare the mean t-scores with an
-effect-size measure.</p>
+<h4>4. <em>t</em>-score descriptive statistics and effect size
+comparisons</h4>
+<p>In next section, we generate descriptive statistics for the SPM-2
+scale <em>t</em>-scores in each sample, and then compare the mean
+<em>t</em>-scores with an effect-size measure.</p>
 <p>To recount, <code>ASD_stand_match</code> is a data frame containing
 the matched cases drawn from the typical sample. In the next snippet of
 code, we use <code>select(contains(&quot;NT&quot;))</code> to subset only the
-columns containing the t-scores). We then call
+columns containing the <em>t</em>-scores. We then call
 <code>rename_with()</code> to apply a function that truncates the names
 of these columns. <code>str_sub(., 1, -4)</code> processes all
 (<code>everything()</code>) of the names in the data object
@@ -924,12 +921,13 @@ of the string’s end.</p>
   select(contains(&quot;_NT&quot;)) %&gt;% 
   rename_with(~ str_sub(., 1, -4), everything()) %&gt;% </code></pre>
 <p><code>psych::describe()</code> is used to obtain descriptive
-statistics on the t-score columns. The argument <code>fast = TRUE</code>
-limits the output to the most frequently reported measures (e.g.,
-<code>n</code>, <code>mean</code>, <code>sd</code>, <code>min</code>,
-<code>max</code>, <code>range</code>, <code>se</code>). These measures
-become column names for the summary data object, which now has a row for
-each score being analyzed, as in:</p>
+statistics on the <em>t</em>-score columns. The argument
+<code>fast = TRUE</code> limits the output to the most frequently
+reported measures (e.g., <code>n</code>, <code>mean</code>,
+<code>sd</code>, <code>min</code>, <code>max</code>, <code>range</code>,
+<code>se</code>). These measures become column names for the summary
+data object, which now has a row for each score being analyzed, as
+in:</p>
 <pre><code>    vars  n  mean   sd min max range   se
 SOC    1 91 64.64 6.27  48  75    27 0.66
 VIS    2 91 62.52 8.42  37  75    38 0.88
