@@ -369,9 +369,8 @@ matched on demographic characteristics. For this demonstration, we
 employ data collected in 2016-2017 as part of the SPM-2 project. We have
 a clinical sample consisting of children who have been diagnosed with
 ASD. The goal of the validity analysis is to determine the extent to
-which the SPM-2 <em>t</em>-scores of this clincial sample differ from a
-sample of typically developing children who are matched to the clinical
-sample on key demographic variables.</p>
+which the SPM-2 <em>t</em>-scores of this clincial sample differ those
+of the matched typical sample.</p>
 <p>The method focuses on drawing a matched subsample from a larger
 sample of typically developing children (in this case the SPM-2
 Standardization Sample). After assembling this comparison sample, we
@@ -582,9 +581,9 @@ write_csv(match_t_desc,
 wrangling (<code>tidyverse</code>), psychometric data simulation and
 analysis (<code>psych</code>), and drawing matched samples
 (<code>MatchIt</code>).</p>
-<p>Ideally, code templates are <em>robust</em>, meaning that they can be
-adapted to different projects with minimal copying-and-pasting of text.
-Robust templates are characterized by their liberal use of
+<p>Ideally, R code templates are <em>robust</em>, meaning that they can
+be adapted to different projects with minimal copying-and-pasting of
+text. Robust templates are characterized by their liberal use of
 <em>tokens</em>, which are names for <em>project-specific</em> data and
 text elements that are used repeatedly throughout the template.</p>
 <p>These tokenized elements include names of variables, files, test
@@ -615,8 +614,8 @@ sample (children diagnosed with ASD) from the typical sample, and
 indicate that the data are in their raw input form, prior to the matched
 sample draw (<code>preMatch</code>). For the clinical sample, we use
 <code>filter(clin_dx == &quot;ASD&quot;)</code> to read in only the persons with
-ASD, out of the larger clinical sample that contains numerous
-diagoses.</p>
+ASD, out of the larger clinical sample that includes persons with other
+diagnoses.</p>
 <pre class="r"><code>suppressMessages(library(here)) 
 suppressMessages(suppressWarnings(library(tidyverse)))
 suppressMessages(library(psych))
@@ -665,14 +664,14 @@ clin_ASD_preMatch &lt;-
 <h4>2. Prep input data for matching</h4>
 <p>To prepare the data for the <code>MatchIt</code> functions, we join
 the clinical and standardization input files with
-<code>bind_rows()</code>, which essentially stacks the rows of the two
-inputs on top of one another. The joined object is named
+<code>bind_rows()</code>, which stacks the rows of its inputs on top of
+one another. The joined object is named
 <code>ASD_clin_stand_preMatch</code>. We include a call to
 <code>mutate()</code> to create a new logical variable,
 <code>Group</code>, which is required by the <code>MatchIt</code>
 functions. <code>Group</code> is coded <code>TRUE</code> for clinical
 cases.</p>
-<p>A further preperatory step is dealing with any <code>NA</code> codes
+<p>A further preparatory step is dealing with any <code>NA</code> codes
 in the data, which the <code>MatchIt</code> functions cannot process. We
 use <code>sum(is.na())</code> to obtain a count of the <code>NA</code>
 cells in <code>ASD_clin_stand_preMatch</code>. If this count is 0, the
@@ -700,8 +699,8 @@ in <code>na_cols</code>. Note that each column name is paired with the
 replacement value of <code>999</code>, some encoded as numbers, some as
 strings, depending on the format of the column. In this example we need
 to add a separate call of <code>mutate()</code> to recode the
-<code>NA</code> values in the <code>HighestEducation</code> column. The
-this latter column was a logical variable in the input file.
+<code>NA</code> values in the <code>HighestEducation</code> column. This
+latter column was a logical variable in the input file.
 <code>replace_na()</code> cannot reformat variables on the fly, so we
 need to use <code>mutate()</code> to coerce
 <code>HighestEducation</code> to character (with
@@ -766,11 +765,10 @@ match &lt;- matchit(
 includes several data elements. <code>match.data(match)</code> is used
 to extract a new data frame <code>ASD_clin_stand_match</code>, which
 includes the clinical sample and the matched subsample drawn from the
-typical sample. We use <code>select()</code> to remove columns not
-needed for the subsequent analysis. We use <code>filter()</code> to
-split the new data frame by clinical status into clinical
-(<code>ASD_clin_match</code>) and typical (<code>ASD_stand_match</code>)
-samples.</p>
+typical sample. <code>select()</code> removes columns not needed for the
+subsequent analysis. <code>filter()</code> splits the new data frame by
+clinical status into clinical (<code>ASD_clin_match</code>) and typical
+(<code>ASD_stand_match</code>) samples.</p>
 <pre class="r"><code>ASD_clin_stand_match &lt;- match.data(match) %&gt;% 
   select(-Group, -distance, -weights) #%&gt;% 
 ASD_stand_match &lt;- ASD_clin_stand_match %&gt;% 
@@ -782,21 +780,22 @@ ASD_clin_match &lt;- ASD_clin_stand_match %&gt;%
 <h4>4. Obtain demographic counts</h4>
 <p>The next section of code generates frequency counts for the
 demographic variables in the clinical and typical samples, and then
-joins them together in a summary table.</p>
+joins them into a summary table.</p>
 <p>To create the frequency table (<code>match_dist_stand</code>) for the
-typical sample, we use <code>select()</code> to extract the columns for
-the four demographic variables
-(<code>age_range, Gender, ParentHighestEducation, Ethnicity</code>) from
-<code>ASD_stand_match</code>. We use <code>pivot_longer()</code> to
-transform this object into long format, wherein the column names from
-<code>ASD_stand_match</code> now occupy the column
-<code>Variable</code>, and the cell values occupy the column
-<code>Category</code>. The object is now in multi-level format, in which
-the values of <code>Category</code> are nested within each value of
-<code>Variable</code>. Thus, each case from <code>ASD_stand_match</code>
-is now represented in four rows in the long-format object. The four rows
-give the values on the four demographic variables. Here is an example of
-how a single case would be represented in long format:</p>
+typical sample, we pipe <code>ASD_stand_match</code> into
+<code>select()</code>, to extract the columns for the four demographic
+variables
+(<code>age_range, Gender, ParentHighestEducation, Ethnicity</code>). We
+use <code>pivot_longer()</code> to transform this object into long
+format, wherein the column names from <code>ASD_stand_match</code> now
+occupy the column <code>Variable</code>, and the cell values occupy the
+column <code>Category</code>. The object is now in multi-level format,
+in which the values of <code>Category</code> are nested within each
+value of <code>Variable</code>. Thus, each case from
+<code>ASD_stand_match</code> is now represented in four rows in the
+long-format object. The four rows give the values on the four
+demographic variables. Here is an example of how a single case would be
+represented in long format:</p>
 <pre><code>Variable               Category                        
 
 age_range              21 to 31.5 mo                   
@@ -862,8 +861,8 @@ ParentHighestEducation High school graduate (including GED)    10
 Ethnicity              Hispanic                                13
                        Asian                                    2</code></pre>
 <p>Note that the next code snippet begins with a call of
-<code>ungroup()</code>, which we use to remove the grouping structures,
-which sometimes cause <code>case_when()</code> to throw an error.</p>
+<code>ungroup()</code> to remove grouping structures, which sometimes
+cause <code>case_when()</code> to throw an error.</p>
 <pre class="r"><code>  ungroup() %&gt;% 
   mutate(Variable = case_when(
     lag(Variable) == &quot;age_range&quot; &amp; Variable == &quot;age_range&quot; ~ &quot;&quot;,
@@ -880,7 +879,7 @@ named <code>group</code>. We capture the first row of the data object
 with the predicate <code>rownames(.) == &quot;1&quot;</code>, and use the formula
 notation <code>~</code> to apply the the label of
 <code>Matched typical</code> to this row. The “else” condition of
-<code>case_when()</code>, given as <code>TRUE ~ _NA_character</code>
+<code>case_when()</code>, given as <code>TRUE ~ _NA_character_</code>
 codes the remaining cells of the <code>group</code> column as
 <code>NA</code>. Finally, we use <code>select()</code> to arrange the
 columns of the data object in the left-right sequence required for
@@ -905,7 +904,8 @@ sample-specific tables on top of one another</p>
 comparisons</h4>
 <p>In next section, we generate descriptive statistics for the SPM-2
 scale <em>t</em>-scores in each sample, and then compare the mean
-<em>t</em>-scores with an effect-size measure.</p>
+<em>t</em>-scores with a measure of effect size (Cohen’s
+<em>d</em>).</p>
 <p>To recount, <code>ASD_stand_match</code> is a data frame containing
 the matched cases drawn from the typical sample. In the next snippet of
 code, we use <code>select(contains(&quot;NT&quot;))</code> to subset only the
@@ -914,8 +914,8 @@ columns containing the <em>t</em>-scores. We then call
 of these columns. <code>str_sub(., 1, -4)</code> processes all
 (<code>everything()</code>) of the names in the data object
 (<code>.</code>), shortening them to the string that begins with the
-first character and ends with the character four positions to the left
-of the string’s end.</p>
+first character of the name and ends with the character four positions
+to the left of the name’s final character.</p>
 <pre class="r"><code>match_t_desc_stand &lt;-
   ASD_stand_match %&gt;% 
   select(contains(&quot;_NT&quot;)) %&gt;% 
@@ -948,7 +948,7 @@ required for output.</p>
   rownames_to_column(var = &quot;scale&quot;) %&gt;% 
   arrange(match(scale, scale_order)) %&gt;% </code></pre>
 <p>As with the demographic tables, we call
-<code>mutate(case_when())</code> to encode a new columns
+<code>mutate(case_when())</code> to encode a new column
 (<code>sample</code>) that identifies the source of the set of scores in
 the data object. We add a variance column <code>var = sd^2)</code> for
 use in calculating the effect size measure, and <code>select()</code>

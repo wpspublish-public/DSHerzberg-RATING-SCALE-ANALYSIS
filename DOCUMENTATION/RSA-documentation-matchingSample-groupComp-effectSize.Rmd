@@ -9,7 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Mean *t*-score comparisons between clinical and matched typical samples
 
-A core set of analyses supporting rating scale validity is the comparison of clinical samples (e.g., persons with diagnoses of ASD, ADHD, LD, etc.) to samples of typically developing students who are matched on demographic characteristics. For this demonstration, we employ data collected in 2016-2017 as part of the SPM-2 project. We have a clinical sample consisting of children who have been diagnosed with ASD. The goal of the validity analysis is to determine the extent to which the SPM-2 *t*-scores of this clincial sample differ from a sample of typically developing children who are matched to the clinical sample on key demographic variables.
+A core set of analyses supporting rating scale validity is the comparison of clinical samples (e.g., persons with diagnoses of ASD, ADHD, LD, etc.) to samples of typically developing students who are matched on demographic characteristics. For this demonstration, we employ data collected in 2016-2017 as part of the SPM-2 project. We have a clinical sample consisting of children who have been diagnosed with ASD. The goal of the validity analysis is to determine the extent to which the SPM-2 *t*-scores of this clincial sample differ those of the matched typical sample.
 
 The method focuses on drawing a matched subsample from a larger sample of typically developing children (in this case the SPM-2 Standardization Sample). After assembling this comparison sample, we calculate descriptive statistics and use a measure of effect size to assess the magnitude of differences between the two samples on mean SPM-2 *t*-scores.
 
@@ -214,7 +214,7 @@ write_csv(match_t_desc,
 
 Load packages for file path specification (`here`), data wrangling (`tidyverse`), psychometric data simulation and analysis (`psych`), and drawing matched samples (`MatchIt`).
 
-Ideally, code templates are *robust*, meaning that they can be adapted to different projects with minimal copying-and-pasting of text. Robust templates are characterized by their liberal use of *tokens*, which are names for *project-specific* data and text elements that are used repeatedly throughout the template.
+Ideally, R code templates are *robust*, meaning that they can be adapted to different projects with minimal copying-and-pasting of text. Robust templates are characterized by their liberal use of *tokens*, which are names for *project-specific* data and text elements that are used repeatedly throughout the template.
 
 These tokenized elements include names of variables, files, test forms, raters, etc., as well as labels for age and score ranges, score item counts, score numerical bounds, and so forth. By definition, these elements differ between, say, an autism rating-scale project and an ADHD rating-scale project.
 
@@ -223,20 +223,20 @@ In contrast, the *project-general* aspects of an R script are those functions an
 In R, we initialize tokens as *vectors*. In the next code snippet, for example, `var_order` is a vector specifying the sequence in which the names of demographic variables are presented in the output tables.
 
 In this demonstration, we employ data from the SPM-2 project, because that project has both small clinical samples and a large standardization sample from which we can draw matched subsamples. We read in the data using `read_csv()`, transforming the `.csv` files into the simplified tibble format with `as_tibble().` The data are in two objects named `stand_preMatch` and `clin_ASD_preMatch`. The names differentiate the clinical sample (children diagnosed with ASD) from the typical sample, and indicate that the data are in their raw input form, prior to the matched sample draw (`preMatch`). For the clinical sample, we use
-`filter(clin_dx == "ASD")` to read in only the persons with ASD, out of the larger clinical sample that contains numerous diagoses.
+`filter(clin_dx == "ASD")` to read in only the persons with ASD, out of the larger clinical sample that includes persons with other diagnoses.
 
 ```{r RSA-match, echo = 1:43, eval = F}
 ```
 
 #### 2. Prep input data for matching
 
-To prepare the data for the `MatchIt` functions, we join the clinical and standardization input files with `bind_rows()`, which essentially stacks the rows of the two inputs on top of one another. The joined object is named `ASD_clin_stand_preMatch`. We include a call to `mutate()` to create a new logical variable, `Group`, which is required by the `MatchIt` functions. `Group` is coded `TRUE` for clinical cases.
+To prepare the data for the `MatchIt` functions, we join the clinical and standardization input files with `bind_rows()`, which stacks the rows of its inputs on top of one another. The joined object is named `ASD_clin_stand_preMatch`. We include a call to `mutate()` to create a new logical variable, `Group`, which is required by the `MatchIt` functions. `Group` is coded `TRUE` for clinical cases.
 
-A further preperatory step is dealing with any `NA` codes in the data, which the `MatchIt` functions cannot process. We use `sum(is.na())` to obtain a count of the `NA` cells in `ASD_clin_stand_preMatch`. If this count is 0, the data are ready for downstream processing.
+A further preparatory step is dealing with any `NA` codes in the data, which the `MatchIt` functions cannot process. We use `sum(is.na())` to obtain a count of the `NA` cells in `ASD_clin_stand_preMatch`. If this count is 0, the data are ready for downstream processing.
 
 If `NA` cells exist, we can identify the columns where they appear by piping `ASD_clin_stand_preMatch` into `select()`. We can use a predicate to select columns by wrapping the predicate in the selection helper `where()`, which allows `select()` to isolate columns where `any(is.na(.))` returns `TRUE`. Here, `.` is shorthand for the piped data object, and `is.na()` returns a logical vector (whose length equals `ncol(.)`), where `TRUE` is the code for any column where `NA` is present. This vector thus identifies the columns that are to be subsetted by `select()`. `any()` enables the `select()` operation by returning `TRUE` to `where()` if `NA` is present in *any* column. `na_cols` names a new data frame holding only the columns that have `NA` values.
 
-To recode `NA` cells to `999` (which is acceptable to the `MatchIt` functions), we pipe `ASD_clin_stand_preMatch` into `replace_na()`, supplying as an argument to the latter a list of the columns identified in `na_cols`. Note that each column name is paired with the replacement value of `999`, some encoded as numbers, some as strings, depending on the format of the column. In this example we need to add a separate call of `mutate()` to recode the `NA` values in the `HighestEducation` column. The this latter column was a logical variable in the input file. `replace_na()` cannot reformat variables on the fly, so we need to use `mutate()` to coerce `HighestEducation` to character (with `as.character()`), before substituting `"999"` for the `NA` values.
+To recode `NA` cells to `999` (which is acceptable to the `MatchIt` functions), we pipe `ASD_clin_stand_preMatch` into `replace_na()`, supplying as an argument to the latter a list of the columns identified in `na_cols`. Note that each column name is paired with the replacement value of `999`, some encoded as numbers, some as strings, depending on the format of the column. In this example we need to add a separate call of `mutate()` to recode the `NA` values in the `HighestEducation` column. This latter column was a logical variable in the input file. `replace_na()` cannot reformat variables on the fly, so we need to use `mutate()` to coerce `HighestEducation` to character (with `as.character()`), before substituting `"999"` for the `NA` values.
 ```{r RSA-match, echo = 45:66, eval = F}
 ```
 
@@ -253,15 +253,15 @@ To recode `NA` cells to `999` (which is acceptable to the `MatchIt` functions), 
 * `ratio = 1` specifies 1:1 case matching, which insures that the matched typical sample has approximately the same *n* as the clinical sample.
 ```{r RSA-match, echo = 67:73, eval = F}
 ```
-`matchit()` returns a list (`match`) that includes several data elements. `match.data(match)` is used to extract a new data frame `ASD_clin_stand_match`, which includes the clinical sample and the matched subsample drawn from the typical sample. We use `select()` to remove columns not needed for the subsequent analysis. We use `filter()` to split the new data frame by clinical status into clinical (`ASD_clin_match`) and typical (`ASD_stand_match`) samples.
+`matchit()` returns a list (`match`) that includes several data elements. `match.data(match)` is used to extract a new data frame `ASD_clin_stand_match`, which includes the clinical sample and the matched subsample drawn from the typical sample. `select()` removes columns not needed for the subsequent analysis. `filter()` splits the new data frame by clinical status into clinical (`ASD_clin_match`) and typical (`ASD_stand_match`) samples.
 ```{r RSA-match, echo = 74:80, eval = F}
 ```
 
 #### 4. Obtain demographic counts
 
-The next section of code generates frequency counts for the demographic variables in the clinical and typical samples, and then joins them together in a summary table.
+The next section of code generates frequency counts for the demographic variables in the clinical and typical samples, and then joins them into a summary table.
 
-To create the frequency table (`match_dist_stand`) for the typical sample, we use `select()` to extract the columns for the four demographic variables (`age_range, Gender, ParentHighestEducation, Ethnicity`) from `ASD_stand_match`. We use `pivot_longer()` to transform this object into long format, wherein the column names from `ASD_stand_match` now occupy the column `Variable`, and the cell values occupy the column `Category`. The object is now in multi-level format, in which the values of `Category` are nested within each value of `Variable`. Thus, each case from `ASD_stand_match` is now represented in four rows in the long-format object. The four rows give the values on the four demographic variables. Here is an example of how a single case would be represented in long format:
+To create the frequency table (`match_dist_stand`) for the typical sample, we pipe `ASD_stand_match` into `select()`, to extract the columns for the four demographic variables (`age_range, Gender, ParentHighestEducation, Ethnicity`). We use `pivot_longer()` to transform this object into long format, wherein the column names from `ASD_stand_match` now occupy the column `Variable`, and the cell values occupy the column `Category`. The object is now in multi-level format, in which the values of `Category` are nested within each value of `Variable`. Thus, each case from `ASD_stand_match` is now represented in four rows in the long-format object. The four rows give the values on the four demographic variables. Here is an example of how a single case would be represented in long format:
 
 ```
 Variable               Category                        
@@ -308,10 +308,10 @@ ParentHighestEducation High school graduate (including GED)    10
 Ethnicity              Hispanic                                13
                        Asian                                    2
 ```
-Note that the next code snippet begins with a call of `ungroup()`, which we use to remove the grouping structures, which sometimes cause `case_when()` to throw an error.
+Note that the next code snippet begins with a call of `ungroup()` to remove grouping structures, which sometimes cause `case_when()` to throw an error.
 ```{r RSA-match, echo = 88:95, eval = F}
 ```
-Because the current table, which gives the demographic counts for the typical sample, will eventually be combined with an analogous table for the clinical sample, we need to create a column to identify the sample. Here, we call `mutate(case_when())` to create a new column named `group`. We capture the first row of the data object with the predicate `rownames(.) == "1"`, and use the formula notation `~` to apply the the label of `Matched typical` to this row. The "else" condition of `case_when()`, given as `TRUE ~ _NA_character` codes the remaining cells of the `group` column as `NA`. Finally, we use `select()` to arrange the columns of the data object in the left-right sequence required for output.
+Because the current table, which gives the demographic counts for the typical sample, will eventually be combined with an analogous table for the clinical sample, we need to create a column to identify the sample. Here, we call `mutate(case_when())` to create a new column named `group`. We capture the first row of the data object with the predicate `rownames(.) == "1"`, and use the formula notation `~` to apply the the label of `Matched typical` to this row. The "else" condition of `case_when()`, given as `TRUE ~ _NA_character_` codes the remaining cells of the `group` column as `NA`. Finally, we use `select()` to arrange the columns of the data object in the left-right sequence required for output.
 ```{r RSA-match, echo = 96:100, eval = F}
 ```
 The script also generates a table of demographic counts  (`match_dist_clin`) for the clinical sample, using analogous procedures. For the final output configuration including both samples (`match_dist`) we use `bind_rows()` to stack the sample-specific tables on top of one another
@@ -320,9 +320,9 @@ The script also generates a table of demographic counts  (`match_dist_clin`) for
 
 #### 4. *t*-score descriptive statistics and effect size comparisons
 
-In next section, we generate descriptive statistics for the SPM-2 scale *t*-scores in each sample, and then compare the mean *t*-scores with an effect-size measure.
+In next section, we generate descriptive statistics for the SPM-2 scale *t*-scores in each sample, and then compare the mean *t*-scores with a measure of effect size (Cohen's *d*).
 
-To recount, `ASD_stand_match` is a data frame containing the matched cases drawn from the typical sample. In the next snippet of code, we use `select(contains("NT"))` to subset only the columns containing the *t*-scores. We then call `rename_with()` to apply a function that truncates the names of these columns. `str_sub(., 1, -4)` processes all (`everything()`) of the names in the data object (`.`), shortening them to the string that begins with the first character and ends with the character four positions to the left of the string's end.
+To recount, `ASD_stand_match` is a data frame containing the matched cases drawn from the typical sample. In the next snippet of code, we use `select(contains("NT"))` to subset only the columns containing the *t*-scores. We then call `rename_with()` to apply a function that truncates the names of these columns. `str_sub(., 1, -4)` processes all (`everything()`) of the names in the data object (`.`), shortening them to the string that begins with the first character of the name and ends with the character four positions to the left of the name's final character.
 ```{r RSA-match, echo = 126:130, eval = F}
 ```
 `psych::describe()` is used to obtain descriptive statistics on the *t*-score columns. The argument `fast = TRUE` limits the output to the most frequently reported measures (e.g., `n`, `mean`, `sd`, `min`, `max`, `range`, `se`). These measures become column names for the summary data object, which now has a row for each score being analyzed, as in:
@@ -341,7 +341,7 @@ TOT    9 91 64.85 6.61  44  75    31 0.69
 Because `describe()` converts the column names of the input object into row names, we use `tibble::rownames_to_column()` to move these row names into a column named `scale`. We then call `arrange(match())` to sort the rows into the sequence required for output.
 ```{r RSA-match, echo = 131:133, eval = F}
 ```
-As with the demographic tables, we call `mutate(case_when())` to encode a new columns (`sample`) that identifies the source of the set of scores in the data object. We add a variance column `var = sd^2)` for use in calculating the effect size measure, and `select()` and `rename()` columns for final output.
+As with the demographic tables, we call `mutate(case_when())` to encode a new column (`sample`) that identifies the source of the set of scores in the data object. We add a variance column `var = sd^2)` for use in calculating the effect size measure, and `select()` and `rename()` columns for final output.
 ```{r RSA-match, echo = 134:143, eval = F}
 ```
 The script also generates a table of descriptive statistics (`match_t_desc_clin`) for the clinical sample, using analogous procedures. We call `left_join()` to merge the tables for the two samples into a single comparison table (`match_t_desc`), aligning rows with `by = "scale"`. Within a call of `mutate()`, we calculate the effect size measure (`ES`), and round the values in the columns named in `across()`. We finish the process with `select()` which drops spurious columns created by the join, and creates the sequence of columns required for final output.
